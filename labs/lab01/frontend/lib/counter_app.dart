@@ -42,21 +42,21 @@ class _CounterAppState extends State<CounterApp> {
                     _increment();
                   });
                 },
-                child: Text("Increment")
+                child: const Icon(Icons.add)
               ),
               TextButton(onPressed: () {
                 setState(() {
                   _decrement();
                 });
               },
-                  child: Text("Decrement")
+                  child: const Icon(Icons.remove)
               ),
               TextButton(onPressed: () {
                 setState(() {
                   _reset();
                 });
               },
-                  child: Text("Reset")
+                  child: const Icon(Icons.refresh)
               )
             ],
           )

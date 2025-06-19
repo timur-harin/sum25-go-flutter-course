@@ -17,20 +17,28 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.asset(avatarUrl ?? "assets/IMG_5769.PNG", width: 100),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Name: $name"),
-              Text("E-mail: $email"),
-              Text("Age: $age"),
-
-            ],
+      child: Card(
+        child: ListTile(
+          leading: avatarUrl != null
+              ? CircleAvatar(
+            backgroundColor: Colors.transparent,
+            child: ClipOval(
+              child: Image.network(
+                avatarUrl!,
+                fit: BoxFit.cover,
+                width: 40,
+                height: 40,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.person);
+                },
+              ),
+            ),
           )
-        ],
+              : const CircleAvatar(child: Icon(Icons.person)),
+          title: Text(name),
+          subtitle: Text(email),
+          trailing: Text("Age: $age"),
+        ),
       ),
     );
   }

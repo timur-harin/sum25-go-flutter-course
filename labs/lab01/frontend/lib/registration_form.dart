@@ -25,50 +25,54 @@ class _RegistrationFormState extends State<RegistrationForm> {
     if (_formKey.currentState!.validate()) {
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Congrats!')),
+        SnackBar(content: Text('Registration successful!')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Container(child:
+      SingleChildScrollView(
       child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
+                key: const Key('name'),
                 controller: _nameController,
                 decoration: InputDecoration(
                     label: Text("Name")
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'ENTER YOUR NAME!!!!!!!1111!!';
+                    return 'Please enter your name';
                   }
 
                   return null;
                 },
               ),
               TextFormField(
+                key: const Key('email'),
                 controller: _emailController,
                 decoration: InputDecoration(
                     label: Text("E-Mail")
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'ENTER YOUR EMAIL!!!!!';
+                    return 'Please enter a valid email';
                   }
 
                   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'IT IS NOT E-MAIL!!!!!!';
+                    return 'Please enter a valid email';
                   }
 
                   return null;
                 },
               ),
               TextFormField(
+                  key: const Key('password'),
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
@@ -76,7 +80,11 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please, enter your password';
+                      return 'Password must be at least 6 characters';
+                    }
+
+                    if (value.length < 6) {
+                      return "Password must be at least 6 characters";
                     }
 
                     return null;
@@ -88,6 +96,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
             ],
           ),
       )
+    )
     );
   }
 }
