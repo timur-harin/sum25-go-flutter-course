@@ -48,6 +48,7 @@ func (tm *TaskManager) AddTask(title, description string) (*Task, error) {
 	tm.tasks[task.ID] = task
 	tm.nextID += 1
 	return task, nil
+	
 }
 
 // UpdateTask updates an existing task
