@@ -15,7 +15,7 @@ var (
 	ErrEmptyName = errors.New("name cannot be empty")
 )
 
-// User represents a user in the system
+// User represents a user in the systemm
 type User struct {
 	Name  string
 	Age   int

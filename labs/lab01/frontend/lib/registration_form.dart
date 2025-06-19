@@ -88,7 +88,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
           if (_message.isNotEmpty)
             Text(
               _message,
-              style: const TextStyle(color: Colors.green),
+              style: const TextStyle(color: Colors.pink),
             ),
         ],
       ),
