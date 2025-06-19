@@ -16,7 +16,6 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement profile card UI
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
@@ -25,17 +24,17 @@ class ProfileCard extends StatelessWidget {
           spacing: 20,
           children: [
             avatarUrl != null && avatarUrl!.isNotEmpty
-                ? Image.network(avatarUrl!)
-                : const CircleAvatar(
+                ? const CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey,
+                )
+                : CircleAvatar(
                     radius: 40,
                     backgroundColor: Colors.grey,
-                    child: Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.white,
-                    ),
+                    child: Text(name[0]),
                   ),
             Text(name),
+            Text("Age: $age"),
             Text(email, style: const TextStyle(color: Colors.grey))
           ],
         )

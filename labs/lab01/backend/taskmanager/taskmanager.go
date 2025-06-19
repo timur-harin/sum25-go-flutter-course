@@ -31,7 +31,7 @@ type TaskManager struct {
 
 // NewTaskManager creates a new task manager
 func NewTaskManager() *TaskManager {
-	return &TaskManager{}
+	return &TaskManager{tasks: make(map[int]*Task), nextID: 1}
 }
 
 // AddTask adds a new task to the manager

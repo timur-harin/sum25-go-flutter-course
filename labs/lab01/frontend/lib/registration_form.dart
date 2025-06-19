@@ -24,7 +24,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   void _submitForm() {
     if (_formKey.currentState?.validate() ?? false) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Form submitted successfully')),
+        const SnackBar(content: Text('Registration successful!')),
       );
     }
   }
@@ -40,6 +40,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
           spacing: 10,
           children: [
             TextFormField(
+              key: const Key("name"),
               controller: _nameController,
               decoration: const InputDecoration(
                 labelText: "Name",
@@ -47,33 +48,41 @@ class _RegistrationFormState extends State<RegistrationForm> {
               ),
               validator: (name) {
                 if (name == null || name.isEmpty) {
-                  return "Name can not be empty";
+                  return "Please enter your name";
                 }
                 return null;
               },
             ),
             TextFormField(
+              key: const Key("email"),
               controller: _emailController,
               decoration: const InputDecoration(
                 labelText: "Email",
                 border: OutlineInputBorder(),
               ),
-              validator: (email) {
-                if (email == null || email.isEmpty) {
-                  return "Email can not be empty";
+              validator: (email) {                
+                if (
+                  email == null ||
+                  email.isEmpty ||
+                  !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                  .hasMatch(email)
+                ) {
+                  return "Please enter a valid email";
                 }
+                
                 return null;
               },
             ),
             TextFormField(
+              key: const Key("password"),
               controller: _passwordController,
               decoration: const InputDecoration(
                 labelText: "Password",
                 border: OutlineInputBorder(),
               ),
               validator: (password) {
-                if (password == null || password.isEmpty) {
-                  return "Password can not be empty";
+                if (password == null || password.isEmpty || password.length < 6) {
+                  return "Password must be at least 6 characters";
                 }
                 return null;
               },

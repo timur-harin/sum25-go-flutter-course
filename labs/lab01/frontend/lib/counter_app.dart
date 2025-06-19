@@ -36,14 +36,15 @@ class _CounterAppState extends State<CounterApp> {
       child: Column(
         spacing: 20,
         children: [
+          const Text("Counter"),
           Text("$_counter"),
           Row(
             spacing: 10,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(onPressed: _decrement, child: const Text("Decrement")),
-              ElevatedButton(onPressed: _reset, child: const Text("Reset")),
-              ElevatedButton(onPressed: _increment, child: const Text("Increment"))
+              ElevatedButton(onPressed: _decrement, child: const Icon(Icons.remove)),
+              ElevatedButton(onPressed: _reset, child: const Icon(Icons.refresh)),
+              ElevatedButton(onPressed: _increment, child: const Icon(Icons.add))
             ]
           )
         ]
