@@ -22,12 +22,69 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _submitForm() {
-    // TODO: Implement form submission
+    if (_formKey.currentState?.validate() ?? false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Form submitted successfully')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement registration form UI
-    return Container();
+    return Container(
+      margin: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUnfocus,
+        child: Column(
+          spacing: 10,
+          children: [
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: "Name",
+                border: OutlineInputBorder(),
+              ),
+              validator: (name) {
+                if (name == null || name.isEmpty) {
+                  return "Name can not be empty";
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(),
+              ),
+              validator: (email) {
+                if (email == null || email.isEmpty) {
+                  return "Email can not be empty";
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _passwordController,
+              decoration: const InputDecoration(
+                labelText: "Password",
+                border: OutlineInputBorder(),
+              ),
+              validator: (password) {
+                if (password == null || password.isEmpty) {
+                  return "Password can not be empty";
+                }
+                return null;
+              },
+            ),
+            ElevatedButton(
+              onPressed: _submitForm,
+              child: const Text("Submit"),
+            ),
+          ]
+        )
+      )
+    );
   }
 }
