@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -46,12 +46,7 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: const Text('Lab 01 Demo'),
       ),
       body: SingleChildScrollView(
@@ -68,12 +63,17 @@ class MyHomePage extends StatelessWidget {
               name: 'John Doe',
               email: 'john@example.com',
               age: 30,
-              avatarUrl: 'https://example.com/avatar.jpg',
+              // avatarUrl: 'https://example.com/avatar.jpg',
             ),
             const SizedBox(height: 24),
             const Text(
               'Counter App Example',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {},
+              child: const Text('Counter'),
             ),
             const SizedBox(height: 8),
             const CounterApp(),
