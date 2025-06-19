@@ -38,7 +38,7 @@ class _CounterAppState extends State<CounterApp> {
             '$_counter',
             style: const TextStyle(fontSize: 48),
           ),
-          const SizedBox(height: 21),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

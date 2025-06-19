@@ -71,7 +71,7 @@ func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) 
 
 // DeleteTask removes a task from the manager
 func (tm *TaskManager) DeleteTask(id int) error {
-	// TODO: Implement task deletionn
+	// TODO: Implement task deletion
 	if _, ok := tm.tasks[id]; !ok {
 		return ErrTaskNotFound
 	}
