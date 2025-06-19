@@ -26,7 +26,21 @@ void main() {
   testWidgets('ProfileCard handles optional avatar', (
     WidgetTester tester,
   ) async {
-    const avatarUrl = 'https://example.com/avatar.jpg';
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ProfileCard(
+            name: 'John',
+            email: 'john@example.com',
+            age: 30,
+            avatarUrl: null,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CircleAvatar), findsOneWidget);
+    expect(find.text('J'), findsOneWidget);
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -35,7 +49,7 @@ void main() {
             name: 'John',
             email: 'john@example.com',
             age: 30,
-            avatarUrl: avatarUrl,
+            avatarUrl: 'https://example.com/avatar.jpg',
           ),
         ),
       ),
