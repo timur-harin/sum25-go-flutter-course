@@ -56,6 +56,6 @@ func (u *User) String() string {
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
 	// TODO: Implement email validation
-	var re = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-	return re.MatchString(email)
+	var red = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	return red.MatchString(email)
 }

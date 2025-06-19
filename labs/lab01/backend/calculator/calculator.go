@@ -39,6 +39,6 @@ func StringToFloat(s string) (float64, error) {
 
 // FloatToString converts a float64 to string with specified precision
 func FloatToString(f float64, precision int) string {
-	format := fmt.Sprintf("%%.%df", precision)
-	return fmt.Sprintf(format, f)
+	formats := fmt.Sprintf("%%.%df", precision)
+	return fmt.Sprintf(formats, f)
 }

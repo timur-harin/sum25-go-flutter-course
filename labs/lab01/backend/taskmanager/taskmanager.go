@@ -104,14 +104,14 @@ func (tm *TaskManager) GetTask(id int) (*Task, error) {
 // ListTasks returns all tasks, optionally filtered by done status
 func (tm *TaskManager) ListTasks(filterDone *bool) []*Task {
 	// TODO: Implement task listing with optional filter
-	var list []*Task
+	var lists []*Task
 	for _, task := range tm.tasks {
 		if filterDone != nil {
 			if task.Done != *filterDone {
 				continue
 			}
 		}
-		list = append(list, task)
+		lists = append(lists, task)
 	}
-	return list
+	return lists
 }
