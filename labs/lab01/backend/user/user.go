@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -22,24 +23,58 @@ type User struct {
 
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
-	// TODO: Implement user creation with validation
-	return nil, nil
+	if name == "" {
+		return nil, ErrEmptyName
+	}
+	if age < 0 || age > 150 {
+		return nil, ErrInvalidAge
+	}
+	if !IsValidEmail(email) {
+		return nil, ErrInvalidEmail
+	}
+	return &User{Name: name, Age: age, Email: email}, nil
 }
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement user validation
+	if u.Name == "" {
+		return ErrEmptyName
+	}
+	if u.Age < 0 || u.Age > 150 {
+		return ErrInvalidAge
+	}
+	if !IsValidEmail(u.Email) {
+		return ErrInvalidEmail
+	}
+
 	return nil
 }
 
 // String returns a string representation of the user
 func (u *User) String() string {
-	// TODO: Implement string representation
-	return ""
+	return "User{Name: \"" + u.Name + "\", Age: " + fmt.Sprintf("%d", u.Age) + ", Email: \"" + u.Email + "\"}"
 }
 
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
-	// TODO: Implement email validation
-	return false
+	at := -1
+	for i, c := range email {
+		if c == '@' {
+			if at != -1 {
+				return false
+			}
+			at = i
+		}
+	}
+	if at <= 0 || at >= len(email)-3 {
+		return false
+	}
+	dot := false
+	for i := at + 1; i < len(email); i++ {
+		if email[i] == '.' {
+			dot = true
+			break
+		}
+	}
+	return dot
 }
