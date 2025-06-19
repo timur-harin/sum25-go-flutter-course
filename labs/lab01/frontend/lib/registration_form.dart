@@ -22,12 +22,72 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _submitForm() {
-    // TODO: Implement form submission
+    if (_formKey.currentState!.validate()) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Congrats!')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement registration form UI
-    return Container();
+    return Container(
+      child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                    label: Text("Name")
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'ENTER YOUR NAME!!!!!!!1111!!';
+                  }
+
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                    label: Text("E-Mail")
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'ENTER YOUR EMAIL!!!!!';
+                  }
+
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    return 'IT IS NOT E-MAIL!!!!!!';
+                  }
+
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                    label: Text("Password")
+                ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please, enter your password';
+                    }
+
+                    return null;
+                  }
+              ),
+              Center(
+                child: TextButton(onPressed: _submitForm, child: Text("Submit")),
+              )
+            ],
+          ),
+      )
+    );
   }
 }
