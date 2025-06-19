@@ -2,6 +2,7 @@ package calculator
 
 import (
 	"errors"
+	"strconv"
 )
 
 // ErrDivisionByZero is returned when attempting to divide by zero
@@ -9,36 +10,39 @@ var ErrDivisionByZero = errors.New("division by zero")
 
 // Add returns the sum of two numbers
 func Add(a, b float64) float64 {
-	// TODO: Implement addition
-	return 0
+	var result float64 = a + b
+	return result
 }
 
 // Subtract returns the difference between two numbers
 func Subtract(a, b float64) float64 {
-	// TODO: Implement subtraction
-	return 0
+	var result float64 = a - b
+	return result
 }
 
 // Multiply returns the product of two numbers
 func Multiply(a, b float64) float64 {
-	// TODO: Implement multiplication
-	return 0
+	var result float64 = a * b
+	return result
 }
 
 // Divide returns the quotient of two numbers
 func Divide(a, b float64) (float64, error) {
-	// TODO: Implement division with error handling
-	return 0, nil
+	if b == 0 {
+		return 0, ErrDivisionByZero
+	}
+	var result float64 = a / b
+	return result, nil
 }
 
 // StringToFloat converts a string to float64
 func StringToFloat(s string) (float64, error) {
-	// TODO: Implement string to float conversion
-	return 0, nil
+	result, err := strconv.ParseFloat(s, 64)
+	return result, err
 }
 
 // FloatToString converts a float64 to string with specified precision
 func FloatToString(f float64, precision int) string {
-	// TODO: Implement float to string conversion
-	return ""
+	var result string = strconv.FormatFloat(f, 'f', 5, 64)
+	return result
 }
