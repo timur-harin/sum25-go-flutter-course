@@ -1,46 +1,69 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
+import 'counter_app.dart';
+import 'profile_card.dart';
+import 'registration_form.dart';
 
-class CounterApp extends StatefulWidget {
-  const CounterApp({Key? key}) : super(key: key);
-
-  @override
-  State<CounterApp> createState() => _CounterAppState();
+void main() {
+  runApp(const MyApp());
 }
 
-class _CounterAppState extends State<CounterApp> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+    return MaterialApp(
+      title: 'Lab 01 Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
+        useMaterial3: true,
       ),
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      home: const MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Lab 01 Demo'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: const [
             Text(
-              'Counter: $_counter',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              'Profile Card Example',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _incrementCounter,
-              child: const Text('Increment'),
+            SizedBox(height: 8),
+            ProfileCard(
+              name: 'Sabina Yamilova',
+              email: 's.yamilova@innopolis.university',
+              age: 30,
+              avatarUrl: 'https://example.com/avatar.jpg',
             ),
+            SizedBox(height: 24),
+            Text(
+              'Counter App',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            CounterApp(),
+            SizedBox(height: 24),
+            Text(
+              'Registration Form ',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            RegistrationForm(),
           ],
         ),
       ),

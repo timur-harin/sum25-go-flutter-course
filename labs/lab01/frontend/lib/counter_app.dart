@@ -10,65 +10,30 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-  void _increment() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  void _decrement() {
-    setState(() {
-      _counter--;
-    });
-  }
-
-  void _reset() {
-    setState(() {
-      _counter = 0;
-    });
-  }
+  void _increment() => setState(() => _counter++);
+  void _decrement() => setState(() => _counter--);
+  void _reset()     => setState(() => _counter = 0);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        centerTitle: true,
-      ),
-      body: Center(
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '$_counter',
-              style: Theme.of(context).textTheme.headline2,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton(
-                  onPressed: _decrement,
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Icon(Icons.remove),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: _reset,
-                  child: const Text('Reset'),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: _increment,
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  child: const Icon(Icons.add),
-                ),
+                ElevatedButton(onPressed: _decrement, child: const Icon(Icons.remove)),
+                ElevatedButton(onPressed: _reset,     child: const Icon(Icons.refresh)),
+                ElevatedButton(onPressed: _increment, child: const Icon(Icons.add)),
               ],
             ),
           ],
@@ -77,4 +42,3 @@ class _CounterAppState extends State<CounterApp> {
     );
   }
 }
-

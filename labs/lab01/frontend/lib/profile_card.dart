@@ -1,3 +1,4 @@
+// lib/profile_card.dart
 import 'package:flutter/material.dart';
 
 class ProfileCard extends StatelessWidget {
@@ -17,53 +18,39 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      margin: EdgeInsets.all(8),
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundImage:
-                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-              child: avatarUrl == null
-                  ? Icon(
-                      Icons.person,
-                      size: 30,
-                    )
-                  : null,
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              child: avatarUrl == null ? const Icon(Icons.person, size: 30) : null,
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    // старый subtitle1 → теперь titleMedium
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     email,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    // старый bodyText2 → теперь bodyMedium
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'Age: \$age',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    'Age: $age',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
               ),
