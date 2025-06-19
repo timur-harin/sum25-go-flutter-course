@@ -15,7 +15,7 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
-    // Tap the Counter button
+    // Tap the Counter tab
     await tester.tap(find.text('Counter'));
     await tester.pumpAndSettle();
 
