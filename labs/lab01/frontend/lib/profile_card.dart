@@ -27,7 +27,7 @@ class ProfileCard extends StatelessWidget {
               name,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-            // if (avatarUrl != null) profilePicture(avatarUrl!)
+            CircleAvatar(child: profilePicture())
           ],
         ),
         Text(
@@ -42,25 +42,27 @@ class ProfileCard extends StatelessWidget {
       ],
     );
   }
-}
 
-// Widget profilePicture(String url) {
-//   return ClipOval(
-//     child: Image.network(
-//       url,
-//       width: 40,
-//       height: 40,
-//       fit: BoxFit.cover,
-//       errorBuilder: (context, error, stackTrace) =>
-//           const Icon(Icons.error, size: 40),
-//       loadingBuilder: (context, child, loadingProgress) {
-//         if (loadingProgress == null) return child;
-//         return const SizedBox(
-//           width: 40,
-//           height: 40,
-//           child: CircularProgressIndicator(strokeWidth: 2),
-//         );
-//       },
-//     ),
-//   );
-// }
+  Widget profilePicture() {
+    if (avatarUrl == null) {
+      return Text(name[0]);
+    }
+    return Image.network(
+      avatarUrl!,
+      width: 40,
+      height: 40,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) =>
+         Text(name[0]),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        );
+      },
+    );
+  }
+
+}

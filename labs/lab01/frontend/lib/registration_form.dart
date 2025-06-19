@@ -13,6 +13,11 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String? _nameError;
+  String? _emailError;
+  String? _passwordError;
+  String? _successMessage;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -21,35 +26,43 @@ class _RegistrationFormState extends State<RegistrationForm> {
     super.dispose();
   }
 
-  void _submitForm() {
-    List<String> errors = [];
-    if (_passwordController.text.length < 6) {
-      errors.add('Password must be at least 6 characters\n');
-    }
-
-    if (_nameController.text.isEmpty) {
-      errors.add('Please enter your name\n');
-    }
-
-    if (_nameController.text.isEmpty || !isValidEmail(_emailController.text)) {
-      errors.add('Please enter a valid email\n');
-    }
-
-    if (errors.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errors.join())));
-      return;
-    }
-
-    _nameController.clear();
-    _emailController.clear();
-    _passwordController.clear();
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful!')));
-  }
-
   bool isValidEmail(String email) {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return emailRegex.hasMatch(email);
+  }
+
+  void _submitForm() {
+    setState(() {
+      _nameError = _emailError = _passwordError = _successMessage = null;
+
+      final name = _nameController.text;
+      final email = _emailController.text;
+      final password = _passwordController.text;
+
+      bool hasError = false;
+
+      if (name.isEmpty) {
+        _nameError = 'Please enter your name';
+        hasError = true;
+      }
+
+      if (email.isEmpty || !isValidEmail(email)) {
+        _emailError = 'Please enter a valid email';
+        hasError = true;
+      }
+
+      if (password.length < 6) {
+        _passwordError = 'Password must be at least 6 characters';
+        hasError = true;
+      }
+
+      if (!hasError) {
+        _nameController.clear();
+        _emailController.clear();
+        _passwordController.clear();
+        _successMessage = 'Registration successful!';
+      }
+    });
   }
 
   @override
@@ -57,33 +70,41 @@ class _RegistrationFormState extends State<RegistrationForm> {
     return Column(
       children: [
         TextField(
+          key: const Key('name'),
           controller: _nameController,
-          decoration: const InputDecoration(
-            hint: Text(
-              'Name',
-              style: TextStyle(fontWeight: FontWeight.w300),
-            ),
+          decoration: InputDecoration(
+            hintText: 'Name',
+            errorText: _nameError,
           ),
         ),
         TextField(
+          key: const Key('email'),
           controller: _emailController,
-          decoration: const InputDecoration(
-              hint: Text(
-            'Email',
-            style: TextStyle(fontWeight: FontWeight.w300),
-          )),
+          decoration: InputDecoration(
+            hintText: 'Email',
+            errorText: _emailError,
+          ),
         ),
         TextField(
+          key: const Key('password'),
           controller: _passwordController,
-          decoration: const InputDecoration(
-            hint: Text(
-              'Password',
-              style: TextStyle(fontWeight: FontWeight.w300),
-            ),
-          ),
           obscureText: true,
+          decoration: InputDecoration(
+            hintText: 'Password',
+            errorText: _passwordError,
+          ),
         ),
-        TextButton(onPressed: _submitForm, child: const Text('Submit'))
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: _submitForm,
+          child: const Text('Submit'),
+        ),
+        if (_successMessage != null)
+          Text(
+            _successMessage!,
+            key: const Key('successMessage'),
+            style: const TextStyle(color: Colors.green),
+          ),
       ],
     );
   }

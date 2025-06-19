@@ -46,7 +46,8 @@ class _CounterAppState extends State<CounterApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text('Counter'),
-                Text(': $_counter')
+                const SizedBox(width: 2.0),
+                Text('$_counter')
               ],
             ),
             Row(
