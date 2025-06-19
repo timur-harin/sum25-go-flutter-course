@@ -31,36 +31,73 @@ type TaskManager struct {
 
 // NewTaskManager creates a new task manager
 func NewTaskManager() *TaskManager {
-	// TODO: Implement task manager initialization
-	return nil
+	return &TaskManager{
+		tasks:  make(map[int]*Task),
+		nextID: 1,
+	}
 }
 
 // AddTask adds a new task to the manager
 func (tm *TaskManager) AddTask(title, description string) (*Task, error) {
-	// TODO: Implement task addition
-	return nil, nil
+	if title == "" {
+		return nil, ErrEmptyTitle
+	}
+
+	tm.tasks[tm.nextID] = &Task{
+		ID: tm.nextID,
+		Title: title,
+		Description: description,
+		Done: false,
+		CreatedAt: time.Now(),
+	}
+	return tm.tasks[tm.nextID], nil
 }
 
 // UpdateTask updates an existing task
 func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) error {
-	// TODO: Implement task update
-	return nil
+	if title == "" {
+		return ErrEmptyTitle
+	}
+	
+	for _, task := range tm.tasks {
+		if task.ID == id {
+			task.Title = title
+			task.Description = description
+			task.Done = done
+			return nil
+		}
+	}
+	return ErrInvalidID
 }
 
 // DeleteTask removes a task from the manager
 func (tm *TaskManager) DeleteTask(id int) error {
-	// TODO: Implement task deletion
-	return nil
+	for _, task := range tm.tasks {
+		if task.ID == id {
+			delete(tm.tasks, id)
+			return nil
+		}
+	}
+	return ErrTaskNotFound
 }
 
 // GetTask retrieves a task by ID
 func (tm *TaskManager) GetTask(id int) (*Task, error) {
-	// TODO: Implement task retrieval
-	return nil, nil
+	for _, task := range tm.tasks {
+		if task.ID == id {
+			return task, nil
+		}
+	}
+	return nil, ErrTaskNotFound
 }
 
 // ListTasks returns all tasks, optionally filtered by done status
 func (tm *TaskManager) ListTasks(filterDone *bool) []*Task {
-	// TODO: Implement task listing with optional filter
-	return nil
+	var result []*Task
+	for _, task := range tm.tasks {
+		if task.Done == *filterDone {
+			result = append(result, task)
+		}
+	}
+	return result
 }
