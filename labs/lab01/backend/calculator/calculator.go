@@ -2,6 +2,8 @@ package calculator
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 )
 
 // ErrDivisionByZero is returned when attempting to divide by zero
@@ -32,12 +34,11 @@ func Divide(a, b float64) (float64, error) {
 
 // StringToFloat converts a string to float64
 func StringToFloat(s string) (float64, error) {
-	// TODO: Implement string to float conversion
-	return 0, nil
+	return strconv.ParseFloat(s, 64)
 }
 
 // FloatToString converts a float64 to string with specified precision
 func FloatToString(f float64, precision int) string {
-	// TODO: Implement float to string conversion
-	return ""
+	return fmt.Sprintf("%.*f", precision, f)
+
 }
