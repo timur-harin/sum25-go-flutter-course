@@ -16,7 +16,29 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement profile card UI
-    return Container();
+    return Container(
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundImage:
+                avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+            onBackgroundImageError: avatarUrl != null
+                ? (exception, stackTrace) {
+                    print('Image load error: $exception');
+                  }
+                : null,
+            child:
+                avatarUrl == null ? Text(name.isNotEmpty ? name[0] : '') : null,
+          ),
+          Text(
+            name,
+            style: TextStyle(fontSize: 20),
+          ),
+          Text(email, style: TextStyle(fontSize: 16)),
+          Text("Age: $age", style: TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
   }
 }

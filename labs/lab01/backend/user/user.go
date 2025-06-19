@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
 )
 
 var (
@@ -11,6 +13,8 @@ var (
 	ErrInvalidAge = errors.New("invalid age: must be between 0 and 150")
 	// ErrEmptyName is returned when the name is empty
 	ErrEmptyName = errors.New("name cannot be empty")
+	// The email format
+	emailRegexp = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 )
 
 // User represents a user in the system
@@ -22,24 +26,41 @@ type User struct {
 
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
-	// TODO: Implement user creation with validation
-	return nil, nil
+	user := &User{
+		Name: name,
+		Age: age,
+		Email: email,
+	}
+	err := user.Validate()
+	if err != nil{
+		return nil, err
+	}
+	return user, nil
 }
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement user validation
+	if u.Age > 150 || u.Age < 0{
+		return ErrInvalidAge
+	}
+	if !IsValidEmail(u.Email) {
+        return ErrInvalidEmail
+    }
+	if u.Name == ""{
+		return ErrEmptyName
+	}
 	return nil
 }
 
 // String returns a string representation of the user
 func (u *User) String() string {
-	// TODO: Implement string representation
-	return ""
+	if u == nil {
+        return "User<nil>"
+    }
+    return fmt.Sprintf("User{Age: %d, Name: %q, Email: %q}", u.Age, u.Name, u.Email)
 }
 
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
-	// TODO: Implement email validation
-	return false
+	return emailRegexp.MatchString(email)
 }
