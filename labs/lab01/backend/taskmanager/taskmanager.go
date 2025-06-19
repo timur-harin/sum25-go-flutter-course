@@ -5,13 +5,10 @@ import (
 	"time"
 )
 
+// Predefined errors
 var (
-	// ErrTaskNotFound is returned when a task is not found
 	ErrTaskNotFound = errors.New("task not found")
-	// ErrEmptyTitle is returned when the task title is empty
-	ErrEmptyTitle = errors.New("task title cannot be empty")
-	// ErrInvalidID is returned when the task ID is invalid
-	ErrInvalidID = errors.New("invalid task ID")
+	ErrEmptyTitle   = errors.New("title cannot be empty")
 )
 
 // Task represents a single task
@@ -40,7 +37,7 @@ func NewTaskManager() *TaskManager {
 // AddTask adds a new task to the manager
 func (tm *TaskManager) AddTask(title, description string) (Task, error) {
 	if title == "" {
-		return Task{}, errors.New("title cannot be empty")
+		return Task{}, ErrEmptyTitle
 	}
 
 	task := Task{
@@ -61,15 +58,15 @@ func (tm *TaskManager) AddTask(title, description string) (Task, error) {
 func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) error {
 	task, exists := tm.tasks[id]
 	if !exists {
-		return errors.New("task not found")
+		return ErrTaskNotFound
 	}
 
-	if title != "" {
-		task.Title = title
+	if title == "" {
+		return ErrEmptyTitle
 	}
-	if description != "" {
-		task.Description = description
-	}
+
+	task.Title = title
+	task.Description = description
 	task.Done = done
 
 	tm.tasks[id] = task
@@ -79,7 +76,7 @@ func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) 
 // DeleteTask removes a task from the manager
 func (tm *TaskManager) DeleteTask(id int) error {
 	if _, exists := tm.tasks[id]; !exists {
-		return errors.New("task not found")
+		return ErrTaskNotFound
 	}
 
 	delete(tm.tasks, id)
@@ -90,7 +87,7 @@ func (tm *TaskManager) DeleteTask(id int) error {
 func (tm *TaskManager) GetTask(id int) (Task, error) {
 	task, exists := tm.tasks[id]
 	if !exists {
-		return Task{}, errors.New("task not found")
+		return Task{}, ErrTaskNotFound
 	}
 	return task, nil
 }
