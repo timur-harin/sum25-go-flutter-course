@@ -76,7 +76,15 @@ class MyHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const CounterApp(),
+            ElevatedButton(
+              onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CounterApp()),
+              );
+            },
+            child: const Text('Открыть счётчик'),
+          ),
             const SizedBox(height: 24),
             const Text(
               'Registration Form Example',
