@@ -10,6 +10,7 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
+<<<<<<< HEAD
   void _incrementCounter() {
     // TODO: Implement this function
   }
@@ -20,10 +21,29 @@ class _CounterAppState extends State<CounterApp> {
 
   void _resetCounter() {
     // TODO: Implement this function
+=======
+  void _increment() {
+    setState(() {
+      _counter++;
+    });
+  }
+
+  void _decrement() {
+    setState(() {
+      _counter--;
+    });
+  }
+
+  void _reset() {
+   setState(() {
+      _counter = 0;
+    });
+>>>>>>> 8441780 (lab01 solution)
   }
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return Scaffold(
       appBar: AppBar(
         title: const Text('Counter App'),
@@ -53,6 +73,39 @@ class _CounterAppState extends State<CounterApp> {
           ],
         ),
       ),
+=======
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$_counter',
+          style: const TextStyle(fontSize: 32),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove),
+              onPressed: _decrement,
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _reset,
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: _increment,
+            ),
+          ],
+        ),
+        ElevatedButton(
+          onPressed: () {
+          },
+          child: const Text('Counter'),
+        ),
+      ],
+>>>>>>> 8441780 (lab01 solution)
     );
   }
 }

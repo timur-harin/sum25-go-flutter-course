@@ -16,22 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Lab 01 Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -44,6 +29,7 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -59,6 +45,17 @@ class MyHomePage extends StatelessWidget {
           ),
         ),
         body: const TabBarView(
+=======
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.amber,
+        title: const Text('Lab 01 Demo'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+>>>>>>> 8441780 (lab01 solution)
           children: [
             Center(
               child: SingleChildScrollView(
@@ -67,8 +64,32 @@ class MyHomePage extends StatelessWidget {
                 child: SizedBox.shrink(),
               ),
             ),
+<<<<<<< HEAD
             CounterApp(),
             RegistrationForm(),
+=======
+            const SizedBox(height: 8),
+            const ProfileCard(
+              name: 'Aleksei Fominykh',
+              email: 'a.fominykh@innopolis.university',
+              age: 19,
+              avatarUrl: null,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Counter App Example',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const CounterApp(),
+            const SizedBox(height: 24),
+            const Text(
+              'Registration Form Example',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const RegistrationForm(),
+>>>>>>> 8441780 (lab01 solution)
           ],
         ),
       ),

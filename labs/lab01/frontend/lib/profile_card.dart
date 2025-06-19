@@ -17,6 +17,7 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+<<<<<<< HEAD
       margin: const EdgeInsets.all(16.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -34,6 +35,43 @@ class ProfileCard extends StatelessWidget {
             const SizedBox(height: 8),
             // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
             
+=======
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              child: avatarUrl == null
+                  ? Text(
+                      name.isNotEmpty ? name[0] : '?',
+                      style: const TextStyle(fontSize: 24, color: Colors.white),
+                    )
+                  : null,
+              backgroundColor: avatarUrl == null ? Colors.blueGrey : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style:
+                        const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(email),
+                  const SizedBox(height: 4),
+                  Text('Age: $age'),
+                ],
+              ),
+            ),
+>>>>>>> 8441780 (lab01 solution)
           ],
         ),
       ),
