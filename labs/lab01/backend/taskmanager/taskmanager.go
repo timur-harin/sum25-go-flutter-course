@@ -14,12 +14,6 @@ var (
 	ErrInvalidID = errors.New("invalid task ID")
 )
 
-type User struct {
-	Name  string
-	Age   int
-	Email string
-}
-
 // Task represents a single task
 type Task struct {
 	ID          int
