@@ -68,7 +68,7 @@ class MyHomePage extends StatelessWidget {
               name: 'John Doe',
               email: 'john@example.com',
               age: 30,
-              avatarUrl: 'https://example.com/avatar.jpg',
+              avatarUrl: null, // заменено с URL на null
             ),
             const SizedBox(height: 24),
             const Text(
@@ -76,7 +76,18 @@ class MyHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const CounterApp(),
+
+            // 🔽 ДОБАВЛЕНО
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CounterApp()),
+                );
+              },
+              child: const Text('Counter'),
+            ),
+
             const SizedBox(height: 24),
             const Text(
               'Registration Form Example',
