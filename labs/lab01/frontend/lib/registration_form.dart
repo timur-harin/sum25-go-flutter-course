@@ -12,6 +12,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String? _successMessage;
 
   @override
   void dispose() {
@@ -22,12 +23,76 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _submitForm() {
-    // TODO: Implement form submission
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _successMessage = 'Registration successful!';
+      });
+    }
+  }
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your name';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null ||
+        value.isEmpty ||
+        !value.contains('@') ||
+        !value.contains('.')) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement registration form UI
-    return Container();
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            key: const Key('name'),
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Name'),
+            validator: _validateName,
+          ),
+          TextFormField(
+            key: const Key('email'),
+            controller: _emailController,
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
+            validator: _validateEmail,
+          ),
+          TextFormField(
+            key: const Key('password'),
+            controller: _passwordController,
+            decoration: const InputDecoration(labelText: 'Password'),
+            validator: _validatePassword,
+          ),
+          ElevatedButton(
+            onPressed: _submitForm,
+            child: const Text('Submit'),
+          ),
+          if (_successMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                _successMessage!,
+                style: const TextStyle(color: Colors.green),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
