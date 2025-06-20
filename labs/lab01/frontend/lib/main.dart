@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/counter_app.dart';
-import 'package:frontend/profile_card.dart';
-import 'package:frontend/registration_form.dart';
+import 'counter_app.dart';
+import 'profile_card.dart';
+import 'registration_form.dart';
 
 void main() {
   runApp(const MyApp());
@@ -59,6 +59,16 @@ class MyHomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const CounterApp(),
+                  ),
+                );
+              },
+              child: const Text("Counter"),
+            ),
             const Text(
               'Profile Card Example',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
