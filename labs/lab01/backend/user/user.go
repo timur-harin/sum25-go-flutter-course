@@ -25,19 +25,19 @@ type User struct {
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
 	if name == "" {
-		return nil, ErrEmptyName
+		return nil, ErrInvalidEmail
 	}
-	if age < 0 || age > 150 {
+	if age <= 0 || age > 150 {
 		return nil, ErrInvalidAge
 	}
-	if !IsValidEmail(email) {
+	if email == "" {
 		return nil, ErrInvalidEmail
 	}
 	return &User{
-		Name:  name,
-		Age:   age,
-		Email: email,
-	}, nil
+			name,
+			age,
+			email},
+		nil
 }
 
 // Validate checks if the user data is valid
