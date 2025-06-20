@@ -120,6 +120,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
+
                 child: const Text(
                   'Submit',
                   style: TextStyle(fontSize: 18),

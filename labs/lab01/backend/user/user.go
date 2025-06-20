@@ -27,12 +27,15 @@ func NewUser(name string, age int, email string) (*User, error) {
 	if name == "" {
 		return nil, ErrInvalidEmail
 	}
+
 	if age <= 0 || age > 150 {
 		return nil, ErrInvalidAge
 	}
+
 	if email == "" {
 		return nil, ErrInvalidEmail
 	}
+
 	return &User{
 			name,
 			age,

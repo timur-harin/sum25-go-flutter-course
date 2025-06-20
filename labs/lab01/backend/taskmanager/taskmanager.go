@@ -83,6 +83,7 @@ func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) 
 
 // DeleteTask removes a task from the manager
 func (tm *TaskManager) DeleteTask(id int) error {
+
 	if id <= 0 {
 		return ErrInvalidID
 	}

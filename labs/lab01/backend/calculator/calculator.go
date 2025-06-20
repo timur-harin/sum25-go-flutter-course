@@ -19,7 +19,7 @@ func Subtract(a, b float64) float64 {
 	return a - b
 }
 
-// Multiply returns the product of two numbers
+// Multiply returns  the product of two numbers
 func Multiply(a, b float64) float64 {
 	return a * b
 }

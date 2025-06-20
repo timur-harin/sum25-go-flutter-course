@@ -58,6 +58,7 @@ class ProfileCard extends StatelessWidget {
                       color: Colors.grey[700],
                     ),
                   ),
+
                   const SizedBox(height: 8),
                   Text(
                     'Age: $age',
