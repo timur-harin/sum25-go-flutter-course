@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"strings"
 )
 
 var (
@@ -23,23 +24,60 @@ type User struct {
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
 	// TODO: Implement user creation with validation
-	return nil, nil
+	u := &User{
+		Name:  name,
+		Age:   age,
+		Email: email,
+	}
+
+	if err := u.Validate(); err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
 	// TODO: Implement user validation
+	if u.Age < 0 || u.Age > 150 {
+		return ErrInvalidAge
+	}
+	if u.Name == "" {
+		return ErrEmptyName
+	}
+	if !IsValidEmail(u.Email) {
+		return ErrInvalidEmail
+	}
+
 	return nil
 }
 
 // String returns a string representation of the user
 func (u *User) String() string {
 	// TODO: Implement string representation
-	return ""
+	return u.Name + " (" + u.Email + "), age: " + string(rune(u.Age))
 }
 
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
 	// TODO: Implement email validation
-	return false
+	if len(email) < 5 {
+		return false
+	}
+
+	atIndex := strings.Index(email, "@")
+	if atIndex < 1 || atIndex >= len(email)-1 {
+		return false
+	}
+
+	domain := email[atIndex+1:]
+	dotIndex := strings.LastIndex(domain, ".")
+	if dotIndex == -1 || dotIndex == 0 || dotIndex == len(domain)-1 {
+		return false
+	}
+
+	tld := domain[dotIndex+1:]
+
+	return len(tld) >= 2
 }
