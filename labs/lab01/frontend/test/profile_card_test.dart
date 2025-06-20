@@ -49,7 +49,7 @@ void main() {
             name: 'John',
             email: 'john@example.com',
             age: 30,
-            avatarUrl: 'https://example.com/avatar.jpg',
+            avatarUrl: 'https://t.me/i/userpic/320/L0ep1yvhyFBLGN_NIG-EgMts7voEHfvNlfRW3nKCaOc.jpg',
           ),
         ),
       ),
