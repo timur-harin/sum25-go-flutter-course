@@ -18,7 +18,7 @@ void main() {
     // Tap the 'Counter' button
     await tester.tap(find.text('Counter'));
     await tester.pumpAndSettle();
-
+    
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
     expect(find.text('1'), findsNothing);
