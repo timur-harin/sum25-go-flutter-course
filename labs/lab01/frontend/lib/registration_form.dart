@@ -12,6 +12,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  var _succes = "";
 
   @override
   void dispose() {
@@ -22,12 +23,63 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _submitForm() {
-    // TODO: Implement form submission
+    setState(() {
+      _succes = "Registration successful!";
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement registration form UI
-    return Container();
+    return Form(key: _formKey, child: Column(
+      children: [
+        TextFormField(
+          key: Key('name'),
+          decoration: const InputDecoration(labelText: "Name"),
+          validator: (value) {
+            if (value == null || value.isEmpty){
+              return "Please enter your name";
+            }
+            return null;
+          },
+          onSaved: (value) => _nameController.text = value!,
+        ),
+        TextFormField(
+          key: Key('email'),
+          decoration: const InputDecoration(labelText: "email"),
+          validator: (value) {
+            if (value == null || value.isEmpty){
+              return "Please enter a valid email";
+            }
+            else if (!value.contains("@")){
+              return "Please enter a valid email";
+            }
+            return null;
+          },
+          onSaved: (value) => _emailController.text = value!,
+        ),
+        TextFormField(
+          key: Key('password'),
+          decoration: const InputDecoration(labelText: "password"),
+          validator: (value) {
+            if (value == null || value.isEmpty){
+              return "Password must be at least 6 characters";
+            }
+            if (value.length < 6){
+              return "Password must be at least 6 characters";
+            }
+            return null;
+          },
+          onSaved: (value) => _passwordController.text = value!,
+        ),
+        ElevatedButton(onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            _formKey.currentState!.save();
+            _submitForm();
+          }
+        }, child: const Text("Submit")),
+        Text(_succes)
+      ],
+    )
+    );
   }
 }
