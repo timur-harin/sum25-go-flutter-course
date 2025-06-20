@@ -123,7 +123,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb?sslmode=disable
-        run: go test -v -tags=integration ./tests/...
+        run: go test -v -tags=integration ./...
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

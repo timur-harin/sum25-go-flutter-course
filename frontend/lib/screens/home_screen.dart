@@ -35,7 +35,6 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // TODO: Add API call to Go backend
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('API integration coming soon!')),
                 );
