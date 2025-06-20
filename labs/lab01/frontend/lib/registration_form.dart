@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RegistrationForm extends StatefulWidget {
-  const RegistrationForm({Key? key}) : super(key: key);
+  const RegistrationForm({super.key}); // IntelliSense suggestion
 
   @override
   State<RegistrationForm> createState() => _RegistrationFormState();
@@ -13,6 +13,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String _message = "";
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -22,12 +24,79 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _submitForm() {
-    // TODO: Implement form submission
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _message = "Registration successful!";
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement registration form UI
-    return Container();
+    return Form(
+      key: _formKey,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+
+          children: [
+            // Name text field
+            TextFormField(
+              key: const Key("name"),
+              controller: _nameController,
+              validator:(value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter your name";
+                }
+
+                return null;
+              },            
+            ),
+
+            const SizedBox(height: 20,),
+
+            // Email text field
+            TextFormField(
+              key: const Key("email"),
+              controller: _emailController,
+              validator:(value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter a valid email";
+                }
+
+                if (!value.contains('@') || !value.contains('.')) {
+                  return "Please enter a valid email";
+                }
+
+                return null;
+              },            
+            ),
+
+            const SizedBox(height: 20,),
+
+            // Password text field
+            TextFormField(
+              key: const Key("password"),
+              controller: _passwordController,
+              validator:(value) {
+                if (value == null || value.length < 6) {
+                  return "Password must be at least 6 characters";
+                }
+
+                return null;
+              },            
+            ),
+            
+            const SizedBox(height: 20),
+
+            ElevatedButton(onPressed: _submitForm, child: const Text("Submit")),
+
+            const SizedBox(height: 20),
+
+            Text(_message),
+          ],
+        ),
+      ),
+    );
   }
 }
