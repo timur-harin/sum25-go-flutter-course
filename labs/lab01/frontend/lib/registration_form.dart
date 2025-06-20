@@ -30,12 +30,9 @@ class _RegistrationFormState extends State<RegistrationForm> {
           duration: Duration(seconds: 2),
         ),
       );
-
-      debugPrint('Name: ${_nameController.text}');
-      debugPrint('Email: ${_emailController.text}');
-      debugPrint('Password: ${_passwordController.text}');
     }
   }
+
   InputDecoration _inputDecoration(String label, {Widget? suffix}) {
     return InputDecoration(
       labelText: label,
@@ -44,6 +41,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
       isDense: true,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -60,28 +58,31 @@ class _RegistrationFormState extends State<RegistrationForm> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
+                key: const Key('name'),
                 controller: _nameController,
-                decoration: _inputDecoration('Name'),
+                decoration: _inputDecoration('name'),
                 validator: (value) =>
-                (value == null || value.isEmpty) ? 'Enter name' : null,
+                (value == null || value.isEmpty) ? 'Please enter your name' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
+                key: const Key('email'),
                 controller: _emailController,
-                decoration: _inputDecoration('Email'),
+                decoration: _inputDecoration('email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || !RegExp(r'^.+@.+\..+\$').hasMatch(value)) {
-                    return 'Enter valid email';
+                    return 'Please enter a valid email';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 12),
               TextFormField(
+                key: const Key('password'),
                 controller: _passwordController,
                 decoration: _inputDecoration(
-                  'Password',
+                  'password',
                   suffix: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -97,8 +98,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 ),
                 obscureText: _obscurePassword,
                 validator: (value) {
-                  if (value == null || value.length < 8) {
-                    return 'Min 8 chars';
+                  if (value == null || value.length < 6) {
+                    return 'Password must be at least 6 characters';
                   }
                   return null;
                 },
@@ -107,6 +108,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  key: const Key('submitButton'),
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -115,7 +117,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     elevation: 0,
                   ),
-                  child: const Text('Register'),
+                  child: const Text('Submit'),
                 ),
               ),
             ],

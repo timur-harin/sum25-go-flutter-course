@@ -27,7 +27,7 @@ class _CounterAppState extends State<CounterApp> {
       _counter = 0;
     });
   }
-
+  final resetButtonKey = Key('reset_button');
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -54,7 +54,7 @@ class _CounterAppState extends State<CounterApp> {
           children: [
             const SizedBox(height: 12),
             Text(
-              'Value of counter',
+              'Counter',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 18,
@@ -72,7 +72,7 @@ class _CounterAppState extends State<CounterApp> {
             ),
             const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: _decrement,
@@ -83,6 +83,12 @@ class _CounterAppState extends State<CounterApp> {
                   ),
                   child: const Icon(Icons.remove, color: Colors.black),
                 ),
+                IconButton(
+                  key: resetButtonKey,
+                  icon: const Icon(Icons.refresh, color: Colors.black),
+                  onPressed: _reset,
+                  padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 14),
+                ),
                 ElevatedButton(
                   onPressed: _increment,
                   style: ElevatedButton.styleFrom(
@@ -92,22 +98,9 @@ class _CounterAppState extends State<CounterApp> {
                   ),
                   child: const Icon(Icons.add, color: Colors.black),
                 ),
-                ElevatedButton(
-                  onPressed: _reset,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.all(7),
-                    elevation: 4,
-                  ),
-                  child: const Text(
-                    'Reset',
-                    style: TextStyle(color: Colors.black, fontSize: 16),
-                  ),
-                ),
               ],
             ),
+
           ],
         ),
       ),
