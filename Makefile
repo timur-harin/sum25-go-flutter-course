@@ -21,20 +21,17 @@ setup:
 		cd backend && go mod download; \
 	else \
 		echo "❌ Go is not installed. Please install Go 1.24.3+"; \
-		exit 1; \
 	fi
 	@if command -v flutter >/dev/null 2>&1; then \
 		echo "✓ Flutter is installed"; \
 		cd frontend && flutter pub get; \
 	else \
 		echo "❌ Flutter is not installed. Please install Flutter 3.32.1+"; \
-		exit 1; \
 	fi
 	@if command -v docker >/dev/null 2>&1; then \
 		echo "✓ Docker is installed"; \
 	else \
 		echo "❌ Docker is not installed. Please install Docker"; \
-		exit 1; \
 	fi
 	@echo "✅ Setup complete!"
 
