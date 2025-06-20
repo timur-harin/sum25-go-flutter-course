@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"strings"
+	"strconv"
 )
 
 var (
@@ -22,24 +24,78 @@ type User struct {
 
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
-	// TODO: Implement user creation with validation
-	return nil, nil
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, ErrEmptyName
+	}
+
+	// Проверяем возраст
+	if age < 0 || age > 150 {
+		return nil, ErrInvalidAge
+	}
+
+	// Проверяем email
+	if !IsValidEmail(email) {
+		return nil, ErrInvalidEmail
+	}
+
+	return &User{
+		Name:  name,
+		Age:   age,
+		Email: strings.TrimSpace(email),
+	}, nil
 }
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement user validation
+	// Проверяем имя
+	if strings.TrimSpace(u.Name) == "" {
+		return ErrEmptyName
+	}
+
+	// Проверяем возраст
+	if u.Age < 0 || u.Age > 150 {
+		return ErrInvalidAge
+	}
+
+	// Проверяем email
+	if !IsValidEmail(u.Email) {
+		return ErrInvalidEmail
+	}
+
 	return nil
 }
 
 // String returns a string representation of the user
 func (u *User) String() string {
-	// TODO: Implement string representation
-	return ""
+    return "User{Name: " + u.Name + ", Age: " + strconv.Itoa(u.Age) + ", Email: " + u.Email + "}"
 }
 
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
-	// TODO: Implement email validation
-	return false
+    email = strings.TrimSpace(email)
+    if email == "" {
+        return false
+    }
+
+    // Проверяем наличие пробелов в email
+    if strings.ContainsAny(email, " \t\n\r") {
+        return false
+    }
+
+    parts := strings.Split(email, "@")
+    if len(parts) != 2 {
+        return false
+    }
+
+    if parts[0] == "" || parts[1] == "" {
+        return false
+    }
+
+    // Проверяем наличие точки в доменной части
+    if !strings.Contains(parts[1], ".") {
+        return false
+    }
+
+    return true
 }
