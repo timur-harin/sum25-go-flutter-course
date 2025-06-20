@@ -71,7 +71,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 decoration: _inputDecoration('email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || !RegExp(r'^.+@.+\..+\$').hasMatch(value)) {
+                  if (value == null || !RegExp(r'^.+@.+\..+$').hasMatch(value)) {
                     return 'Please enter a valid email';
                   }
                   return null;
