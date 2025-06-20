@@ -2,44 +2,56 @@ package user
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
 
 var (
-	// ErrInvalidEmail is returned when the email format is invalid
 	ErrInvalidEmail = errors.New("invalid email format")
-	// ErrInvalidAge is returned when the age is invalid
-	ErrInvalidAge = errors.New("invalid age: must be between 0 and 150")
-	// ErrEmptyName is returned when the name is empty
-	ErrEmptyName = errors.New("name cannot be empty")
+	ErrInvalidAge   = errors.New("invalid age: must be between 0 and 150")
+	ErrEmptyName    = errors.New("name cannot be empty")
 )
 
-// User represents a user in the system
 type User struct {
 	Name  string
 	Age   int
 	Email string
 }
 
-// NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
-	// TODO: Implement user creation with validation
-	return nil, nil
+	var user = User{name, age, email}
+	err := user.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return &User{name, age, email}, nil
 }
 
-// Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement user validation
+
+	if len(u.Name) == 0 {
+		return ErrEmptyName
+	}
+	if u.Age < 0 || u.Age > 150 {
+		return ErrInvalidAge
+	}
+	if !IsValidEmail(u.Email) == true {
+		return ErrInvalidEmail
+	}
 	return nil
 }
 
-// String returns a string representation of the user
 func (u *User) String() string {
-	// TODO: Implement string representation
-	return ""
+	s := fmt.Sprintf("%s %d %s", u.Name, u.Age, u.Email)
+	return s
 }
 
-// IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
-	// TODO: Implement email validation
-	return false
+	if email == "" || len(email) == 0 {
+		return false
+	}
+	if strings.Contains(email, "@") == false {
+		return false
+	}
+	return true
 }
