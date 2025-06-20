@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"net/mail"
+	"strconv"
 )
 
 var (
@@ -23,23 +25,42 @@ type User struct {
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
 	// TODO: Implement user creation with validation
-	return nil, nil
+	if _, err := mail.ParseAddress(email); err != nil {
+		return nil, ErrInvalidEmail
+	} else if age < 0 || age > 150 {
+		return nil, ErrInvalidAge
+	} else if name == "" {
+		return nil, ErrEmptyName
+	} else {
+		return &User{name, age, email}, nil
+	}
 }
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
 	// TODO: Implement user validation
-	return nil
+	if _, err := mail.ParseAddress(u.Email); err != nil {
+		return ErrInvalidEmail
+	} else if u.Age < 0 || u.Age > 150 {
+		return ErrInvalidAge
+	} else if u.Name == "" {
+		return ErrEmptyName
+	} else {
+		return nil
+	}
 }
 
 // String returns a string representation of the user
 func (u *User) String() string {
 	// TODO: Implement string representation
-	return ""
+	return u.Name + " " + u.Email + strconv.Itoa(u.Age)
 }
 
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
 	// TODO: Implement email validation
-	return false
+	if _, err := mail.ParseAddress(email); err != nil {
+		return false
+	}
+	return true
 }
