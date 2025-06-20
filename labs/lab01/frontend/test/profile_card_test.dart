@@ -3,15 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/profile_card.dart';
 
 void main() {
-  testWidgets('ProfileCard displays user information correctly', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('ProfileCard displays user information correctly',
+      (WidgetTester tester) async {
     const name = 'John Doe';
     const email = 'john@example.com';
     const age = 30;
 
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: ProfileCard(name: name, email: email, age: age),
         ),
@@ -23,11 +22,11 @@ void main() {
     expect(find.text('Age: $age'), findsOneWidget);
   });
 
-  testWidgets('ProfileCard handles optional avatar', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('ProfileCard handles optional avatar',
+      (WidgetTester tester) async {
+    // Test with no avatar URL
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: ProfileCard(
             name: 'John',
@@ -42,8 +41,9 @@ void main() {
     expect(find.byType(CircleAvatar), findsOneWidget);
     expect(find.text('J'), findsOneWidget);
 
+    // Test with avatar URL (mock)
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: ProfileCard(
             name: 'John',
