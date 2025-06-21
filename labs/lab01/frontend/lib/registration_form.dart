@@ -12,6 +12,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -22,12 +23,77 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _submitForm() {
-    // TODO: Implement form submission
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful!')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement registration form UI
-    return Container();
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            key: const Key('name'),
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Name'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your name';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            key: const Key('email'),
+            controller: _emailController,
+            decoration: const InputDecoration(labelText: 'Email'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a valid email';
+              }
+              if (!value.contains('@')) {
+                return 'Please enter a valid email';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            key: const Key('password'),
+            controller: _passwordController,
+            obscureText: !_isPasswordVisible,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Password must be at least 6 characters';
+              }
+              if (value.length < 6) {
+                return 'Password must be at least 6 characters';
+              }
+              return null;
+            },
+          ),
+          ElevatedButton(
+            onPressed: _submitForm,
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
   }
 }
