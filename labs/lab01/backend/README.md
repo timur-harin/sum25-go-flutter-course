@@ -1,6 +1,6 @@
 # Lab 01 - Go Backend
 
-This directory contains the Go implementation of three basic components:
+This directory contains the Go implementation of three components:
 
 1. **Calculator Package**: Basic arithmetic operations and type conversions
 2. **User Management**: User struct with validation methods
