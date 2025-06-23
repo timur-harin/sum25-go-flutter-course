@@ -2,43 +2,49 @@ package calculator
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 )
 
 // ErrDivisionByZero is returned when attempting to divide by zero
 var ErrDivisionByZero = errors.New("division by zero")
+var ErrInvalidInput = errors.New("invalid input string")
 
 // Add returns the sum of two numbers
 func Add(a, b float64) float64 {
-	// TODO: Implement addition
-	return 0
+	return a + b
 }
 
 // Subtract returns the difference between two numbers
 func Subtract(a, b float64) float64 {
-	// TODO: Implement subtraction
-	return 0
+	return a - b
 }
 
 // Multiply returns the product of two numbers
 func Multiply(a, b float64) float64 {
-	// TODO: Implement multiplication
-	return 0
+	return a * b
 }
 
 // Divide returns the quotient of two numbers
 func Divide(a, b float64) (float64, error) {
-	// TODO: Implement division with error handling
-	return 0, nil
+	if b == 0 {
+		return 0, ErrDivisionByZero
+	} else {
+		return a / b, nil
+	}
 }
 
 // StringToFloat converts a string to float64
 func StringToFloat(s string) (float64, error) {
-	// TODO: Implement string to float conversion
-	return 0, nil
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+	return f, nil
 }
 
 // FloatToString converts a float64 to string with specified precision
 func FloatToString(f float64, precision int) string {
-	// TODO: Implement float to string conversion
-	return ""
+	format := fmt.Sprintf("%%.%df", precision)
+	return fmt.Sprintf(format, f)
 }

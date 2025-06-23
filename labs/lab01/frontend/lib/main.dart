@@ -54,36 +54,36 @@ class MyHomePage extends StatelessWidget {
         // the App.build method, and use it to set our appbar title.
         title: const Text('Lab 01 Demo'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Profile Card Example',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const ProfileCard(
+            SizedBox(height: 8),
+            ProfileCard(
               name: 'John Doe',
               email: 'john@example.com',
               age: 30,
-              avatarUrl: 'https://example.com/avatar.jpg',
+              avatarUrl: null,
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 24),
+            Text(
               'Counter App Example',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const CounterApp(),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: 8),
+            CounterApp(),
+            SizedBox(height: 24),
+            Text(
               'Registration Form Example',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const RegistrationForm(),
+            SizedBox(height: 8),
+            RegistrationForm(),
           ],
         ),
       ),
