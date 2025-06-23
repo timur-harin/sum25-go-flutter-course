@@ -30,7 +30,7 @@ git pull upstream main
 git push origin main
 
 # Create a new branch for the lab
-git checkout -b lab01-surname-name
+git checkout -b lab01-farkhetdinova-aigul
 ```
 
 **Branch naming convention**: `labXX-surname-name` (all lowercase, no spaces, like in Moodle)
@@ -54,7 +54,7 @@ make test
 make lint
 
 # Test your specific lab
-cd labs/labXX
+cd labs/lab01
 # Run Go tests
 cd backend && go test ./...
 # Run Flutter tests  
@@ -76,7 +76,7 @@ git commit -m "lab01: implement user authentication with JWT
 - Update documentation"
 
 # Push to your fork
-git push origin lab01-surname-name
+git push origin lab01-Farkhetdinova-Aigul
 ```
 
 **Commit message guidelines**:
