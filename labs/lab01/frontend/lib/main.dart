@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -49,7 +49,7 @@ class MyHomePage extends StatelessWidget {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: const Text('Lab 01 Demo'),
@@ -76,7 +76,7 @@ class MyHomePage extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const CounterApp(),
+            TextButton(onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => const CounterApp()));}, child: Text('Counter')),
             const SizedBox(height: 24),
             const Text(
               'Registration Form Example',

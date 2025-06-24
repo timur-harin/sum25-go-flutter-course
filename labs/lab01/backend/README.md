@@ -1,4 +1,4 @@
-# Lab 01 - Go Backend
+пше # Lab 01 - Go Backend
 
 This directory contains the Go implementation of three basic components:
 

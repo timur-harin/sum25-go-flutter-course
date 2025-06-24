@@ -1,4 +1,4 @@
-# Lab 01: Foundations
+c# Lab 01: Foundations
 
 This lab focuses on implementing basic Go and Flutter components based on the fundamental concepts covered in Lecture 01.
 
