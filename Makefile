@@ -18,14 +18,14 @@ setup:
 	@echo "🚀 Setting up development environment..."
 	@if command -v go >/dev/null 2>&1; then \
 		echo "✓ Go is installed"; \
-		cd backend && go mod download; \
+		( cd backend && go mod download ); \
 	else \
 		echo "❌ Go is not installed. Please install Go 1.24.3+"; \
 		exit 1; \
 	fi
 	@if command -v flutter >/dev/null 2>&1; then \
 		echo "✓ Flutter is installed"; \
-		cd frontend && flutter pub get; \
+		( cd frontend && flutter pub get ); \
 	else \
 		echo "❌ Flutter is not installed. Please install Flutter 3.32.1+"; \
 		exit 1; \
@@ -37,6 +37,7 @@ setup:
 		exit 1; \
 	fi
 	@echo "✅ Setup complete!"
+
 
 # Start development environment
 dev:

@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"strings"
+	"fmt"
 )
 
 // Predefined errors

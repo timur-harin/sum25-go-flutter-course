@@ -2,6 +2,7 @@ package calculator
 
 import (
 	"errors"
+	"strconv"
 )
 
 // ErrDivisionByZero is returned when attempting to divide by zero
