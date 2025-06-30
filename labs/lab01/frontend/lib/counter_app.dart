@@ -11,20 +11,50 @@ class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
   void _increment() {
-    // TODO: Implement increment
-  }
+  setState(() {
+    _counter++;
+  });
+}
 
-  void _decrement() {
-    // TODO: Implement decrement
-  }
+void _decrement() {
+  setState(() {
+    _counter--;
+  });
+}
 
-  void _reset() {
-    // TODO: Implement reset
-  }
-
+void _reset() {
+  setState(() {
+    _counter = 0;
+  });
+}
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement counter UI
-    return Container();
+    return Container(
+      color: Colors.white,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$_counter'
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _increment,
+            child: Icon(Icons.add),
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _decrement,
+            child: Icon(Icons.remove),
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _reset,
+            child: Icon(Icons.refresh),
+          ),
+        ],
+      ),
+    );
   }
 }

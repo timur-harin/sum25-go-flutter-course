@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"regexp"
 )
 
 var (
@@ -20,17 +21,35 @@ type User struct {
 	Email string
 }
 
+// Validate checks if the user data is valid
+func (u *User) Validate() error {
+	if u.Name==""{
+		return ErrEmptyName
+	}
+	if u.Age<0 || u.Age>150{
+		return ErrInvalidAge
+	}
+	if !IsValidEmail(u.Email){
+		return ErrInvalidEmail
+	}
+	return nil
+}
+
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
 	// TODO: Implement user creation with validation
-	return nil, nil
+	u:=User{
+		Name: name,
+		Age: age,
+		Email: email,
+	}
+	if u.Validate()==nil{
+		return &u, nil
+	}
+	return nil,u.Validate()
 }
 
-// Validate checks if the user data is valid
-func (u *User) Validate() error {
-	// TODO: Implement user validation
-	return nil
-}
+
 
 // String returns a string representation of the user
 func (u *User) String() string {
@@ -40,6 +59,5 @@ func (u *User) String() string {
 
 // IsValidEmail checks if the email format is valid
 func IsValidEmail(email string) bool {
-	// TODO: Implement email validation
-	return false
+	return regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`).MatchString(email)
 }
