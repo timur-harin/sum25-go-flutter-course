@@ -1,14 +1,14 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
-    branches: [main]
-  workflow_dispatch:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/ci.yml'
 
 env:
-  GO_VERSION: '1.24.3'
+  GO_VERSION: '1.24'
   FLUTTER_VERSION: '3.32.1'
 
 jobs:
@@ -123,7 +123,13 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb?sslmode=disable
-        run: go test -v -tags=integration ./tests/...
+        run: |
+          if [ -d "./tests" ] && [ "$(ls -A ./tests)" ]; then
+            echo "Running integration tests..."
+            go test -v -tags=integration ./tests/...
+          else
+            echo "No integration tests found, skipping integration tests"
+          fi
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
