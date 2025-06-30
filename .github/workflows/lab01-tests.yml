@@ -6,6 +6,10 @@ on:
       - 'labs/lab01/**'
       - '.github/workflows/lab01-tests.yml'
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   test:
     name: Run Lab 01 Tests
@@ -76,16 +80,15 @@ jobs:
           
       - name: Calculate score
         id: score
-        shell: bash
         run: |
           TOTAL=0
-          [[ "${{ steps.go-tests.outputs.calculator_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
-          [[ "${{ steps.go-tests.outputs.user_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
-          [[ "${{ steps.go-tests.outputs.taskmanager_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
-          [[ "${{ steps.flutter-tests.outputs.profile_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
-          [[ "${{ steps.flutter-tests.outputs.counter_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
-          [[ "${{ steps.flutter-tests.outputs.registration_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
-          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          if [[ "${{ steps.go-tests.outputs.calculator_passed }}" == "true" ]]; then ((TOTAL++)); fi
+          if [[ "${{ steps.go-tests.outputs.user_passed }}" == "true" ]]; then ((TOTAL++)); fi
+          if [[ "${{ steps.go-tests.outputs.taskmanager_passed }}" == "true" ]]; then ((TOTAL++)); fi
+          if [[ "${{ steps.flutter-tests.outputs.profile_passed }}" == "true" ]]; then ((TOTAL++)); fi
+          if [[ "${{ steps.flutter-tests.outputs.counter_passed }}" == "true" ]]; then ((TOTAL++)); fi
+          if [[ "${{ steps.flutter-tests.outputs.registration_passed }}" == "true" ]]; then ((TOTAL++)); fi
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
           
       - name: Comment PR with score
         uses: actions/github-script@v7

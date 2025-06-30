@@ -252,3 +252,55 @@ func TestDeleteTask(t *testing.T) {
 		})
 	}
 }
+
+func TestListTasks(t *testing.T) {
+	tm := NewTaskManager()
+
+	// Add some tasks
+	_, _ = tm.AddTask("Task 1", "Description 1")
+	task2, _ := tm.AddTask("Task 2", "Description 2")
+	_, _ = tm.AddTask("Task 3", "Description 3")
+
+	// Mark one task as done
+	tm.UpdateTask(task2.ID, task2.Title, task2.Description, true)
+
+	tests := []struct {
+		name     string
+		filter   *bool
+		expected int
+	}{
+		{
+			name:     "all tasks (no filter)",
+			filter:   nil,
+			expected: 3,
+		},
+		{
+			name:     "only done tasks",
+			filter:   &[]bool{true}[0],
+			expected: 1,
+		},
+		{
+			name:     "only pending tasks",
+			filter:   &[]bool{false}[0],
+			expected: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tasks := tm.ListTasks(tt.filter)
+			if len(tasks) != tt.expected {
+				t.Errorf("ListTasks() returned %d tasks, want %d", len(tasks), tt.expected)
+			}
+
+			// Verify that filtered tasks match the filter criteria
+			if tt.filter != nil {
+				for _, task := range tasks {
+					if task.Done != *tt.filter {
+						t.Errorf("Task %d has Done=%v, expected %v", task.ID, task.Done, *tt.filter)
+					}
+				}
+			}
+		})
+	}
+}
