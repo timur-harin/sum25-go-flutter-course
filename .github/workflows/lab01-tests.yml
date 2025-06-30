@@ -1,6 +1,8 @@
 name: Lab 01 Tests
 
 on:
+  push: 
+    branches: [lab01-*]
   pull_request:
     paths:
       - 'labs/lab01/**'
