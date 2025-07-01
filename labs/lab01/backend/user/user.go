@@ -51,14 +51,11 @@ func NewUser(name string, age int, email string) (*User, error) {
 	return user, nil
 }
 
-// IsValidEmail checks if the email format is valid
-// You can use regexp.MustCompile to compile the email regex
 func IsValidEmail(email string) bool {
 	var re = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	return re.MatchString(email)
 }
 
-// IsValidName checks if the name is valid, returns false if the name is empty or longer than 30 characters
 func IsValidName(name string) bool {
 	length := len(name)
 	return length >= 1 && length <= 30
