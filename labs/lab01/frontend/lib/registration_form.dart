@@ -50,32 +50,42 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 TextFormField(
                   key: const Key('name'),
                   // TODO: use _nameController
+                  controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Name',
                     hintText: 'Enter your name',
                   ),
                   validator: (value) {
                     // TODO: validate if value is not null or empty and return 'Please enter your name'
-                    return null;
+                    if (value != null && value.isNotEmpty) {
+                      return null;
+                    }
+                    return 'Please enter your name';
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('email'),
                   // TODO: use _emailController
+                  controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
                   ),
                   validator: (value) {
                     // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
-                    return null;
+                    final regExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    if (value != null && value.isNotEmpty && regExp.hasMatch(value)) {
+                      return null;
+                    }
+                    return 'Please enter a valid email';
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('password'),
                   // TODO: use _passwordController
+                  controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
@@ -83,11 +93,15 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   obscureText: true,
                   validator: (value) {
                     // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
-                    return null;
+                    if (value != null && value.isNotEmpty && value.length > 5) {
+                      return null;
+                    }
+                    return 'Password must be at least 6 characters';
                   },
                 ),
                 const SizedBox(height: 32),
                 // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+                ElevatedButton(onPressed: _submitForm, child: Text('Submit'), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue,),)
               ],
             ),
           ),
