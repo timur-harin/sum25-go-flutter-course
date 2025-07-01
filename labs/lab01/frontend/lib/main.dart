@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'counter_app.dart';
-import 'profile_card.dart';
-import 'registration_form.dart';
+import 'package:frontend/counter_app.dart';
+import 'package:frontend/profile_card.dart';
+import 'package:frontend/registration_form.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,56 +44,31 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: const Text('Lab 01 Demo'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: const Text('Lab 01 Demo'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Profile'),
+              Tab(text: 'Counter'),
+              Tab(text: 'Register'),
+            ],
+          ),
+        ),
+        body: const TabBarView(
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const CounterApp(),
-                  ),
-                );
-              },
-              child: const Text("Counter"),
+            Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16.0),
+                // TODO: change to ProfileCard
+                child: SizedBox.shrink(),
+              ),
             ),
-            const Text(
-              'Profile Card Example',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const ProfileCard(
-              name: 'John Doe',
-              email: 'john@example.com',
-              age: 30,
-              avatarUrl: 'https://example.com/avatar.jpg',
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Counter App Example',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const CounterApp(),
-            const SizedBox(height: 24),
-            const Text(
-              'Registration Form Example',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const RegistrationForm(),
+            CounterApp(),
+            RegistrationForm(),
           ],
         ),
       ),

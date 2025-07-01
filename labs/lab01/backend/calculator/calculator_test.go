@@ -134,3 +134,27 @@ func TestStringToFloat(t *testing.T) {
 		})
 	}
 }
+
+func TestFloatToString(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     float64
+		precision int
+		expected  string
+	}{
+		{"zero precision", 3.14159, 0, "3"},
+		{"one decimal", 3.14159, 1, "3.1"},
+		{"two decimals", 3.14159, 2, "3.14"},
+		{"negative number", -2.5, 1, "-2.5"},
+		{"large number", 123456.789, 2, "123456.79"},
+		{"zero", 0.0, 2, "0.00"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FloatToString(tt.input, tt.precision); got != tt.expected {
+				t.Errorf("FloatToString(%v, %d) = %v, want %v", tt.input, tt.precision, got, tt.expected)
+			}
+		})
+	}
+}
