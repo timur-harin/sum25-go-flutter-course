@@ -10,7 +10,6 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
   bool _showCounter = false;
-  bool _showCounter = false;
 
   void _incrementCounter() {
     // TODO: Implement this function

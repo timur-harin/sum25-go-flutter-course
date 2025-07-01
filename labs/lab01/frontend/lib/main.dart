@@ -14,13 +14,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: const HomeScreen(),
-      home: const HomeScreen(),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
