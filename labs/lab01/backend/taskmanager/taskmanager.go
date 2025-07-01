@@ -48,6 +48,7 @@ func (tm *TaskManager) AddTask(title, description string) (Task, error) {
 	tm.tasks[tm.nextID] = newTask
 	tm.nextID++
 	return newTask, nil
+
 }
 
 // UpdateTask updates an existing task, returns an error if the title is empty or the task is not found
@@ -62,7 +63,6 @@ func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) 
 	task.Title = title
 	task.Description = description
 	task.Done = done
-
 	tm.tasks[id] = task
 	return nil
 }

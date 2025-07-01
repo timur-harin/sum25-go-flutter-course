@@ -12,6 +12,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String? _successMessage;
 
   @override
   void dispose() {
