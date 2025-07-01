@@ -7,50 +7,34 @@ class ProfileCard extends StatelessWidget {
   final String? avatarUrl;
 
   const ProfileCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.email,
     required this.age,
     this.avatarUrl,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement profile card UI
-    return Scaffold(
-      appBar: AppBar(
-          title: Text("lol")
-      ),
-      body: Center(
+    return Card(
+      margin: const EdgeInsets.all(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 36),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-                  child: avatarUrl == null ? Text(name[0]) : null,
-                ),
-              ]
-            ),
-                const Text("Username:"),
-                Text(
-                  name,
-                ),
-                const SizedBox(height: 20,),
-                const Text("Email:"),
-                Text(
-                  email,
-                ),
-                const SizedBox(height: 20,),
-                const SizedBox(height: 4),
-                Text(
-                    'Age: $age'
-                )
-              ],
+            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
+            
+            const SizedBox(height: 16),
+            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
+           
+            const SizedBox(height: 8),
+            // TODO: add a Text with Age: $age and style fontSize: 16
+           
+            const SizedBox(height: 8),
+            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
+            
+          ],
         ),
       ),
     );
