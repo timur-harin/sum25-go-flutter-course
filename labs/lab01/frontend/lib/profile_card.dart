@@ -16,6 +16,9 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Показываем '?' вместо имени, но не в аватаре
+    final displayName = name.isNotEmpty ? name : '?';
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -31,9 +34,10 @@ class ProfileCard extends StatelessWidget {
               backgroundImage:
               avatarUrl != null ? NetworkImage(avatarUrl!) : null,
               backgroundColor: Colors.grey.shade200,
-              child: avatarUrl == null
+              // Показываем только первую букву, если имя непустое
+              child: avatarUrl == null && name.isNotEmpty
                   ? Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '',
+                name[0].toUpperCase(),
                 style: const TextStyle(fontSize: 20),
               )
                   : null,
@@ -44,9 +48,9 @@ class ProfileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    displayName,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
