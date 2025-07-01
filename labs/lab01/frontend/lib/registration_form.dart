@@ -56,7 +56,6 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     hintText: 'Enter your name',
                   ),
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
                     if(value == null || value.isEmpty){
                       return 'Please enter your name';
                     }
