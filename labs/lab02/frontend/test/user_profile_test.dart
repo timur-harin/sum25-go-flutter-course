@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/user_profile.dart';
+import 'package:lab02_chat/user_profile.dart';
 import 'dart:async';
 
 class MockUserService {
