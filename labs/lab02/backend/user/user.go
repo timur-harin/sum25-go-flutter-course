@@ -8,7 +8,6 @@ import (
 )
 
 // User represents a chat user
-// TODO: Add more fields if needed
 
 type User struct {
 	Name  string

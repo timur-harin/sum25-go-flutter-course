@@ -8,7 +8,6 @@ import (
 
 // Message represents a chat message
 // Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
 
 type Message struct {
 	Sender    string
