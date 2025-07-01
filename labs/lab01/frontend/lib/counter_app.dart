@@ -10,44 +10,58 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-  void _incrementCounter() {
-    // TODO: Implement this function
+  void _increment() {
+    setState(() {
+      _counter++;
+    });
   }
 
-  void _decrementCounter() {
-    // TODO: Implement this function
+  void _decrement() {
+    setState(() {
+      _counter--;
+    });
   }
 
-  void _resetCounter() {
-    // TODO: Implement this function
+  void _reset() {
+    setState(() {
+      _counter = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
-        ],
-      ),
-      body: Center(
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Text(
+              'Counter',
+              style: TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 8),
             Text(
               '$_counter',
-              style: const TextStyle(fontSize: 48),
+              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
+                IconButton(
+                  onPressed: _increment,
+                  icon: const Icon(Icons.add),
+                ),
+                IconButton(
+                  onPressed: _decrement,
+                  icon: const Icon(Icons.remove),
+                ),
+                IconButton(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh),
+                ),
               ],
             ),
           ],
