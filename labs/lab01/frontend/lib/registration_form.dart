@@ -84,7 +84,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 TextFormField(
                   key: const Key('password'),
                   // TODO: use _passwordController
-                  controller: _emailController,
+                  controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',

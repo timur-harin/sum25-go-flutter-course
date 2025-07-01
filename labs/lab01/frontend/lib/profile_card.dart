@@ -27,7 +27,7 @@ class ProfileCard extends StatelessWidget {
             CircleAvatar(
               radius: 50,
               backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-              child: avatarUrl == null ? Text(name[0].toUpperCase()) : null,
+                child: avatarUrl == null ? Text(name.isEmpty ? '?' : name[0].toUpperCase()): null,
             ),
             const SizedBox(height: 16),
             // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
@@ -38,7 +38,7 @@ class ProfileCard extends StatelessWidget {
             const SizedBox(height: 8),
             // TODO: add a Text with Age: $age and style fontSize: 16
               Text(
-                '$age',
+                'Age: $age',
                 style: TextStyle(fontSize: 16),
               ),
             const SizedBox(height: 8),

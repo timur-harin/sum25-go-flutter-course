@@ -49,12 +49,17 @@ class _CounterAppState extends State<CounterApp> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                FloatingActionButton(
+                  onPressed: _decrementCounter,
+                  child: Icon(Icons.remove),
+                ),
                 // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                     IconButton(onPressed: _decrementCounter, icon: Icon(Icons.remove)),
                 const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                    IconButton(onPressed: _incrementCounter, icon: Icon(Icons.add))
-                
+                FloatingActionButton(
+                  onPressed: _incrementCounter,
+                  child: Icon(Icons.add),
+                )
+                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter                
               ],
             ),
           ],

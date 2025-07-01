@@ -25,10 +25,10 @@ func (u *User) Validate() error {
 	if !IsValidAge(u.Age) {
 		return ErrInvalidAge
 	}
-	if IsValidName(u.Name) {
+	if !IsValidName(u.Name) {
 		return ErrInvalidName
 	} 
-	if IsValidEmail(u.Email) {
+	if !IsValidEmail(u.Email) {
 		return ErrInvalidEmail
 	}
 	return nil
@@ -36,7 +36,7 @@ func (u *User) Validate() error {
 
 // String returns a string representation of the user, formatted as "Name: <name>, Age: <age>, Email: <email>"
 func (u *User) String() string {
-	return fmt.Sprintf("User: {Name: %s, Age: %d, Email: %s}", u.Name, u.Age, u.Email)
+	return fmt.Sprintf("Name: %s, Age: %d, Email: %s", u.Name, u.Age, u.Email)
 }
 
 // NewUser creates a new user with validation, returns an error if the user is not valid
@@ -44,10 +44,10 @@ func NewUser(name string, age int, email string) (*User, error) {
 	if !IsValidAge(age) {
 		return nil, ErrInvalidAge
 	}
-	if IsValidName(name) {
+	if !IsValidName(name) {
 		return nil, ErrInvalidName
 	} 
-	if IsValidEmail(email) {
+	if !IsValidEmail(email) {
 		return nil, ErrInvalidEmail
 	}
 	return &User{
@@ -60,26 +60,18 @@ func NewUser(name string, age int, email string) (*User, error) {
 // IsValidEmail checks if the email format is valid
 // You can use regexp.MustCompile to compile the email regex
 func IsValidEmail(email string) bool {
-	var emailRegExp = regexp.MustCompile(`^.+@.$`)
-	if emailRegExp.MatchString(email) {
-		return true
-	}
-	return false
+	var emailRegExp = regexp.MustCompile(`^.+@.+\..+$`)
+	return emailRegExp.MatchString(email)
+
 }
 
 // IsValidName checks if the name is valid, returns false if the name is empty or longer than 30 characters
 func IsValidName(name string) bool {
-	if (len(name) == 0 || len(name) > 30) {
-		return false
-	} 
-	return true
+	return !(len(name) < 1 || len(name) > 30)
 }
 
 // IsValidAge checks if the age is valid, returns false if the age is not between 0 and 150
 func IsValidAge(age int) bool {
 	// TODO: Implement this function
-	if age > 150 || age < 0 {
-		return false
-	}
-	return true
+	return !(age > 150 || age < 0)
 }
