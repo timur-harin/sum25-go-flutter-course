@@ -68,6 +68,8 @@ func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) 
 	task.Description = description
 	task.Done = done
 
+	tm.tasks[id] = task
+
 	return nil
 }
 
@@ -93,7 +95,7 @@ func (tm *TaskManager) GetTask(id int) (Task, error) {
 func (tm *TaskManager) ListTasks(filterDone *bool) []Task {
 	var results []Task
 	for _, task := range tm.tasks {
-		if task.Done == *filterDone {
+		if filterDone == nil || task.Done == *filterDone {
 			results = append(results, task)
 		}
 	}
