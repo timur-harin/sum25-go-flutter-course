@@ -29,7 +29,7 @@ class ProfileCard extends StatelessWidget {
               backgroundImage: (avatarUrl != null &&
                       avatarUrl!.isNotEmpty &&
                       avatarUrl!.startsWith('http') &&
-                      !kDebugMode) // 👈 важно: блокируем загрузку в тестах
+                      !kDebugMode)
                   ? NetworkImage(avatarUrl!)
                   : null,
               child: (avatarUrl == null || avatarUrl!.isEmpty || kDebugMode)

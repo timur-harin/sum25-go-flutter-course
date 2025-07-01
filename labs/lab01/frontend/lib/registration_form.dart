@@ -87,7 +87,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a valid email'; // ← должно совпадать
+                    return 'Please enter a valid email';
                   }
                   if (!value.contains('@')) {
                     return 'Please enter a valid email';

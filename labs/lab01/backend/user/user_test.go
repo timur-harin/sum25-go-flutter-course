@@ -26,7 +26,7 @@ func TestNewUser(t *testing.T) {
 			age:         30,
 			email:       "john@example.com",
 			expectError: true,
-			errorType:   ErrEmptyName,
+			errorType:   ErrInvalidName,
 		},
 		{
 			name:        "invalid age - too young",
@@ -48,7 +48,23 @@ func TestNewUser(t *testing.T) {
 			name:        "invalid email",
 			userName:    "John Doe",
 			age:         30,
-			email:       "invalid-email",
+			email:       "invalid-email@",
+			expectError: true,
+			errorType:   ErrInvalidEmail,
+		},
+		{
+			name:        "not valid email",
+			userName:    "John Doe",
+			age:         30,
+			email:       "john@notvalid",
+			expectError: true,
+			errorType:   ErrInvalidEmail,
+		},
+		{
+			name:        "not valid email - no @",
+			userName:    "John Doe",
+			age:         30,
+			email:       "johnnotvalid",
 			expectError: true,
 			errorType:   ErrInvalidEmail,
 		},
@@ -110,7 +126,7 @@ func TestUserValidate(t *testing.T) {
 				Email: "john@example.com",
 			},
 			expectError: true,
-			errorType:   ErrEmptyName,
+			errorType:   ErrInvalidName,
 		},
 		{
 			name: "invalid age",
@@ -128,6 +144,16 @@ func TestUserValidate(t *testing.T) {
 				Name:  "John Doe",
 				Age:   30,
 				Email: "invalid-email",
+			},
+			expectError: true,
+			errorType:   ErrInvalidEmail,
+		},
+		{
+			name: "not valid email",
+			user: User{
+				Name:  "John Doe",
+				Age:   30,
+				Email: "john@notvalid",
 			},
 			expectError: true,
 			errorType:   ErrInvalidEmail,
@@ -150,6 +176,50 @@ func TestUserValidate(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestUserString(t *testing.T) {
+	tests := []struct {
+		name     string
+		user     User
+		expected string
+	}{
+		{
+			name: "valid user",
+			user: User{
+				Name:  "John Doe",
+				Age:   30,
+				Email: "john@example.com",
+			},
+			expected: "Name: John Doe, Age: 30, Email: john@example.com",
+		},
+		{
+			name: "user with zero age",
+			user: User{
+				Name:  "Baby",
+				Age:   0,
+				Email: "baby@example.com",
+			},
+			expected: "Name: Baby, Age: 0, Email: baby@example.com",
+		},
+		{
+			name: "user with special characters",
+			user: User{
+				Name:  "José María",
+				Age:   25,
+				Email: "jose.maria@example.com",
+			},
+			expected: "Name: José María, Age: 25, Email: jose.maria@example.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.user.String(); got != tt.expected {
+				t.Errorf("User.String() = %v, want %v", got, tt.expected)
 			}
 		})
 	}
