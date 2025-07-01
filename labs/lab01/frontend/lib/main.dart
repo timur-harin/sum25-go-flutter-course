@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'counter_app.dart';
+import 'profile_card.dart'; // Import the ProfileCard widget
+import 'registration_form.dart'; // Import the RegistrationForm widget
 
 void main() {
   runApp(const MyApp());
@@ -41,7 +43,12 @@ class HomeScreen extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16.0),
                 // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
+                child: ProfileCard(
+                  name: 'John Doe',
+                  email: 'john.doe@example.com',
+                  age: 30,
+                  avatarUrl: 'https://example.com/avatar.jpg', // Optional
+                ),
               ),
             ),
             CounterApp(),
