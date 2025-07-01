@@ -29,7 +29,6 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -45,51 +44,20 @@ class MyHomePage extends StatelessWidget {
           ),
         ),
         body: const TabBarView(
-=======
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.amber,
-        title: const Text('Lab 01 Demo'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
->>>>>>> 8441780 (lab01 solution)
           children: [
             Center(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
+                child: ProfileCard(
+                  name: 'Aleksei Fominykh',
+                  email: 'a.fominykh@innopolis.university',
+                  age: 19,
+                  avatarUrl: null,
+                ),
               ),
             ),
-<<<<<<< HEAD
             CounterApp(),
             RegistrationForm(),
-=======
-            const SizedBox(height: 8),
-            const ProfileCard(
-              name: 'Aleksei Fominykh',
-              email: 'a.fominykh@innopolis.university',
-              age: 19,
-              avatarUrl: null,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Counter App Example',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const CounterApp(),
-            const SizedBox(height: 24),
-            const Text(
-              'Registration Form Example',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const RegistrationForm(),
->>>>>>> 8441780 (lab01 solution)
           ],
         ),
       ),

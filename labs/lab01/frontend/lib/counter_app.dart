@@ -10,45 +10,34 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-<<<<<<< HEAD
   void _incrementCounter() {
-    // TODO: Implement this function
-  }
-
-  void _decrementCounter() {
-    // TODO: Implement this function
-  }
-
-  void _resetCounter() {
-    // TODO: Implement this function
-=======
-  void _increment() {
     setState(() {
       _counter++;
     });
   }
 
-  void _decrement() {
+  void _decrementCounter() {
     setState(() {
       _counter--;
     });
   }
 
-  void _reset() {
-   setState(() {
+  void _resetCounter() {
+    setState(() {
       _counter = 0;
     });
->>>>>>> 8441780 (lab01 solution)
   }
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return Scaffold(
       appBar: AppBar(
         title: const Text('Counter App'),
         actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _resetCounter,
+          ),
         ],
       ),
       body: Center(
@@ -63,49 +52,22 @@ class _CounterAppState extends State<CounterApp> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
+                FloatingActionButton(
+                  heroTag: 'decrement',
+                  onPressed: _decrementCounter,
+                  child: const Icon(Icons.remove),
+                ),
                 const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
+                FloatingActionButton(
+                  heroTag: 'increment',
+                  onPressed: _incrementCounter,
+                  child: const Icon(Icons.add),
+                ),
               ],
             ),
           ],
         ),
       ),
-=======
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '$_counter',
-          style: const TextStyle(fontSize: 32),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.remove),
-              onPressed: _decrement,
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _reset,
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: _increment,
-            ),
-          ],
-        ),
-        ElevatedButton(
-          onPressed: () {
-          },
-          child: const Text('Counter'),
-        ),
-      ],
->>>>>>> 8441780 (lab01 solution)
     );
   }
 }
