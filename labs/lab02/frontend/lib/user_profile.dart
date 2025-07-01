@@ -12,21 +12,68 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  bool _isLoading = true;
+  String? _error;
+  Map<String, dynamic>? _userData;
+
+  Future<void> _fetchUserInfo() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final data = await widget.userService.fetchUser();
+      setState(() {
+        _userData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _fetchUserInfo();
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
-    );
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(child: Text('error'));
+    }
+    if (_userData != null) {
+      final name = _userData!['name'] ?? '';
+      final initial = name.isNotEmpty ? name[0].toUpperCase() : '';
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 40,
+              child: Text(
+                initial,
+                style: const TextStyle(fontSize: 40),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('$name'),
+            const SizedBox(height: 8),
+            Text(
+              _userData!['email'] ?? '',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+    return const Center(child: Text('No user data available'));
   }
 }
