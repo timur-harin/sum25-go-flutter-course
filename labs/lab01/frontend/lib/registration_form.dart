@@ -74,7 +74,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   ),
                   validator: (value) {
                     // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
-                    final regExp = RegExp(r'^[\w-]\.+@([\w-]+\.)+[\w-]{2,4}$');
+                    final regExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                     if (value != null && value.isNotEmpty && regExp.hasMatch(value)) {
                       return null;
                     }
