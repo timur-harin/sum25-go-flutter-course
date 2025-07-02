@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lab02_chat/user_service.dart';
 
-// UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final UserService userService;
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -12,21 +10,53 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  String? _name;
+  String? _email;
+  String? _error;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final data = await widget.userService.fetchUser();
+      setState(() {
+        _name = data['name'];
+        _email = data['email'];
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'error loading user';
+        _loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: _error != null
+          ? Center(child: Text(_error!))
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_name ?? '', style: const TextStyle(fontSize: 24)),
+                  const SizedBox(height: 8),
+                  Text(_email ?? '', style: const TextStyle(fontSize: 18)),
+                ],
+              ),
+            ),
     );
   }
 }
