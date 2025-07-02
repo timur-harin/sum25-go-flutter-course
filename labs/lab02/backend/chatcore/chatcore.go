@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 )
 
 // Message represents a chat message
@@ -36,41 +37,46 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (fan-in/fan-out)
 func (b *Broker) Run() {
+	defer close(b.done)
 	for {
 		select {
-		case <-b.ctx.Done():
-			close(b.done)
-			return
 		case msg := <-b.input:
 			b.usersMutex.RLock()
 			if msg.Broadcast {
-				for _, ch := range b.users {
+				for _, userCh := range b.users {
 					select {
-					case ch <- msg:
+					case userCh <- msg:
 					default:
 					}
 				}
 			} else {
-				if ch, ok := b.users[msg.Recipient]; ok {
+				if userCh, ok := b.users[msg.Recipient]; ok {
 					select {
-					case ch <- msg:
+					case userCh <- msg:
 					default:
+
 					}
 				}
 			}
 			b.usersMutex.RUnlock()
+
+		case <-b.ctx.Done():
+			return
+
 		}
 	}
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
+	if msg.Timestamp == 0 {
+		msg.Timestamp = time.Now().Unix()
+	}
 	select {
-	case <-b.done:
-		return errors.New("broker is stopped")
 	case <-b.ctx.Done():
-		return errors.New("context canceled")
-	case b.input <- msg:
+		return errors.New("broker is shut down")
+	default:
+		b.input <- msg
 		return nil
 	}
 }
@@ -86,5 +92,9 @@ func (b *Broker) RegisterUser(userID string, recv chan Message) {
 func (b *Broker) UnregisterUser(userID string) {
 	b.usersMutex.Lock()
 	defer b.usersMutex.Unlock()
-	delete(b.users, userID)
+	
+	if userCh, ok := b.users[userID]; ok {
+		delete(b.users, userID)
+		close(userCh)
+	}
 }
