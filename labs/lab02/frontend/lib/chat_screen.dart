@@ -74,7 +74,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
       body: Column(
