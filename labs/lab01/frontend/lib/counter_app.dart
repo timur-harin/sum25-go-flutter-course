@@ -35,6 +35,8 @@ class _CounterAppState extends State<CounterApp> {
         title: const Text('Counter App'),
         actions: [
           // TODO: add a refresh button with Icon(Icons.refresh)
+          //comment to have just something in the branch
+          //why did i do lab in main? I'm also don't know
           IconButton(onPressed: _resetCounter, icon: Icon(Icons.refresh))
         ],
       ),
