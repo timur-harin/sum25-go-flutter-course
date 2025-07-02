@@ -20,6 +20,28 @@ type User struct {
 	Email string
 }
 
+
+
+func (u *User) Validate() error {
+	if !IsValidName(u.Name) {
+		return ErrInvalidName
+	}
+
+	if !IsValidAge(u.Age) {
+		return ErrInvalidAge
+	}
+
+	if !IsValidEmail(u.Email) {
+		return ErrInvalidEmail
+	}
+
+	return nil
+}
+
+// String returns a string representation of the user, formatted as "Name: <name>, Age: <age>, Email: <email>"
+func (u *User) String() string {
+	return "Name: " + u.Name + ", Age: " + fmt.Sprint(u.Age) + ", Email: " + u.Email
+}
 // NewUser creates a new user with validation
 func NewUser(name string, age int, email string) (*User, error) {
 	u := &User{
@@ -33,26 +55,6 @@ func NewUser(name string, age int, email string) (*User, error) {
 	return u, nil
 }
 
-// Validate checks if the user data is valid
-func (u *User) Validate() error {
-	if u.Name == ""{
-		return ErrInvalidName
-	}
-	if u.Age < 0 || u.Age > 150{
-		return ErrInvalidAge
-	}
-	if !IsValidEmail(u.Email){
-		return ErrInvalidEmail
-	}
-	return nil
-}
-
-// String returns a string representation of the user, formatted as "Name: <name>, Age: <age>, Email: <email>"
-func (u *User) String() string {
-	return "Name" + u.Name + "Age" + fmt.Sprint(u.Age) + "Email" + u.Email
-}
-
-
 // IsValidEmail checks if the email format is valid
 // You can use regexp.MustCompile to compile the email regex
 func IsValidEmail(email string) bool {
@@ -61,8 +63,17 @@ func IsValidEmail(email string) bool {
 	return matched
 }
 
+
+
+// IsValidName checks if the name is valid, returns false if the name is empty or longer than 30 characters
+func IsValidName(name string) bool {
+	return !(name=="" || len(name) > 30 )
+}
+
 // IsValidAge checks if the age is valid, returns false if the age is not between 0 and 150
 func IsValidAge(age int) bool {
-	// TODO: Implement this function
-	return false
+	
+	return  !(age <= 0 || age > 150)
 }
+
+

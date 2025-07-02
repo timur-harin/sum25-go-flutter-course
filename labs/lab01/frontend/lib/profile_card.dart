@@ -20,30 +20,36 @@ class ProfileCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration:
           const BoxDecoration(color: Color.fromARGB(255, 179, 178, 178)),
-      child: Column(
+      child: Card(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           CircleAvatar(
+            radius: 50,
             backgroundImage:
                 avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-            child: avatarUrl == null ? Text(name[0]) : null,
+            child: avatarUrl == null ? Text(name == '' ? "" : name[0].toUpperCase() ) : null,
           ),
-          const Padding(padding: EdgeInsets.only(top: 20)),
+           const SizedBox(height: 16),
           Text(
-            name,
-            style: Theme.of(context).textTheme.displaySmall,
+            name == '' ? '?' : name,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          Text(
-            email,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          const SizedBox(height: 8),
           Text(
             "Age: $age",
-            style: Theme.of(context).textTheme.bodyMedium,
-          )
+            style: TextStyle(fontSize: 16),
+          ),
+                    const SizedBox(height: 8),
+          Text(
+            email,
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+          
         ],
       ),
+      )
     );
   }
 }

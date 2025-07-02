@@ -23,16 +23,16 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return const AlertDialog(
-              title: Text('Registration successful!'),
-              content: Text(
-                'Submitted successfully',
-              ),
-            );
-          });
+     ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _formKey.currentState!.reset();
+      _nameController.clear();
+      _emailController.clear();
+      _passwordController.clear();
     }
   }
 
@@ -65,8 +65,11 @@ class _RegistrationFormState extends State<RegistrationForm> {
       ),
       contentPadding: const EdgeInsets.only(left: 16),
     );
-    return Container(
-      child: Column(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Registration Form"),
+      ),
+      body: Column(
         children: [
           Form(
               key: _formKey,
@@ -101,8 +104,13 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   ),
                   TextFormField(
                     key: const Key('password'),
-                    decoration: inputDecoration,
+                    decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Enter your password',
+                  ),
                     controller: _passwordController,
+                    obscureText: true,
+                    
                     validator: (value) {
                       if (value == null) {
                         return "Password must be at least 6 characters";
@@ -114,9 +122,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   ),
                 ],
               )),
-          InkWell(
-            borderRadius: BorderRadius.circular(15),
-            onTap: () => _submitForm(),
+          ElevatedButton(
+            onPressed: () => _submitForm(),
             child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 15, vertical: 10),

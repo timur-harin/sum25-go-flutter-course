@@ -30,30 +30,33 @@ class _CounterAppState extends State<CounterApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('Counter App'),
-        Text('$_counter'),
-        const SizedBox(height: 20),
-        Row(
+    return Scaffold(
+        appBar: AppBar(
+          title: Text("Counter App"),
+        ),
+        body: Center(
+            child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(onPressed: _increment, icon: const Icon(Icons.add)),
-            const SizedBox(width: 10),
+            Text('$_counter'),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FloatingActionButton(onPressed: _increment, child: const Icon(Icons.add)),
+                const SizedBox(width: 10),
+                FloatingActionButton(
+                  onPressed: _decrement,
+                  child: const Icon(Icons.remove),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             IconButton(
-              onPressed: _decrement,
-              icon: const Icon(Icons.remove),
+              onPressed: _reset,
+              icon: const Icon(Icons.refresh),
             ),
           ],
-        ),
-        const SizedBox(height: 20),
-        IconButton(
-          onPressed: _reset,
-          icon: const Icon(Icons.refresh),
-        ),
-      ],
-    ));
+        )));
   }
 }
