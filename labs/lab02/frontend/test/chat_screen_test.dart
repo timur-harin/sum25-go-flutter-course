@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import '../lib/chat_screen.dart';
-import '../lib/chat_service.dart';
+import 'package:lab02_chat/chat_screen.dart';
+import 'package:lab02_chat/chat_service.dart';
 
 void main() {
   group('ChatScreen', () {

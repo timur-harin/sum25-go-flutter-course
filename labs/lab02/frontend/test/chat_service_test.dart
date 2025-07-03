@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/chat_service.dart';
+import 'package:lab02_chat/chat_service.dart';
 import 'dart:async';
 
 class MockChatService extends ChatService {

@@ -4,7 +4,7 @@ import 'chat_service.dart';
 // ChatScreen displays the chat UI
 class ChatScreen extends StatefulWidget {
   final ChatService chatService;
-  const ChatScreen({Key? key, required this.chatService}) : super(key: key);
+  const ChatScreen({super.key, required this.chatService});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();

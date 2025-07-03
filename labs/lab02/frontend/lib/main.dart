@@ -8,7 +8,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  MyApp({super.key});
 
   final ChatService chatService = ChatService();
   final dynamic userService = null; // TODO: Replace with actual user service
