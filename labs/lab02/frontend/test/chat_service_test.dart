@@ -28,8 +28,9 @@ void main() {
 
   test('sends message and receives confirmation', () async {
     final service = MockChatService();
+    final future = expectLater(service.messageStream, emits('test'));
     await service.sendMessage('test');
-    await expectLater(service.messageStream, emits('test'));
+    await future;
   });
 
   test('handles connection errors', () async {

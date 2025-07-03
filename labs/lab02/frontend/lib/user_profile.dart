@@ -1,55 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:lab02_chat/user_service.dart';
 
-// UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final dynamic userService; // Accepts a user service for fetching user info
-  const UserProfile({super.key, required this.userService});
+  final UserService userService;
+  const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
   State<UserProfile> createState() => _UserProfileState();
 }
 
 class _UserProfileState extends State<UserProfile> {
-  late Future<Map<String, String>> _userFuture;
+  Map<String, String>? _userData;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _userFuture = _fetchUser();
+    _fetchUser();
   }
 
-  Future<Map<String, String>> _fetchUser() async {
-    // TODO: Fetch user info from userService
-    throw UnimplementedError();
+  void _fetchUser() async {
+    try {
+      final data = await widget.userService.fetchUser();
+      setState(() {
+        _userData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text('User Profile')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('User Profile')),
+        body: Center(child: Text('error')),
+      );
+    }
+    
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: FutureBuilder<Map<String, String>>(
-        future: _userFuture,
-        builder: (context, snapshot) {
-          // TODO: Display user info, loading, and error states
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-                child: Text('An error occurred: \\${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final user = snapshot.data!;
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(user['name'] ?? '', style: const TextStyle(fontSize: 24)),
-                Text(user['email'] ?? '', style: const TextStyle(fontSize: 16)),
-                // TODO: Add more user fields if needed
-              ],
-            );
-          } else {
-            return const Center(child: Text('No user data'));
-          }
-        },
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${_userData!['name']}'),
+            Text('${_userData!['email']}'),
+          ],
+        ),
       ),
     );
   }

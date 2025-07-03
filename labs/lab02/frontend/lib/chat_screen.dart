@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'chat_service.dart';
+import 'dart:async';
 
-// ChatScreen displays the chat UI
 class ChatScreen extends StatefulWidget {
   final ChatService chatService;
   const ChatScreen({super.key, required this.chatService});
@@ -11,65 +11,83 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final TextEditingController _controller = TextEditingController();
-  // TODO: Add loading/error state if needed
+  final TextEditingController controller = TextEditingController();
+  final List<String> messages = [];
+  StreamSubscription<String>? subscription;
+  String? error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service
+    _connect();
+  }
+
+  void _connect() async {
+    try {
+      await widget.chatService.connect();
+      subscription = widget.chatService.messageStream.listen((message) {
+        setState(() => messages.add(message));
+      });
+    } catch (e) {
+      setState(() => error = 'Connection error: ${e.toString()}');
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    // TODO: Dispose chat service if needed
+    subscription?.cancel();
+    controller.dispose();
     super.dispose();
   }
 
-  void _sendMessage() {
-    // TODO: Send message using chatService
+  void _sendMessage() async {
+    if (controller.text.isEmpty) return;
+    try {
+      await widget.chatService.sendMessage(controller.text);
+      controller.clear();
+    } catch (e) {
+      setState(() => error = 'Send error: ${e.toString()}');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<String>(
-              stream: widget.chatService.messageStream,
-              builder: (context, snapshot) {
-                // TODO: Display messages, loading, and error states
-                return ListView(
-                  children: [
-                    // TODO: Build message widgets from snapshot.data
-                  ],
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
+      body: error != null
+          ? Center(child: Text(error!))
+          : Column(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration:
-                        const InputDecoration(hintText: 'Type a message'),
-                  ),
+                  child: messages.isEmpty
+                      ? const Center(child: Text('No messages yet'))
+                      : ListView.builder(
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) => 
+                              ListTile(title: Text(messages[index])),
+                        ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          decoration: const InputDecoration(
+                            hintText: 'Type a message',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: _sendMessage,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
