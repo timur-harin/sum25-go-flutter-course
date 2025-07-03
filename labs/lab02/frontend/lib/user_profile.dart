@@ -14,6 +14,7 @@ class _UserProfileState extends State<UserProfile> {
   bool _isLoading = true;
   String? _error;
 
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +63,7 @@ class _UserProfileState extends State<UserProfile> {
           ],
         ),
       ),
+
     );
   }
 }

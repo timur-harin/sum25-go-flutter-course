@@ -5,3 +5,4 @@ class UserService {
     return {'name': 'Valera', 'email': 'valera_nagibator@vobla.com'};
   }
 }
+
