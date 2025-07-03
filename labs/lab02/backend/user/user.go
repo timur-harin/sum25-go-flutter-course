@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"regexp"
 	"sync"
 )
 
@@ -17,7 +18,10 @@ type User struct {
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	re := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$`)
+	if !re.MatchString(u.Email) || u.ID == "" || u.Name == "" {
+		return errors.ErrUnsupported
+	}
 	return nil
 }
 
@@ -50,18 +54,64 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
-	// TODO: Add user to map, check context
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		default:
+			m.users[u.ID] = u
+			return nil
+		}
+	}
+	m.users[u.ID] = u
 	return nil
+
+	// TODO: Add user to map, check context
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
-	// TODO: Remove user from map
-	return nil
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		default:
+			_, finded := m.users[id]
+			if finded {
+				delete(m.users, id)
+				return nil
+			}
+			return errors.New("not found")
+		}
+	}
+	_, finded := m.users[id]
+	if finded {
+		delete(m.users, id)
+		return nil
+	}
+	return errors.New("not found")
+	// }
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
 	// TODO: Get user from map
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return User{}, m.ctx.Err()
+		default:
+			u, finded := m.users[id]
+			if finded {
+				return u, nil
+			}
+			return User{}, errors.New("not found")
+		}
+	}
+	u, finded := m.users[id]
+	if finded {
+		return u, nil
+	}
 	return User{}, errors.New("not found")
+
 }
