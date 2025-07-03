@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"regexp"
 	"sync"
 )
 
@@ -17,7 +18,17 @@ type User struct {
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	emailRegex := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
+	if u.Name == "" || len(u.Name) > 30 {
+		return errors.New("Invalid name")
+	}
+	matched, err := regexp.MatchString(emailRegex, u.Email)
+	if err != nil || !matched {
+		return errors.New("Invalid email")
+	}
+	if u.ID == "" {
+		return errors.New("Invalid Id")
+	}
 	return nil
 }
 
@@ -33,7 +44,6 @@ type UserManager struct {
 
 // NewUserManager creates a new UserManager
 func NewUserManager() *UserManager {
-	// TODO: Initialize UserManager fields
 	return &UserManager{
 		users: make(map[string]User),
 	}
@@ -41,7 +51,6 @@ func NewUserManager() *UserManager {
 
 // NewUserManagerWithContext creates a new UserManager with context
 func NewUserManagerWithContext(ctx context.Context) *UserManager {
-	// TODO: Initialize UserManager with context
 	return &UserManager{
 		ctx:   ctx,
 		users: make(map[string]User),
@@ -50,18 +59,61 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
-	// TODO: Add user to map, check context
+	if err := u.Validate(); err != nil {
+		return err
+	}
+
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		}
+	} else {
+		m.mutex.Lock()
+		defer m.mutex.Unlock()
+		m.users[u.ID] = u
+	}
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
-	// TODO: Remove user from map
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		}
+	} else {
+		m.mutex.RLock()
+		user, ok := m.users[id]
+		m.mutex.RUnlock()
+
+		if !ok {
+			return errors.New("User not found")
+		}
+
+		m.mutex.Lock()
+		defer m.mutex.Unlock()
+		delete(m.users, user.ID)
+	}
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
-	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return User{}, m.ctx.Err()
+		}
+	} else {
+		m.mutex.RLock()
+		user, ok := m.users[id]
+		m.mutex.RUnlock()
+
+		if !ok {
+			return User{}, errors.New("not found")
+		}
+		return user, nil
+	}
 }

@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
 
 // Predefined errors
@@ -18,7 +20,22 @@ type User struct {
 	Email string
 }
 
-// Validate checks if the user data is valid, returns an error for each invalid field
+// NewUser creates a new user with validation
+func NewUser(name string, age int, email string) (*User, error) {
+	newUser := &User{
+		Name:  name,
+		Age:   age,
+		Email: email,
+	}
+
+	if err := newUser.Validate(); err != nil {
+		return nil, err
+	}
+
+	return newUser, nil
+}
+
+// Validate checks if the user data is valid
 func (u *User) Validate() error {
 	if !IsValidName(u.Name) {
 		return ErrInvalidName
@@ -35,33 +52,40 @@ func (u *User) Validate() error {
 	return nil
 }
 
-// String returns a string representation of the user, formatted as "Name: <name>, Age: <age>, Email: <email>"
+// String returns a string representation of the user
 func (u *User) String() string {
-	// TODO: Implement this function
-	return ""
-}
-
-// NewUser creates a new user with validation, returns an error if the user is not valid
-func NewUser(name string, age int, email string) (*User, error) {
-	// TODO: Implement this function
-	return nil, nil
+	return fmt.Sprintf("Name: %s, Age: %d, Email: %s", u.Name, u.Age, u.Email)
 }
 
 // IsValidEmail checks if the email format is valid
-// You can use regexp.MustCompile to compile the email regex
 func IsValidEmail(email string) bool {
-	// TODO: Implement this function
-	return false
+	if email == "" {
+		return false
+	}
+
+	at := strings.Index(email, "@")
+	if at <= 0 {
+		return false
+	}
+
+	dot := strings.LastIndex(email, ".")
+	if dot <= at+1 {
+		return false
+	}
+
+	if dot >= len(email)-1 {
+		return false
+	}
+
+	return true
 }
 
-// IsValidName checks if the name is valid, returns false if the name is empty or longer than 30 characters
+// IsValidName checks if the name is valid
 func IsValidName(name string) bool {
-	// TODO: Implement this function
-	return false
+	return len(name) > 0 && len(name) <= 30
 }
 
-// IsValidAge checks if the age is valid, returns false if the age is not between 0 and 150
+// IsValidAge checks if the age is valid
 func IsValidAge(age int) bool {
-	// TODO: Implement this function
-	return false
+	return age >= 0 && age <= 150
 }
