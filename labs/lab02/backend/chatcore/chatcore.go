@@ -5,7 +5,6 @@ import (
 	"sync"
 )
 
-// Message represents a chat message
 // Sender, Recipient, Content, Broadcast, Timestamp
 type Message struct {
 	Sender    string
@@ -75,6 +74,15 @@ func (b *Broker) SendMessage(msg Message) error {
 		return context.Canceled
 	case <-b.done:
 		return context.Canceled
+	default:
+
+	}
+
+	select {
+	case <-b.ctx.Done():
+		return context.Canceled
+	case <-b.done:
+		return context.Canceled
 	case b.input <- msg:
 		return nil
 	}
@@ -91,5 +99,8 @@ func (b *Broker) RegisterUser(userID string, recv chan Message) {
 func (b *Broker) UnregisterUser(userID string) {
 	b.usersMutex.Lock()
 	defer b.usersMutex.Unlock()
-	delete(b.users, userID)
+	if ch, ok := b.users[userID]; ok {
+		close(ch)
+		delete(b.users, userID)
+	}
 }
