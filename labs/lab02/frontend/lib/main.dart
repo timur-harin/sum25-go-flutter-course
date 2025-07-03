@@ -6,12 +6,15 @@ import 'user_service.dart';
 
 void main() {
   // TODO: Initialize and run the app
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key, this.chatService, this.userService}) : super(key: key);
 
   // TODO: Initialize chatService and userService
+  final chatService;
+  final userService;
 
   @override
   Widget build(BuildContext context) {
