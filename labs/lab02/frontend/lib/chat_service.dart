@@ -6,25 +6,28 @@ class ChatService {
   // TODO: Add simulation flags for connection and send failures
   // TODO: Replace simulation with real backend logic in the future
 
-  final StreamController<String> _controller =
-      StreamController<String>.broadcast();
+  final StreamController<String> _controller = StreamController<String>.broadcast();
   bool failSend = false;
 
   ChatService();
 
   Future<void> connect() async {
     // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+    await Future.delayed(Duration(milliseconds: 500));
+    
   }
 
   Future<void> sendMessage(String msg) async {
     // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+    await Future.delayed(Duration(milliseconds: 200));
+    if (failSend) throw Exception('Send failed (simulated)');
+    _controller.add(msg);
   }
 
-  Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
-  }
+  // Stream<String> get messageStream {
+  //   // TODO: Return stream of incoming messages (for tests)
+  //   throw UnimplementedError();
+  // }
+
+  Stream<String> get messageStream => _controller.stream;
 }
