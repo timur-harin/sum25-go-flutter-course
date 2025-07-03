@@ -7,6 +7,7 @@ import 'user_service.dart';
 void main() {
   // TODO: Initialize and run the app
   runApp(MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
   // TODO: Initialize chatService and userService
   final ChatService chatService = ChatService();
   final UserService userService = UserService();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,6 +38,7 @@ class MyApp extends StatelessWidget {
               // TODO: Implement ChatScreen and UserProfile
               ChatScreen(chatService: chatService),
               UserProfile(userService: userService),
+
             ],
           ),
         ),

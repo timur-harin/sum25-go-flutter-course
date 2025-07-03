@@ -16,6 +16,7 @@ class _ChatScreenState extends State<ChatScreen> {
   StreamSubscription<String>? subscription;
   String? error;
 
+
   @override
   void initState() {
     super.initState();
@@ -48,10 +49,12 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       setState(() => error = 'Send error: ${e.toString()}');
     }
+
   }
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
       body: error != null

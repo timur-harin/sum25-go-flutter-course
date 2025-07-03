@@ -131,4 +131,46 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
+            });
+            
+      - name: Create commit comment with score
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = ${{ steps.score.outputs.total }};
+            const maxScore = 6;
+            const percentage = (score / maxScore) * 100;
+
+            const results = {
+              'Go Tasks': {
+                'ChatCore': ${{ steps.go-tests.outputs.chatcore_passed }},
+                'User Management': ${{ steps.go-tests.outputs.user_passed }},
+                'Message Storage': ${{ steps.go-tests.outputs.message_passed }}
+              },
+              'Flutter Tasks': {
+                'Chat Service': ${{ steps.flutter-tests.outputs.chat_service_passed }},
+                'Chat Screen': ${{ steps.flutter-tests.outputs.chat_screen_passed }},
+                'User Profile': ${{ steps.flutter-tests.outputs.user_profile_passed }}
+              }
+            };
+
+            let comment = `## Lab 02 Test Results\n\n`;
+            comment += `Score: ${score}/${maxScore} (${percentage}%)\n\n`;
+            comment += `### Task Completion:\n\n`;
+
+            for (const [category, tasks] of Object.entries(results)) {
+              comment += `#### ${category}\n`;
+              for (const [task, passed] of Object.entries(tasks)) {
+                const status = passed ? '✅' : '❌';
+                comment += `- ${status} ${task}\n`;
+              }
+              comment += '\n';
+            }
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
             }); 

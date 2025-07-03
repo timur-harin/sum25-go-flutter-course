@@ -23,3 +23,4 @@ class ChatService {
 
   Stream<String> get messageStream => _controller.stream;
 }
+
