@@ -84,6 +84,10 @@ jobs:
         id: score
         run: |
           TOTAL=0
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 5ea9fc2 (update lab1 and workflow of submission)
           if [[ "${{ steps.go-tests.outputs.calculator_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           if [[ "${{ steps.go-tests.outputs.user_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           if [[ "${{ steps.go-tests.outputs.taskmanager_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
@@ -91,6 +95,18 @@ jobs:
           if [[ "${{ steps.flutter-tests.outputs.counter_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           if [[ "${{ steps.flutter-tests.outputs.registration_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
+<<<<<<< HEAD
+=======
+          [[ "${{ steps.go-tests.outputs.calculator_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
+          [[ "${{ steps.go-tests.outputs.user_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
+          [[ "${{ steps.go-tests.outputs.taskmanager_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
+          [[ "${{ steps.flutter-tests.outputs.profile_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
+          [[ "${{ steps.flutter-tests.outputs.counter_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
+          [[ "${{ steps.flutter-tests.outputs.registration_passed }}" == "true" ]] && TOTAL=$((TOTAL + 1))
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+>>>>>>> 0ab2bc2 (fix counting points)
+=======
+>>>>>>> 5ea9fc2 (update lab1 and workflow of submission)
           
       - name: Comment PR with score
         if: github.event_name == 'pull_request'

@@ -3,98 +3,162 @@ import 'package:http/http.dart' as http;
 import '../models/message.dart';
 
 class ApiService {
-  // TODO: Add static const String baseUrl = 'http://localhost:8080';
-  // TODO: Add static const Duration timeout = Duration(seconds: 30);
-  // TODO: Add late http.Client _client field
+  static const String baseUrl = 'http://localhost:8080';
+  static const Duration timeout = Duration(seconds: 30);
+  late http.Client _client;
 
-  // TODO: Add constructor that initializes _client = http.Client();
+  ApiService() {
+    _client = http.Client();
+  }
 
-  // TODO: Add dispose() method that calls _client.close();
+  void dispose() {
+    _client.close();
+  }
 
-  // TODO: Add _getHeaders() method that returns Map<String, String>
-  // Return headers with 'Content-Type': 'application/json' and 'Accept': 'application/json'
+  Map<String, String> _getHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+  }
 
-  // TODO: Add _handleResponse<T>() method with parameters:
-  // http.Response response, T Function(Map<String, dynamic>) fromJson
-  // Check if response.statusCode is between 200-299
-  // If successful, decode JSON and return fromJson(decodedData)
-  // If 400-499, throw client error with message from response
-  // If 500-599, throw server error
-  // For other status codes, throw general error
+  T _handleResponse<T>(
+      http.Response response, T Function(Map<String, dynamic>) fromJson) {
+    final statusCode = response.statusCode;
+    if (response.body.trim().isEmpty) {
+      throw ApiException('Empty response body');
+  }
+    final data = jsonDecode(response.body);
 
-  // Get all messages
+    if (statusCode >= 200 && statusCode < 300) {
+      return fromJson(data);
+    } else if (statusCode >= 400 && statusCode < 500) {
+      throw ApiException(data['error'] ?? 'Client error');
+    } else if (statusCode >= 500) {
+      throw ServerException('Server error: $statusCode');
+    } else {
+      throw ApiException('Unexpected error: $statusCode');
+    }
+  }
+
   Future<List<Message>> getMessages() async {
-    // TODO: Implement getMessages
-    // Make GET request to '$baseUrl/api/messages'
-    // Use _handleResponse to parse response into List<Message>
-    // Handle network errors and timeouts
-    throw UnimplementedError('TODO: Implement getMessages');
+    try {
+      final uri = Uri.parse('$baseUrl/api/messages');
+      final res = await _client.get(uri, headers: _getHeaders()).timeout(timeout);
+      final data = jsonDecode(res.body);
+      final messages = (data['data'] as List)
+          .map((e) => Message.fromJson(e))
+          .toList();
+      return messages;
+    } catch (e) {
+      throw NetworkException('Failed to fetch messages: $e');
+    }
   }
 
-  // Create a new message
   Future<Message> createMessage(CreateMessageRequest request) async {
-    // TODO: Implement createMessage
-    // Validate request using request.validate()
-    // Make POST request to '$baseUrl/api/messages'
-    // Include request.toJson() in body
-    // Use _handleResponse to parse response
-    // Extract message from ApiResponse.data
-    throw UnimplementedError('TODO: Implement createMessage');
+    final error = request.validate();
+    if (error != null) throw ValidationException(error);
+
+    try {
+      final uri = Uri.parse('$baseUrl/api/messages');
+      final res = await _client
+          .post(uri,
+              headers: _getHeaders(),
+              body: jsonEncode(request.toJson()))
+          .timeout(timeout);
+      final parsed = _handleResponse(res, (json) => ApiResponse.fromJson(json, Message.fromJson));
+      return parsed.data!;
+    } catch (e) {
+      rethrow;
+    }
   }
 
-  // Update an existing message
   Future<Message> updateMessage(int id, UpdateMessageRequest request) async {
-    // TODO: Implement updateMessage
-    // Validate request using request.validate()
-    // Make PUT request to '$baseUrl/api/messages/$id'
-    // Include request.toJson() in body
-    // Use _handleResponse to parse response
-    // Extract message from ApiResponse.data
-    throw UnimplementedError('TODO: Implement updateMessage');
+    // final error = request.validate();
+    // if (error != null) throw ValidationException(error);
+
+    // try {
+    //   final uri = Uri.parse('$baseUrl/api/messages/$id');
+    //   final res = await _client
+    //       .put(uri,
+    //           headers: _getHeaders(),
+    //           body: jsonEncode(request.toJson()))
+    //       .timeout(timeout);
+    //   final parsed = _handleResponse(res, (json) => ApiResponse.fromJson(json, Message.fromJson));
+    //   return parsed.data!;
+    // } catch (e) {
+    //   rethrow;
+    // }
+    throw UnimplementedError();
   }
 
-  // Delete a message
   Future<void> deleteMessage(int id) async {
-    // TODO: Implement deleteMessage
-    // Make DELETE request to '$baseUrl/api/messages/$id'
-    // Check if response.statusCode is 204
-    // Throw error if deletion failed
-    throw UnimplementedError('TODO: Implement deleteMessage');
+    // try {
+    //   final uri = Uri.parse('$baseUrl/api/messages/$id');
+    //   final res = await _client
+    //       .delete(uri, headers: _getHeaders())
+    //       .timeout(timeout);
+
+    //   if (res.statusCode != 204) {
+    //     throw ApiException('Failed to delete message');
+    //   }
+    // } catch (e) {
+    //   throw NetworkException('Delete failed: $e');
+    // }
+    throw UnimplementedError();
   }
 
-  // Get HTTP status information
   Future<HTTPStatusResponse> getHTTPStatus(int statusCode) async {
-    // TODO: Implement getHTTPStatus
-    // Make GET request to '$baseUrl/api/status/$statusCode'
-    // Use _handleResponse to parse response
-    // Extract HTTPStatusResponse from ApiResponse.data
-    throw UnimplementedError('TODO: Implement getHTTPStatus');
-  }
+  // try {
+  //   final uri = Uri.parse('$baseUrl/api/status/$statusCode');
+  //   final res = await _client.get(uri, headers: _getHeaders()).timeout(timeout);
 
-  // Health check
+  //   if (res.body.trim().isEmpty) {
+  //     throw ApiException('Empty response body');
+  //   }
+
+  //   final parsed = _handleResponse(
+  //     res,
+  //     (json) => ApiResponse.fromJson(json, HTTPStatusResponse.fromJson),
+  //   );
+  //   return parsed.data!;
+  // } catch (e) {
+  //   if (e is FormatException) {
+  //     throw ApiException('Invalid JSON response');
+  //   }
+  //   rethrow;
+  // }
+  throw UnimplementedError();
+}
+
+
   Future<Map<String, dynamic>> healthCheck() async {
-    // TODO: Implement healthCheck
-    // Make GET request to '$baseUrl/api/health'
-    // Return decoded JSON response
-    throw UnimplementedError('TODO: Implement healthCheck');
+    try {
+      final uri = Uri.parse('$baseUrl/api/health');
+      final res = await _client.get(uri, headers: _getHeaders()).timeout(timeout);
+      return jsonDecode(res.body);
+    } catch (e) {
+      throw NetworkException('Health check failed: $e');
+    }
   }
 }
 
-// Custom exceptions
 class ApiException implements Exception {
-  // TODO: Add final String message field
-  // TODO: Add constructor ApiException(this.message);
-  // TODO: Override toString() to return 'ApiException: $message'
+  final String message;
+  ApiException(this.message);
+
+  @override
+  String toString() => 'ApiException: $message';
 }
 
 class NetworkException extends ApiException {
-  // TODO: Add constructor NetworkException(String message) : super(message);
+  NetworkException(super.message);
 }
 
 class ServerException extends ApiException {
-  // TODO: Add constructor ServerException(String message) : super(message);
+  ServerException(super.message);
 }
 
 class ValidationException extends ApiException {
-  // TODO: Add constructor ValidationException(String message) : super(message);
+  ValidationException(super.message);
 }
