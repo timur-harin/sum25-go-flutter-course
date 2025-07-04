@@ -49,29 +49,22 @@ func (ms *MemoryStorage) GetByID(id int) (*models.Message, error) {
 
 // Create adds a new message to storage
 func (ms *MemoryStorage) Create(username, content string) (*models.Message, error) {
-	// TODO: Implement Create method
-	// Use write lock for thread safety
-	// Get next available ID
-	// Create new message using models.NewMessage
-	// Add message to map
-	// Increment nextID
-	// Return created message
-	ms.mutex.RLock()
-	defer ms.mutex.RUnlock()
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 	message := &models.Message{
 		ID: ms.nextID,
 		Username: username,
 		Content: content,
 	}
 	ms.messages[message.ID] = message
-	message.ID++
+	ms.nextID++
 	return message, nil
 }
 
 // Update modifies an existing message
 func (ms *MemoryStorage) Update(id int, content string) (*models.Message, error) {
-	ms.mutex.RLock()
-	defer ms.mutex.RUnlock()
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 
 	if id > ms.nextID || id < 1 {
 		return nil, ErrInvalidID
@@ -84,13 +77,13 @@ func (ms *MemoryStorage) Update(id int, content string) (*models.Message, error)
 	message.Content = content
 	ms.messages[id] = message
 
-	return nil, nil
+	return message, nil
 }
 
 // Delete removes a message from storage
 func (ms *MemoryStorage) Delete(id int) error {
-	ms.mutex.RLock()
-	defer ms.mutex.RUnlock()
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
 
 	if id > ms.nextID || id < 1 {
 		return ErrInvalidID
@@ -110,7 +103,6 @@ func (ms *MemoryStorage) Count() int {
 	ms.mutex.RLock()
 	defer ms.mutex.RUnlock()
 	return len(ms.messages)
-	return 0
 }
 
 // Common errors
