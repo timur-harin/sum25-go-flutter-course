@@ -2,6 +2,7 @@ package chatcore
 
 import (
 	"context"
+	"errors"
 	"sync"
 )
 
@@ -88,9 +89,9 @@ func (b *Broker) SendMessage(msg Message) error {
 	case b.input <- msg:
 		return nil
 	case <-b.done:
-		return context.Canceled
+		return errors.New("Content canceled")
 	case <-b.ctx.Done():
-		return context.Canceled
+		return errors.New("Content canceled")
 	}
 }
 
