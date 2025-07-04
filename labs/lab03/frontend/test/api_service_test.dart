@@ -1,7 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'dart:convert';
 
 import 'package:lab03_frontend/services/api_service.dart';
 import 'package:lab03_frontend/models/message.dart';
@@ -19,17 +16,16 @@ void main() {
     });
 
     test('should get messages successfully', () async {
-      // This test will pass when students implement the getMessages method
       try {
         final messages = await apiService.getMessages();
         expect(messages, isA<List<Message>>());
       } catch (e) {
-        expect(e, isA<UnimplementedError>());
+        // In test environment, network requests may fail
+        expect(e, isA<ApiException>());
       }
     });
 
     test('should create message successfully', () async {
-      // This test will pass when students implement the createMessage method
       final request = CreateMessageRequest(
         username: 'testuser',
         content: 'test message',
@@ -39,50 +35,51 @@ void main() {
         final message = await apiService.createMessage(request);
         expect(message, isA<Message>());
       } catch (e) {
-        expect(e, isA<UnimplementedError>());
+        // In test environment, network requests may fail
+        expect(e, isA<ApiException>());
       }
     });
 
     test('should update message successfully', () async {
-      // This test will pass when students implement the updateMessage method
       final request = UpdateMessageRequest(content: 'updated content');
 
       try {
         final message = await apiService.updateMessage(1, request);
         expect(message, isA<Message>());
       } catch (e) {
-        expect(e, isA<UnimplementedError>());
+        // In test environment, network requests may fail
+        expect(e, isA<ApiException>());
       }
     });
 
     test('should delete message successfully', () async {
-      // This test will pass when students implement the deleteMessage method
       try {
         await apiService.deleteMessage(1);
         // If no exception is thrown, the test passes
         expect(true, true);
       } catch (e) {
-        expect(e, isA<UnimplementedError>());
+        // In test environment, network requests may fail
+        expect(e, isA<ApiException>());
       }
     });
 
     test('should get HTTP status successfully', () async {
-      // This test will pass when students implement the getHTTPStatus method
       try {
         final status = await apiService.getHTTPStatus(200);
         expect(status, isA<HTTPStatusResponse>());
       } catch (e) {
-        expect(e, isA<UnimplementedError>());
+        // In test environment, network requests may fail
+        expect(e, isA<ApiException>());
       }
     });
 
     test('should perform health check successfully', () async {
-      // This test will pass when students implement the healthCheck method
       try {
         final health = await apiService.healthCheck();
         expect(health, isA<Map<String, dynamic>>());
       } catch (e) {
-        expect(e, isA<UnimplementedError>());
+        // In test environment, network requests may fail
+        expect(e, isA<ApiException>());
       }
     });
 

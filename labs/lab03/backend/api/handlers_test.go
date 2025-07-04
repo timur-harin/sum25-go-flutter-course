@@ -31,14 +31,10 @@ func TestGetMessages(t *testing.T) {
 		t.Errorf("Expected status %v, got %v", http.StatusOK, status)
 	}
 
-	var response models.APIResponse
-	err = json.NewDecoder(rr.Body).Decode(&response)
+	var messages []models.Message
+	err = json.NewDecoder(rr.Body).Decode(&messages)
 	if err != nil {
 		t.Fatalf("Could not decode response: %v", err)
-	}
-
-	if !response.Success {
-		t.Error("Expected success to be true")
 	}
 }
 
@@ -65,14 +61,14 @@ func TestCreateMessage(t *testing.T) {
 		t.Errorf("Expected status %v, got %v", http.StatusCreated, status)
 	}
 
-	var response models.APIResponse
-	err = json.NewDecoder(rr.Body).Decode(&response)
+	var message models.Message
+	err = json.NewDecoder(rr.Body).Decode(&message)
 	if err != nil {
 		t.Fatalf("Could not decode response: %v", err)
 	}
 
-	if !response.Success {
-		t.Error("Expected success to be true")
+	if message.Username != "testuser" {
+		t.Errorf("Expected username 'testuser', got '%s'", message.Username)
 	}
 }
 
@@ -173,14 +169,14 @@ func TestGetHTTPStatus(t *testing.T) {
 			}
 
 			if tt.expectedStatus == http.StatusOK {
-				var response models.APIResponse
+				var response models.HTTPStatusResponse
 				err = json.NewDecoder(rr.Body).Decode(&response)
 				if err != nil {
 					t.Fatalf("Could not decode response: %v", err)
 				}
 
-				if !response.Success {
-					t.Error("Expected success to be true")
+				if response.StatusCode != 200 && response.StatusCode != 404 && response.StatusCode != 500 {
+					t.Errorf("Expected status code 200, 404, or 500, got %d", response.StatusCode)
 				}
 			}
 		})

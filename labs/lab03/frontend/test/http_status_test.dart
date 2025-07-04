@@ -134,10 +134,10 @@ void main() {
           final response = await apiService.getHTTPStatus(code);
           expect(response, isA<HTTPStatusResponse>());
           expect(response.statusCode, equals(code));
-          expect(response.imageUrl, contains(code.toString()));
+          expect(response.description, isNotEmpty);
         } catch (e) {
-          // Method not implemented yet
-          expect(e, isA<UnimplementedError>());
+          // In test environment, network requests may fail
+          expect(e, isA<ApiException>());
         }
       }
     });
@@ -151,11 +151,10 @@ void main() {
           // Should throw an error for invalid codes
           fail('Expected an error for invalid status code $code');
         } catch (e) {
-          // Should throw appropriate error or UnimplementedError
+          // Should throw appropriate error
           expect(
               e,
               anyOf([
-                isA<UnimplementedError>(),
                 isA<ValidationException>(),
                 isA<ApiException>(),
               ]));

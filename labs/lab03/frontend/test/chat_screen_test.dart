@@ -39,7 +39,7 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('should display TODO text initially',
+    testWidgets('should display REST API CHAT title',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -50,8 +50,8 @@ void main() {
         ),
       );
 
-      // Should display placeholder text until implemented
-      expect(find.textContaining('TODO'), findsWidgets);
+      // Should display the app title
+      expect(find.text('REST API CHAT'), findsOneWidget);
     });
 
     testWidgets('should have text controllers for username and message',
@@ -68,9 +68,8 @@ void main() {
       // Wait for widget to settle
       await tester.pumpAndSettle();
 
-      // After implementation, there should be text fields
-      // This test will pass when students implement the input fields
-      expect(find.byType(ChatScreen), findsOneWidget);
+      // Should have text fields for input
+      expect(find.byType(TextField), findsAtLeastNWidgets(2));
     });
 
     testWidgets('should handle loading state', (WidgetTester tester) async {
@@ -85,7 +84,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // After implementation, should handle loading states properly
+      // Should handle loading states properly
       expect(find.byType(ChatScreen), findsOneWidget);
     });
 
@@ -101,7 +100,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // After implementation, should handle error states properly
+      // Should handle error states properly
       expect(find.byType(ChatScreen), findsOneWidget);
     });
 
@@ -118,7 +117,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // After implementation, should display messages in a list
+      // Should display messages in a list
       expect(find.byType(ChatScreen), findsOneWidget);
     });
   });
@@ -176,9 +175,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // After implementation, should be able to send messages
-      // Look for send button or similar UI elements
-      expect(find.byType(ChatScreen), findsOneWidget);
+      // Should be able to send messages
+      expect(find.text('Send Message'), findsOneWidget);
     });
 
     testWidgets('should edit existing messages', (WidgetTester tester) async {
@@ -193,7 +191,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // After implementation, should be able to edit messages
+      // Should be able to edit messages
       expect(find.byType(ChatScreen), findsOneWidget);
     });
 
@@ -209,7 +207,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // After implementation, should be able to delete messages
+      // Should be able to delete messages
       expect(find.byType(ChatScreen), findsOneWidget);
     });
   });
