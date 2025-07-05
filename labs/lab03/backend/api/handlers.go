@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"lab03-backend/models"
 	"lab03-backend/storage"
 	"log"
@@ -39,6 +40,7 @@ func (h *Handler) SetupRoutes() *mux.Router {
 	api.HandleFunc("/messages/{id}", h.UpdateMessage).Methods("PUT")
 	api.HandleFunc("/messages/{id}", h.DeleteMessage).Methods("DELETE")
 	api.HandleFunc("/status/{code}", h.GetHTTPStatus).Methods("GET")
+	api.HandleFunc("/cat/{code}", h.GetCatImage).Methods("GET")
 	api.HandleFunc("/health", h.HealthCheck).Methods("GET")
 
 	return router
@@ -160,7 +162,7 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 
 	response := models.HTTPStatusResponse{
 		StatusCode:  code,
-		ImageURL:    "https://http.cat/" + strconv.Itoa(code),
+		ImageURL:    "/api/cat/" + strconv.Itoa(code),
 		Description: getHTTPStatusDescription(code),
 	}
 
@@ -171,11 +173,56 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, http.StatusOK, apiResponse)
 }
 
+// GetCatImage handles GET /api/cat/{code}
+func (h *Handler) GetCatImage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	codeStr := vars["code"]
+
+	code, err := strconv.Atoi(codeStr)
+	if err != nil {
+		h.writeError(w, http.StatusBadRequest, "Invalid status code")
+		return
+	}
+
+	if code < 100 || code > 599 {
+		h.writeError(w, http.StatusBadRequest, "Status code must be between 100 and 599")
+		return
+	}
+
+	// Fetch image from http.cat
+	resp, err := http.Get("https://http.cat/" + strconv.Itoa(code))
+	if err != nil {
+		h.writeError(w, http.StatusInternalServerError, "Failed to fetch cat image")
+		return
+	}
+	defer resp.Body.Close()
+
+	// Copy headers
+	for key, values := range resp.Header {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
+	}
+
+	// Set CORS headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	// Copy response
+	w.WriteHeader(resp.StatusCode)
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		log.Printf("Error copying cat image: %v", err)
+	}
+}
+
 // HealthCheck handles GET /api/health
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode("healthy")
+	healthData := map[string]interface{}{
+		"status": "healthy",
+	}
+	h.writeJSON(w, http.StatusOK, healthData)
 }
 
 // Helper function to write JSON responses

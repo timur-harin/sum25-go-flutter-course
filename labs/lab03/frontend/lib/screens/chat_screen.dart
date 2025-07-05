@@ -64,13 +64,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     try {
-      final request = CreateMessageRequest(username: username, content: content);
+      final request =
+          CreateMessageRequest(username: username, content: content);
       final newMessage = await _apiService.createMessage(request);
-      
+
       setState(() {
         _messages.add(newMessage);
       });
-      
+
       _messageController.clear();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,8 +81,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _editMessage(Message message) async {
-    final TextEditingController editController = TextEditingController(text: message.content);
-    
+    final TextEditingController editController =
+        TextEditingController(text: message.content);
+
     final String? newContent = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -97,7 +99,8 @@ class _ChatScreenState extends State<ChatScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(editController.text.trim()),
+            onPressed: () =>
+                Navigator.of(context).pop(editController.text.trim()),
             child: const Text('Save'),
           ),
         ],
@@ -107,8 +110,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (newContent != null && newContent.isNotEmpty) {
       try {
         final request = UpdateMessageRequest(content: newContent);
-        final updatedMessage = await _apiService.updateMessage(message.id, request);
-        
+        final updatedMessage =
+            await _apiService.updateMessage(message.id, request);
+
         setState(() {
           final index = _messages.indexWhere((m) => m.id == message.id);
           if (index != -1) {
@@ -128,7 +132,8 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Message'),
-        content: Text('Are you sure you want to delete this message?\n\n"${message.content}"'),
+        content: Text(
+            'Are you sure you want to delete this message?\n\n"${message.content}"'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -160,9 +165,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _showHTTPStatus(int statusCode) async {
     try {
       final statusResponse = await _apiService.getHTTPStatus(statusCode);
-      
+
       if (!mounted) return;
-      
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -284,7 +289,8 @@ class _ChatScreenState extends State<ChatScreen> {
           TextField(
             controller: _usernameController,
             decoration: const InputDecoration(
-              labelText: 'Username',
+              labelText: 'Enter your username',
+              hintText: 'Enter your username',
               border: OutlineInputBorder(),
             ),
           ),
@@ -391,12 +397,23 @@ class _ChatScreenState extends State<ChatScreen> {
           ? _buildLoadingWidget()
           : _error != null
               ? _buildErrorWidget()
-              : ListView.builder(
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    return _buildMessageTile(_messages[index]);
-                  },
-                ),
+              : _messages.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text('No messages yet'),
+                          SizedBox(height: 8),
+                          Text('Send your first message to get started!'),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        return _buildMessageTile(_messages[index]);
+                      },
+                    ),
       bottomSheet: _buildMessageInput(),
       floatingActionButton: FloatingActionButton(
         onPressed: _loadMessages,
@@ -412,14 +429,14 @@ class HTTPStatusDemo {
     final random = Random();
     final statusCodes = [200, 201, 400, 404, 500];
     final randomCode = statusCodes[random.nextInt(statusCodes.length)];
-    
+
     // This would be called from the chat screen
     // For now, we'll handle it directly in the chat screen
   }
 
   static void showStatusPicker(BuildContext context, ApiService apiService) {
     final statusCodes = [100, 200, 201, 400, 401, 403, 404, 418, 500, 503];
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

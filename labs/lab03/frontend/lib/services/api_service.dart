@@ -173,14 +173,25 @@ class ApiService {
   }
 
   // Health check
-  Future<String> healthCheck() async {
+  Future<Map<String, dynamic>> healthCheck() async {
     try {
       final response = await _client
           .get(Uri.parse('$baseUrl/health'), headers: _getHeaders())
           .timeout(timeout);
 
       if (response.statusCode == 200) {
-        return response.body.replaceAll('"', ''); // Remove quotes from JSON string
+        final decodedData = json.decode(response.body);
+        if (decodedData is Map<String, dynamic>) {
+          if (decodedData['success'] == true && decodedData['data'] != null) {
+            return decodedData['data'] as Map<String, dynamic>;
+          } else {
+            return decodedData;
+          }
+        } else if (decodedData is String) {
+          return {'status': decodedData};
+        } else {
+          return {'status': 'healthy'};
+        }
       } else {
         throw ApiException('Health check failed: ${response.statusCode}');
       }
