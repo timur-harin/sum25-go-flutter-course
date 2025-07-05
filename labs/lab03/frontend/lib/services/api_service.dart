@@ -3,13 +3,11 @@ import 'package:http/http.dart' as http;
 import '../models/message.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080';
+  static const String baseUrl = 'http://localhost:8080/api';
   static const Duration timeout = Duration(seconds: 30);
-  late http.Client _client;
+  final http.Client _client;
 
-  ApiService() {
-    _client = http.Client();
-  }
+  ApiService({http.Client? client}) : _client = client ?? http.Client();
 
   void dispose() {
     _client.close();
@@ -39,19 +37,22 @@ class ApiService {
   Future<List<Message>> getMessages() async {
     try {
       final response = await _client
-          .get(Uri.parse('$baseUrl/api/messages'), headers: _getHeaders())
+          .get(Uri.parse('$baseUrl/messages'), headers: _getHeaders())
           .timeout(timeout);
 
-      final apiResponse = _handleResponse<ApiResponse<List<dynamic>>>(
-        response,
-        (json) => ApiResponse.fromJson(json, (data) => data as List<dynamic>),
-      );
-
-      if (apiResponse.success && apiResponse.data != null) {
-        return apiResponse.data!.map((json) => Message.fromJson(json)).toList();
+      final decodedData = json.decode(response.body);
+      
+      // Handle both direct array and wrapped response formats
+      List<dynamic> messagesData;
+      if (decodedData is List) {
+        messagesData = decodedData;
+      } else if (decodedData is Map<String, dynamic> && decodedData['data'] is List) {
+        messagesData = decodedData['data'];
       } else {
-        throw ApiException(apiResponse.error ?? 'Failed to get messages');
+        throw ApiException('Invalid response format');
       }
+
+      return messagesData.map((json) => Message.fromJson(json)).toList();
     } catch (e) {
       if (e is ApiException) {
         rethrow;
@@ -70,7 +71,7 @@ class ApiService {
     try {
       final response = await _client
           .post(
-            Uri.parse('$baseUrl/api/messages'),
+            Uri.parse('$baseUrl/messages'),
             headers: _getHeaders(),
             body: json.encode(request.toJson()),
           )
@@ -104,7 +105,7 @@ class ApiService {
     try {
       final response = await _client
           .put(
-            Uri.parse('$baseUrl/api/messages/$id'),
+            Uri.parse('$baseUrl/messages/$id'),
             headers: _getHeaders(),
             body: json.encode(request.toJson()),
           )
@@ -132,7 +133,7 @@ class ApiService {
   Future<void> deleteMessage(int id) async {
     try {
       final response = await _client
-          .delete(Uri.parse('$baseUrl/api/messages/$id'), headers: _getHeaders())
+          .delete(Uri.parse('$baseUrl/messages/$id'), headers: _getHeaders())
           .timeout(timeout);
 
       if (response.statusCode != 204) {
@@ -150,7 +151,7 @@ class ApiService {
   Future<HTTPStatusResponse> getHTTPStatus(int statusCode) async {
     try {
       final response = await _client
-          .get(Uri.parse('$baseUrl/api/status/$statusCode'), headers: _getHeaders())
+          .get(Uri.parse('$baseUrl/status/$statusCode'), headers: _getHeaders())
           .timeout(timeout);
 
       final apiResponse = _handleResponse<ApiResponse<Map<String, dynamic>>>(
@@ -172,21 +173,16 @@ class ApiService {
   }
 
   // Health check
-  Future<Map<String, dynamic>> healthCheck() async {
+  Future<String> healthCheck() async {
     try {
       final response = await _client
-          .get(Uri.parse('$baseUrl/api/health'), headers: _getHeaders())
+          .get(Uri.parse('$baseUrl/health'), headers: _getHeaders())
           .timeout(timeout);
 
-      final apiResponse = _handleResponse<ApiResponse<Map<String, dynamic>>>(
-        response,
-        (json) => ApiResponse.fromJson(json, (data) => data as Map<String, dynamic>),
-      );
-
-      if (apiResponse.success && apiResponse.data != null) {
-        return apiResponse.data!;
+      if (response.statusCode == 200) {
+        return response.body.replaceAll('"', ''); // Remove quotes from JSON string
       } else {
-        throw ApiException(apiResponse.error ?? 'Health check failed');
+        throw ApiException('Health check failed: ${response.statusCode}');
       }
     } catch (e) {
       if (e is ApiException) {

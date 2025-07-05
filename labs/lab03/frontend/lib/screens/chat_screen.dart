@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
 import 'dart:math';
@@ -199,9 +198,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading HTTP status: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading HTTP status: $e')),
+        );
+      }
     }
   }
 

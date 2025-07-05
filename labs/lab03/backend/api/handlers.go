@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -48,11 +47,11 @@ func (h *Handler) SetupRoutes() *mux.Router {
 // GetMessages handles GET /api/messages
 func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	messages := h.storage.GetAll()
-	response := models.APIResponse{
-		Success: true,
-		Data:    messages,
-	}
-	h.writeJSON(w, http.StatusOK, response)
+
+	// Return messages directly as array for compatibility with tests
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(messages)
 }
 
 // CreateMessage handles POST /api/messages
@@ -174,18 +173,9 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 
 // HealthCheck handles GET /api/health
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	healthData := map[string]interface{}{
-		"status":         "ok",
-		"message":        "API is running",
-		"timestamp":      time.Now(),
-		"total_messages": h.storage.Count(),
-	}
-
-	response := models.APIResponse{
-		Success: true,
-		Data:    healthData,
-	}
-	h.writeJSON(w, http.StatusOK, response)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("healthy")
 }
 
 // Helper function to write JSON responses
