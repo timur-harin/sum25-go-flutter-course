@@ -55,7 +55,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final validationError = request.validate();
     if (validationError != null) {
-      // Используем ScaffoldMessenger для показа SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(validationError)),
       );
@@ -80,7 +79,6 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _editMessage(Message message) async {
     final contentController = TextEditingController(text: message.content);
 
-    // Используем await для получения результата
     final newContent = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -156,7 +154,6 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final status = await _apiService.getHTTPStatus(statusCode);
 
-      // Проверяем, что виджет еще смонтирован
       if (!mounted) return;
 
       showDialog(
@@ -369,7 +366,6 @@ class HTTPStatusDemo {
     final randomCode =
         statusCodes[DateTime.now().millisecond % statusCodes.length];
 
-    // Access the state through the widget's context
     final state = context.findAncestorStateOfType<_ChatScreenState>();
     if (state != null) {
       state._showHTTPStatus(randomCode);

@@ -76,27 +76,20 @@ func (ms *MemoryStorage) Update(id int, content string) (*models.Message, error)
 
 // Delete removes a message from storage
 func (ms *MemoryStorage) Delete(id int) error {
-	// TODO: Implement Delete method
-	// Use write lock for thread safety
 	ms.mu.Lock()
 	defer ms.mu.Unlock()
-	// Check if message exists
+
 	if _, exists := ms.messages[id]; exists {
-		// Delete from map
 		delete(ms.messages, id)
 		return nil
 	}
-	// Return error if message not found
 	return ErrMessageNotFound
 }
 
 // Count returns the total number of messages
 func (ms *MemoryStorage) Count() int {
-	// TODO: Implement Count method
-	// Use read lock for thread safety
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
-	// Return length of messages map
 	return len(ms.messages)
 }
 

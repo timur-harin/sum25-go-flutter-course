@@ -35,7 +35,6 @@ class ApiService {
     }
   }
 
-  // Helper method to handle network errors - now returns Never
   Never _handleNetworkError(Object e) {
     if (e is SocketException) {
       throw NetworkException('No internet connection');
@@ -71,7 +70,7 @@ class ApiService {
 
   Future<Message> createMessage(CreateMessageRequest request) async {
     try {
-      print('Sending request: ${request.toJson()}'); // Логирование
+      print('Sending request: ${request.toJson()}');
 
       final response = await client
           .post(
@@ -81,7 +80,7 @@ class ApiService {
           )
           .timeout(timeout);
 
-      print('Raw response: ${response.body}'); // Логирование
+      print('Raw response: ${response.body}');
 
       final json = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -218,13 +217,10 @@ class ApiService {
 
       final json = jsonDecode(response.body) as Map<String, dynamic>;
 
-      // Проверяем статус ответа
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // Проверяем наличие поля 'data'
         if (json['data'] != null) {
           return json['data'] as Map<String, dynamic>;
         } else {
-          // Если поля 'data' нет, возвращаем весь ответ
           return json;
         }
       } else {

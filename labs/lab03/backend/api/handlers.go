@@ -77,7 +77,7 @@ func (h *Handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
 		"id":        msg.ID,
 		"username":  msg.Username,
 		"content":   msg.Content,
-		"timestamp": msg.Timestamp.Format(time.RFC3339), // Ensure consistent timestamp format
+		"timestamp": msg.Timestamp.Format(time.RFC3339),
 	}
 
 	h.writeJSON(w, http.StatusCreated, models.APIResponse{
@@ -152,7 +152,6 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Используем локальный URL вместо https://http.cat
 	imageURL := fmt.Sprintf("http://%s/api/cat/%d", r.Host, code)
 
 	response := models.HTTPStatusResponse{
@@ -172,13 +171,11 @@ func (h *Handler) ServeCatImage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	code := vars["code"]
 
-	// Проверяем, что код - это число
 	if _, err := strconv.Atoi(code); err != nil {
 		h.writeError(w, http.StatusBadRequest, "Invalid status code")
 		return
 	}
 
-	// Проксируем запрос к http.cat
 	resp, err := http.Get(fmt.Sprintf("https://http.cat/%s.jpg", code))
 	if err != nil {
 		h.writeError(w, http.StatusInternalServerError, "Failed to fetch image")
@@ -259,7 +256,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 		allowedOrigins := map[string]bool{
 			"http://localhost:3000": true,
 			"http://localhost:8080": true,
-			// Добавьте другие разрешенные origin при необходимости
 		}
 
 		if allowedOrigins[origin] {

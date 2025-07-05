@@ -13,13 +13,12 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     try {
-      // Преобразуем timestamp с учетом формата
       final timestamp = json['timestamp'] is String
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(); // fallback
 
       return Message(
-        id: int.parse(json['id'].toString()), // Универсальное преобразование
+        id: int.parse(json['id'].toString()),
         username: json['username'].toString(),
         content: json['content'].toString(),
         timestamp: timestamp,
