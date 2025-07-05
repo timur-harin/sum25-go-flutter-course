@@ -1,36 +1,26 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
 	"lab03-backend/storage"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 // Handler holds the storage instance
 type Handler struct {
+	// TODO: Add storage field of type *storage.MemoryStorage
 	storage *storage.MemoryStorage
 }
 
 // NewHandler creates a new handler instance
 func NewHandler(storage *storage.MemoryStorage) *Handler {
+	// TODO: Return a new Handler instance with provided storage
 	return &Handler{storage}
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-        if r.Method == "OPTIONS" {
-            w.WriteHeader(http.StatusOK)
-            return
-        }
-
-        next.ServeHTTP(w, r)
-    })
 }
 
 // SetupRoutes configures all API routes
@@ -42,21 +32,26 @@ func (h *Handler) SetupRoutes() *mux.Router {
 	// GET /messages -> h.GetMessages
 	// POST /messages -> h.CreateMessage
 	// PUT /messages/{id} -> h.UpdateMessage
-	// DELETE /messages/{id} -> h.DeleteMessage
-	// GET /status/{code} -> h.GetHTTPStatus
-	// GET /health -> h.HealthCheck
+	//  /messages/{id} -> h.DeleteMessage DELETE
+	//  /status/{code} -> h.GetHTTPStatus GET
+	//  /health -> h.HealthCheck GET
 	// TODO: Return the router
 
 	r := mux.NewRouter()
 	r.Use(corsMiddleware)
 
-	api := r.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/messages", h.GetMessages).Methods("GET")
-	api.HandleFunc("/messages", h.CreateMessage).Methods("POST")
-	api.HandleFunc("/messages/{id}", h.UpdateMessage).Methods("PUT")
-	api.HandleFunc("/messages/{id}", h.DeleteMessage).Methods("DELETE")
-	api.HandleFunc("/status/{code}", h.GetHTTPStatus).Methods("GET")
-	api.HandleFunc("/health", h.HealthCheck).Methods("GET")
+	api := r.PathPrefix("/api/v1").Subrouter()
+
+	// Message-related routes
+	messageRoutes := api.PathPrefix("/messages").Subrouter()
+	messageRoutes.HandleFunc("", h.GetMessages).Methods(http.MethodGet)
+	messageRoutes.HandleFunc("", h.CreateMessage).Methods(http.MethodPost)
+	messageRoutes.HandleFunc("/{id}", h.UpdateMessage).Methods(http.MethodPut)
+	messageRoutes.HandleFunc("/{id}", h.DeleteMessage).Methods(http.MethodDelete)
+
+	// System routes
+	api.HandleFunc("/status/{code}", h.GetHTTPStatus).Methods(http.MethodGet)
+	api.HandleFunc("/health", h.HealthCheck).Methods(http.MethodGet)
 
 	return r
 }
@@ -69,6 +64,14 @@ func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	// Write JSON response with status 200
 	// Handle any errors appropriately
 
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	message, err := h.storage.GetAll()
+
+	if err != nil {
+		h.writeError()
+	}
 
 }
 
@@ -131,47 +134,70 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Helper function to write JSON responses
 func (h *Handler) writeJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("Error encoding JSON response: %v", err)
-	}
+	// TODO: Implement writeJSON helper
+	// Set Content-Type header to "application/json"
+	// Set status code
+	// Encode data as JSON and write to response
+	// Log any encoding errors
 }
 
 // Helper function to write error responses
 func (h *Handler) writeError(w http.ResponseWriter, status int, message string) {
-	response := APIResponse{
-		Success: false,
-		Error:   message,
+	// TODO: Implement writeError helper
+	// Create APIResponse with Success: false and Error: message
+	// Use writeJSON to send the error response
+	response := ErrorResponse{Error: apiErr}
+}
+
+func writeError(w http.ResponseWriter, apiErr APIError) {
+	response := ErrorResponse{Error: apiErr}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(apiErr.Code)
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding error response: %v", err)
 	}
-	h.writeJSON(w, status, response)
 }
 
 // Helper function to parse JSON request body
 func (h *Handler) parseJSON(r *http.Request, dst interface{}) error {
-	return json.NewDecoder(r.Body).Decode(dst)
+	// TODO: Implement parseJSON helper
+	// Create JSON decoder from request body
+	// Decode into destination interface
+	// Return any decoding errors
+	return nil
 }
 
 // Helper function to get HTTP status description
 func getHTTPStatusDescription(code int) string {
-	switch code {
-	case http.StatusOK:
-		return "OK"
-	case http.StatusCreated:
-		return "Created"
-	case http.StatusNoContent:
-		return "No Content"
-	case http.StatusBadRequest:
-		return "Bad Request"
-	case http.StatusUnauthorized:
-		return "Unauthorized"
-	case http.StatusNotFound:
-		return "Not Found"
-	case http.StatusInternalServerError:
-		return "Internal Server Error"
-	default:
+	// TODO: Implement getHTTPStatusDescription
+	// Return appropriate description for common HTTP status codes
+	// Use a switch statement or map to handle:
+	// 200: "OK", 201: "Created", 204: "No Content"
+	// 400: "Bad Request", 401: "Unauthorized", 404: "Not Found"
+	// 500: "Internal Server Error", etc.
+	// Return "Unknown Status" for unrecognized codes
+	return "Unknown Status"
+}
 
-// CORS middleware
+//CORS middleware
+//func corsMiddleware(next http.Handler) http.Handler {
+//	// TODO: Implement CORS middleware
+//	// Set the following headers:
+//	// Access-Control-Allow-Origin: *
+//	// Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+//	// Access-Control-Allow-Headers: Content-Type, Authorization
+//	// Handle OPTIONS preflight requests
+//	// Call next handler for non-OPTIONS requests
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		// TODO: Implement CORS logic here
+//		next.ServeHTTP(w, r)
+//	})
+//
+//
+//}
+
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
