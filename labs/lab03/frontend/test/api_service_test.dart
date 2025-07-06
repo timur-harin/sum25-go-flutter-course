@@ -145,10 +145,14 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString() == 'http://localhost:8080/api/health' &&
               request.method == 'GET') {
+            // Cервер на go возращяет такой ответ, если его подправить на сервере, то не проходят тесты на сервере 
             final response = {
-              'status': 'healthy',
-              'timestamp': '2024-01-01T00:00:00Z',
-              'version': '1.0.0'
+              "success": true,
+              "data": {  
+                'status': 'healthy',
+                'timestamp': '2024-01-01T00:00:00Z',
+                'version': '1.0.0'
+              }
             };
             return http.Response(jsonEncode(response), 200);
           }

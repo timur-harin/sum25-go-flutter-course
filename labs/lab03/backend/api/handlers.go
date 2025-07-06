@@ -211,7 +211,7 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	//   - total_messages: count from storage
 	// Write JSON response with status 200
 	resp := map[string]interface{}{
-		"status":         "ok",
+		"status":         "healthy",
 		"message":        "API is running",
 		"timestamp":      time.Now(),
 		"total_messages": h.Storage.Count(),
@@ -298,7 +298,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	// Call next handler for non-OPTIONS requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Implement CORS logic here
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 

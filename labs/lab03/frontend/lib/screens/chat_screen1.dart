@@ -85,9 +85,6 @@ class _ChatScreenState extends State<ChatScreen> {
         throw ApiException("Not valid data!!!");
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message sent!'))
-      );
       final msg = await _apiService.createMessage(request);
       setState(() {
         _messages.insert(0, msg);
@@ -148,7 +145,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final confitrm = await showDialog<bool>(
       context: context, 
       builder: (_) => AlertDialog(
-        title: const Text('Delete Message'),
+        title: const Text('TODO: Delete Message'),
         content: const Text('Are you sure? Do you really want to delete this message?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
@@ -180,7 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text('HTTP Status: $statusCode'),
+          title: Text('HTTP ${status.statusCode}'),
           content: Image.network(
             status.imageUrl,
             errorBuilder: (_, __, ___) => const Text('Image not found'),
@@ -246,14 +243,14 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           TextField(
             controller: _usernameController,
-            decoration: const InputDecoration(labelText: 'Enter your username'),
+            decoration: const InputDecoration(labelText: 'Username'),
           ),
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _messageController,
-                  decoration: const InputDecoration(labelText: 'Enter your message'),
+                  decoration: const InputDecoration(labelText: 'Message'),
                 ),
               ),
               IconButton(
@@ -264,25 +261,15 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatusButton(200, 'OK'),
-              _buildStatusButton(404, 'Not Found'), 
-              _buildStatusButton(500, 'Error'),
-            ],
+            children: [200, 404, 500].map((code) {
+              return TextButton(
+                onPressed: () => _showHTTPStatus(code),
+                child: Text('HTTP $code'),
+              );
+            }).toList(),
           ),
-          TextButton(
-            onPressed: _sendMessage,
-            child: const Text('Send'),
-          )
         ],
       ),
-    );
-  }
-
-  Widget _buildStatusButton(int code, String text) {
-    return TextButton(
-      onPressed: () async => _showHTTPStatus(code),
-      child: Text('$code $text'),
     );
   }
 
@@ -296,7 +283,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 64),
+          const Icon(Icons.error, color: Colors.red, size: 64),
           const SizedBox(height: 16),
           Text(_error ?? 'Unknown error', style: const TextStyle(color: Colors.red)),
           ElevatedButton(onPressed: _loadMessages, child: const Text('Retry')),
@@ -309,18 +296,6 @@ class _ChatScreenState extends State<ChatScreen> {
     // TODO: Implement _buildLoadingWidget
     // Return Center widget with CircularProgressIndicator
     return const Center(child: CircularProgressIndicator());
-  }
-
-  Widget _buildEmptyWidget() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('No messages yet'),
-          const Text('Send your first message to get started!'),
-        ],
-      ),
-    );
   }
 
   @override
@@ -343,13 +318,11 @@ class _ChatScreenState extends State<ChatScreen> {
           ? _buildLoadingWidget()
           : _error != null
               ? _buildErrorWidget()
-              : _messages.isEmpty
-                ? _buildEmptyWidget()
-                : ListView.builder(
-                    reverse: true,
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) => _buildMessageTile(_messages[index]),
-                  ),
+              : ListView.builder(
+                  reverse: true,
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) => _buildMessageTile(_messages[index]),
+                ),
       bottomSheet: _buildMessageInput(),
       floatingActionButton: FloatingActionButton(
         onPressed: _loadMessages,
@@ -407,7 +380,7 @@ class HTTPStatusDemo {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text('$code'),
+          title: Text('$code ${description}'),
           content: Image.network(
             'https://http.cat/$code.jpg',
             fit: BoxFit.cover,
