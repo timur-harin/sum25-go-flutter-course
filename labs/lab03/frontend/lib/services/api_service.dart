@@ -206,19 +206,16 @@ class ApiService {
           .timeout(timeout);
 
       // If we get a 400 response, check if it's from the test environment
-      if (response.statusCode == 400) {
+      if (response.statusCode == 400 || response.statusCode == 404) {
         try {
-          // Try to decode the response
           final Map<String, dynamic> decoded =
           json.decode(response.body) as Map<String, dynamic>;
-          final message = decoded['message'] ?? 'Client error';
+          final message = decoded['error'] ?? 'Client error';
           throw ApiException(message);
         } catch (FormatException) {
-          // If we can't decode the response, it's likely a test environment
-          throw ApiException('deleteMessage method needs to be implemented');
+          throw ApiException('Invalid JSON response from server.');
         }
       }
-
       if (response.statusCode == 204) {
         // Successfully deleted, nothing to return
         return;
