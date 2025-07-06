@@ -90,10 +90,11 @@ class HTTPStatusResponse {
   });
 
   factory HTTPStatusResponse.fromJson(Map<String, dynamic> json) {
+    final statusJson = json['status'] ?? {};
     return HTTPStatusResponse(
-      statusCode: json['status_code'] as int,
-      imageUrl: json['image_url'] as String,
-      description: json['description'] as String,
+      statusCode: statusJson['statusCode'] ?? 0,
+      imageUrl: statusJson['imageUrl'] ?? '',
+      description: statusJson['description'] ?? '',
     );
   }
 }

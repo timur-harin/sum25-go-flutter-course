@@ -10,9 +10,7 @@ class ApiService {
 
   late http.Client _client;
 
-  ApiService() {
-    _client = http.Client();
-  }
+  ApiService({http.Client? client}) : _client = client ?? http.Client();
 
   void dispose() {
     _client.close();
@@ -30,7 +28,7 @@ class ApiService {
     final status = response.statusCode;
 
     if (response.body.isEmpty) {
-      throw UnimplementedError();
+      throw ApiException('Unexpected API response');
     }
 
     final data = json.decode(response.body);
@@ -45,7 +43,7 @@ class ApiService {
     final status = response.statusCode;
 
     if (response.body.isEmpty) {
-      throw UnimplementedError();
+      throw ApiException('Unexpected API response');
     }
 
     final data = json.decode(response.body);
@@ -69,7 +67,7 @@ class ApiService {
 
       final data = _handleDynamicResponse(response);
 
-      final list = data['data'];
+      final list = data['messages'];
       if (list is! List) {
         throw UnimplementedError();
       }
@@ -102,7 +100,7 @@ class ApiService {
         (json) => json,
       );
 
-      return Message.fromJson(parsed['data']);
+      return Message.fromJson(parsed['message']);
     } on SocketException {
       throw NetworkException('No internet connection.');
     } on TimeoutException {
@@ -131,7 +129,7 @@ class ApiService {
         (json) => json,
       );
 
-      return Message.fromJson(parsed['data']);
+      return Message.fromJson(parsed['message']);
     } on SocketException {
       throw NetworkException('No internet connection.');
     } on TimeoutException {
@@ -152,6 +150,8 @@ class ApiService {
       if (response.statusCode != 204) {
        throw UnimplementedError();
       }
+
+      return;
     } on SocketException {
       throw NetworkException('No internet connection.');
     } on TimeoutException {
@@ -160,27 +160,14 @@ class ApiService {
     throw UnimplementedError();
   }
 
-  Future<HTTPStatusResponse> getHTTPStatus(int statusCode) async {
-    try {
-      final response = await _client
-          .get(
-            Uri.parse('$baseUrl/api/status/$statusCode'),
-            headers: _getHeaders(),
-          )
-          .timeout(timeout);
-
-      final parsed = _handleResponse<Map<String, dynamic>>(
-        response,
-        (json) => json,
-      );
-
-      return HTTPStatusResponse.fromJson(parsed['data']);
-    } on SocketException {
-      throw NetworkException('No internet connection.');
-    } on TimeoutException {
-      throw NetworkException('Request timed out.');
+  Future<HTTPStatusResponse> getHTTPStatus(int code) async {
+  final response = await http.get(Uri.parse('$baseUrl/api/status/$code'));
+    if (response.statusCode == 200) {
+      final jsonMap = jsonDecode(response.body);
+      return HTTPStatusResponse.fromJson(jsonMap);
+    } else {
+      throw ApiException('Failed to fetch HTTP status for code $code');
     }
-    throw UnimplementedError();
   }
 
   Future<Map<String, dynamic>> healthCheck() async {

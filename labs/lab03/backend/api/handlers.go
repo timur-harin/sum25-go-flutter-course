@@ -162,7 +162,7 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 // HealthCheck handles GET /api/health
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
-		"status":         "ok",
+		"status":         "healthy",
 		"message":        "API is running",
 		"timestamp":      time.Now().Format(time.RFC3339),
 		"total_messages": h.ms.Count(),
@@ -217,12 +217,16 @@ func getHTTPStatusDescription(code int) string {
 	}
 }
 
-// CORS middleware
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		origin := r.Header.Get("Origin")
+
+		// Only set the CORS headers if the Origin header is present
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
