@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'dart:convert';
 
 import 'package:lab03_frontend/screens/chat_screen.dart';
 import 'package:lab03_frontend/services/api_service.dart';
+import 'package:lab03_frontend/main.dart';
+import 'package:lab03_frontend/models/message.dart';
 
 void main() {
   group('ChatScreen Widget Tests', () {
@@ -14,203 +19,296 @@ void main() {
     });
 
     tearDown(() {
-      try {
-        mockApiService.dispose();
-      } catch (e) {
-        // Ignore if dispose is not implemented yet
-      }
+      mockApiService.dispose();
     });
 
-    testWidgets('should display chat screen with app bar',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => mockApiService,
-            child: const ChatScreen(),
-          ),
-        ),
-      );
+    // Helper function to create mock client
+    MockClient _createMockClient() {
+      return MockClient((request) async {
+        if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+            request.method == 'GET') {
+          final response = {
+            'success': true,
+            'data': [
+              {
+                'id': 1,
+                'username': 'testuser',
+                'content': 'test message',
+                'timestamp': '2024-01-01T00:00:00.000Z'
+              }
+            ]
+          };
+          return http.Response(jsonEncode(response), 200);
+        }
+        if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+            request.method == 'POST') {
+          final response = {
+            'success': true,
+            'data': {
+              'id': 2,
+              'username': 'integrationtest',
+              'content': 'Test message from integration test',
+              'timestamp': '2024-01-01T00:00:00.000Z'
+            }
+          };
+          return http.Response(jsonEncode(response), 201);
+        }
+        if (request.url.toString() == 'http://localhost:8080/api/status/200') {
+          final response = {
+            'success': true,
+            'data': {
+              'status_code': 200,
+              'image_url': 'http://localhost:8080/api/cat/200',
+              'description': 'OK'
+            }
+          };
+          return http.Response(jsonEncode(response), 200);
+        }
+        if (request.url.toString() == 'http://localhost:8080/api/status/404') {
+          final response = {
+            'success': true,
+            'data': {
+              'status_code': 404,
+              'image_url': 'http://localhost:8080/api/cat/404',
+              'description': 'Not Found'
+            }
+          };
+          return http.Response(jsonEncode(response), 200);
+        }
+        return http.Response('Not Found', 404);
+      });
+    }
 
-      // Check if app bar is present
-      expect(find.byType(AppBar), findsOneWidget);
-
-      // Check if scaffold is present
-      expect(find.byType(Scaffold), findsOneWidget);
-    });
-
-    testWidgets('should display TODO text initially',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => mockApiService,
-            child: const ChatScreen(),
-          ),
-        ),
-      );
-
-      // Should display placeholder text until implemented
-      expect(find.textContaining('TODO'), findsWidgets);
-    });
-
-    testWidgets('should have text controllers for username and message',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => mockApiService,
-            child: const ChatScreen(),
-          ),
-        ),
-      );
-
-      // Wait for widget to settle
-      await tester.pumpAndSettle();
-
-      // After implementation, there should be text fields
-      // This test will pass when students implement the input fields
-      expect(find.byType(ChatScreen), findsOneWidget);
-    });
-
-    testWidgets('should handle loading state', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => mockApiService,
-            child: const ChatScreen(),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // After implementation, should handle loading states properly
-      expect(find.byType(ChatScreen), findsOneWidget);
-    });
-
-    testWidgets('should handle error state', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => mockApiService,
-            child: const ChatScreen(),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // After implementation, should handle error states properly
-      expect(find.byType(ChatScreen), findsOneWidget);
-    });
-
-    testWidgets('should display messages when loaded',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => mockApiService,
-            child: const ChatScreen(),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // After implementation, should display messages in a list
-      expect(find.byType(ChatScreen), findsOneWidget);
-    });
-  });
-
-  group('HTTPStatusDemo Tests', () {
-    testWidgets('should show HTTP status demo functionality',
-        (WidgetTester tester) async {
-      // This test will verify the HTTP status demonstration features
-      // Students should implement buttons that show HTTP cat images
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () {
-                  // This will be implemented by students
-                  // HTTPStatusDemo.showRandomStatus(context, ApiService());
-                },
-                child: const Text('Show HTTP Cat'),
+    // MOCK TESTS
+    group('Mock Tests', () {
+      testWidgets('should display chat screen with proper UI elements',
+          (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<ApiService>(
+                create: (_) => ApiService(client: _createMockClient()),
+                dispose: (_, apiService) => apiService.dispose(),
               ),
+              ChangeNotifierProxyProvider<ApiService, ChatProvider>(
+                create: (context) => ChatProvider(
+                  Provider.of<ApiService>(context, listen: false),
+                ),
+                update: (context, apiService, previous) =>
+                    previous ?? ChatProvider(apiService),
+              ),
+            ],
+            child: const MaterialApp(
+              home: ChatScreen(),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Show HTTP Cat'), findsOneWidget);
-    });
+        // Wait for messages to load
+        await tester.pumpAndSettle();
 
-    testWidgets('should handle different HTTP status codes',
-        (WidgetTester tester) async {
-      // Test that the demo can handle various status codes
-      // This will pass when students implement the HTTPStatusDemo class
+        // Should have app bar
+        expect(find.byType(AppBar), findsOneWidget);
+        expect(find.text('REST API Chat'), findsOneWidget);
 
-      const statusCodes = [200, 201, 400, 404, 418, 500];
+        // Should have input fields
+        expect(find.byType(TextField), findsNWidgets(2));
+        expect(find.text('Enter your username'), findsOneWidget);
+        expect(find.text('Enter your message'), findsOneWidget);
 
-      for (final code in statusCodes) {
-        // Each status code should be valid for the HTTP cat API
-        expect(code, greaterThan(99));
-        expect(code, lessThan(600));
-      }
-    });
-  });
+        // Should have HTTP status buttons
+        expect(find.text('200 OK'), findsOneWidget);
+        expect(find.text('404 Not Found'), findsOneWidget);
+        expect(find.text('500 Error'), findsOneWidget);
 
-  group('Message Operations Tests', () {
-    testWidgets('should send new messages', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => ApiService(),
-            child: const ChatScreen(),
+        // Should have send button
+        expect(find.text('Send'), findsOneWidget);
+
+        // Should have refresh buttons
+        expect(find.byIcon(Icons.refresh), findsNWidgets(2)); // App bar + FAB
+
+        // Should have floating action button
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+      });
+
+      testWidgets('should send message and update UI',
+          (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<ApiService>(
+                create: (_) => ApiService(client: _createMockClient()),
+                dispose: (_, apiService) => apiService.dispose(),
+              ),
+              ChangeNotifierProxyProvider<ApiService, ChatProvider>(
+                create: (context) => ChatProvider(
+                  Provider.of<ApiService>(context, listen: false),
+                ),
+                update: (context, apiService, previous) =>
+                    previous ?? ChatProvider(apiService),
+              ),
+            ],
+            child: const MaterialApp(
+              home: ChatScreen(),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        // Wait for initial load
+        await tester.pumpAndSettle();
 
-      // After implementation, should be able to send messages
-      // Look for send button or similar UI elements
-      expect(find.byType(ChatScreen), findsOneWidget);
-    });
+        // Find username and message input fields
+        final usernameField = find.byType(TextField).first;
+        final messageField = find.byType(TextField).at(1);
+        final sendButton = find.text('Send');
 
-    testWidgets('should edit existing messages', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => ApiService(),
-            child: const ChatScreen(),
+        // Enter username and message
+        await tester.enterText(usernameField, 'integrationtest');
+        await tester.enterText(
+            messageField, 'Test message from integration test');
+        await tester.pump();
+
+        // Tap send button
+        await tester.tap(sendButton);
+        await tester.pumpAndSettle();
+
+        // Should show success message
+        expect(find.byType(SnackBar), findsOneWidget);
+      });
+
+      testWidgets('should show HTTP status dialogs when buttons are pressed',
+          (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<ApiService>(
+                create: (_) => ApiService(client: _createMockClient()),
+                dispose: (_, apiService) => apiService.dispose(),
+              ),
+              ChangeNotifierProxyProvider<ApiService, ChatProvider>(
+                create: (context) => ChatProvider(
+                  Provider.of<ApiService>(context, listen: false),
+                ),
+                update: (context, apiService, previous) =>
+                    previous ?? ChatProvider(apiService),
+              ),
+            ],
+            child: const MaterialApp(
+              home: ChatScreen(),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        // Wait for initial load
+        await tester.pumpAndSettle();
 
-      // After implementation, should be able to edit messages
-      expect(find.byType(ChatScreen), findsOneWidget);
-    });
+        // Find and tap HTTP status buttons
+        final status200Button = find.text('200 OK');
+        final status404Button = find.text('404 Not Found');
 
-    testWidgets('should delete messages', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Provider<ApiService>(
-            create: (_) => ApiService(),
-            child: const ChatScreen(),
+        expect(status200Button, findsOneWidget);
+        expect(status404Button, findsOneWidget);
+
+        // Tap 200 OK button
+        await tester.tap(status200Button);
+        await tester.pumpAndSettle();
+
+        // Should show dialog with HTTP status
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('HTTP Status: 200'), findsOneWidget);
+        expect(find.text('OK'), findsOneWidget);
+
+        // Close dialog
+        await tester.tap(find.text('Close'));
+        await tester.pumpAndSettle();
+
+        // Tap 404 button
+        await tester.tap(status404Button);
+        await tester.pumpAndSettle();
+
+        // Should show dialog with 404 status
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('HTTP Status: 404'), findsOneWidget);
+        expect(find.text('Not Found'), findsOneWidget);
+      });
+
+      testWidgets('should display error message when API fails',
+          (WidgetTester tester) async {
+        // Create a mock client that returns error
+        final errorMockClient = MockClient((request) async {
+          return http.Response('Server Error', 500);
+        });
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<ApiService>(
+                create: (_) => ApiService(client: errorMockClient),
+                dispose: (_, apiService) => apiService.dispose(),
+              ),
+              ChangeNotifierProxyProvider<ApiService, ChatProvider>(
+                create: (context) => ChatProvider(
+                  Provider.of<ApiService>(context, listen: false),
+                ),
+                update: (context, apiService, previous) =>
+                    previous ?? ChatProvider(apiService),
+              ),
+            ],
+            child: const MaterialApp(
+              home: ChatScreen(),
+            ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        // Wait for error to appear
+        await tester.pumpAndSettle();
 
-      // After implementation, should be able to delete messages
-      expect(find.byType(ChatScreen), findsOneWidget);
+        // Should show error widget
+        expect(find.byIcon(Icons.error_outline), findsOneWidget);
+        expect(find.text('Retry'), findsOneWidget);
+      });
+
+      testWidgets('should display empty state when no messages',
+          (WidgetTester tester) async {
+        // Create a mock client that returns empty messages
+        final emptyMockClient = MockClient((request) async {
+          if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+              request.method == 'GET') {
+            final response = {'success': true, 'data': []};
+            return http.Response(jsonEncode(response), 200);
+          }
+          return http.Response('Not Found', 404);
+        });
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<ApiService>(
+                create: (_) => ApiService(client: emptyMockClient),
+                dispose: (_, apiService) => apiService.dispose(),
+              ),
+              ChangeNotifierProxyProvider<ApiService, ChatProvider>(
+                create: (context) => ChatProvider(
+                  Provider.of<ApiService>(context, listen: false),
+                ),
+                update: (context, apiService, previous) =>
+                    previous ?? ChatProvider(apiService),
+              ),
+            ],
+            child: const MaterialApp(
+              home: ChatScreen(),
+            ),
+          ),
+        );
+
+        // Wait for messages to load
+        await tester.pumpAndSettle();
+
+        // Should show empty state
+        expect(find.text('No messages yet'), findsOneWidget);
+        expect(find.text('Send your first message to get started!'),
+            findsOneWidget);
+      });
     });
   });
 }

@@ -108,9 +108,7 @@ Implement the following features:
 
 3. Run the app:
    ```bash
-   flutter run -d chrome  # For web
-   # or
-   flutter run             # For mobile/desktop
+   flutter run --web-port 3000 --web-hostname localhost --dart-define=FLUTTER_WEB_USE_SKIA=true
    ```
 
 ### Testing
