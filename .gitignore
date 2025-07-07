@@ -229,3 +229,7 @@ app.*.map.json
 # Exceptions to above rules
 # =========================
 !/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java 
+
+# FVM Version Cache
+.fvm/
+.fvmrc/
