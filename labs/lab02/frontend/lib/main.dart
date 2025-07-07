@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
-import 'user_profile.dart';
-import 'chat_service.dart';
-import 'user_service.dart';
 
 void main() {
   // TODO: Initialize and run the app
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   // TODO: Initialize chatService and userService
 
