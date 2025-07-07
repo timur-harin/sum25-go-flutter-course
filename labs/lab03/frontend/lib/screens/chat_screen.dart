@@ -327,6 +327,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: const Text('404 Not Found'),
               ),
               ElevatedButton(
+                onPressed: () => _showHTTPStatus(418),
+                child: const Text("418 I'm a teapot"),
+              ),
+              ElevatedButton(
                 onPressed: () => _showHTTPStatus(500),
                 child: const Text('500 Error'),
               ),
