@@ -161,7 +161,7 @@ class ApiService {
           throw ApiException(data['error'] ?? 'Health check failed');
         }
       } else {
-        return data; // Для тестов, которые возвращают плоский объект
+        return data;
       }
     } else {
       throw ApiException('Health check failed: ${response.statusCode}');
