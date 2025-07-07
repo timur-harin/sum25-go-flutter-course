@@ -136,28 +136,32 @@ class _ChatScreenState extends State<ChatScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('HTTP Status $statusCode'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(statusResponse.description),
-              const SizedBox(height: 16),
-              Image.network(
-                statusResponse.imageUrl,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
+          title: Text('HTTP Status: $statusCode'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(statusResponse.description),
+                const SizedBox(height: 16),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 300, maxHeight: 200),
+                  child: Image.network(
+                    statusResponse.imageUrl,
                     height: 200,
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Text('Failed to load image'),
-                    ),
-                  );
-                },
-              ),
-            ],
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Text('Failed to load image'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -283,21 +287,32 @@ class _ChatScreenState extends State<ChatScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(context, 200),
-                child: const Text('200 OK'),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _showHTTPStatus(context, 200),
+                  child: const Text('200 OK'),
+                ),
               ),
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(context, 404),
-                child: const Text('404 Not Found'),
+              SizedBox(width: 4),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _showHTTPStatus(context, 404),
+                  child: const Text('404 Not Found'),
+                ),
               ),
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(context, 418),
-                child: const Text("418 I'm a teapot"),
+              SizedBox(width: 4),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _showHTTPStatus(context, 418),
+                  child: const Text("418 I'm a teapot"),
+                ),
               ),
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(context, 500),
-                child: const Text('500 Error'),
+              SizedBox(width: 4),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _showHTTPStatus(context, 500),
+                  child: const Text('500 Error'),
+                ),
               ),
             ],
           ),
