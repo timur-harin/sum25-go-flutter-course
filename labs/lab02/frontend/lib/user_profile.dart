@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lab02_chat/user_service.dart';
 
-// UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final dynamic userService;
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -18,7 +16,11 @@ class _UserProfileState extends State<UserProfile> {
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _userFuture = _fetchUser();
+  }
+
+  Future<Map<String, String>> _fetchUser() async {
+    return widget.userService.fetchUser();
   }
 
   @override
@@ -26,7 +28,32 @@ class _UserProfileState extends State<UserProfile> {
     // TODO: Build user profile UI with loading, error, and user info
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: FutureBuilder<Map<String, String>>(
+        future: _userFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'An error occurred: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            );
+          } else if (snapshot.hasData) {
+            final user = snapshot.data!;
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(user['name'] ?? '', style: const TextStyle(fontSize: 24)),
+                Text(user['email'] ?? '', style: const TextStyle(fontSize: 16)),
+              ],
+            );
+          } else {
+            return const Center(child: Text('No user data'));
+          }
+        },
+      ),
     );
   }
 }
