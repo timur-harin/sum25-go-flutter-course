@@ -259,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
             controller: _usernameController,
             decoration: const InputDecoration(
               labelText: 'Enter your username',
-              hintText: 'Enter your username',
+              hintText: 'Username',
               border: OutlineInputBorder(),
             ),
           ),
