@@ -11,14 +11,12 @@ class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
   void _incrementCounter() {
-    // TODO: Implement this function
     setState(() {
       _counter+=1;
     });
   }
 
   void _decrementCounter() {
-    // TODO: Implement this function
     setState(() {
       _counter-=1;
     });
