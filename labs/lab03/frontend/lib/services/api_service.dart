@@ -2,111 +2,198 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/message.dart';
 
-class ChatApi {
-  static const String endpoint = 'http://localhost:8080';
-  static const Duration reqTimeout = Duration(seconds: 30);
+class ApiService {
+  static const String baseUrl = 'http://localhost:8080';
+  static const Duration timeout = Duration(seconds: 30);
+  late http.Client _client;
 
-  final http.Client _http;
+  ApiService() {
+    _client = http.Client();
+  }
 
-  ChatApi() : _http = http.Client();
+  void dispose() {
+    _client.close();
+  }
 
-  void close() => _http.close();
-
-  Map<String, String> get _headers => {
+  Map<String, String> _getHeaders() => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
 
-  T _parse<T>(http.Response resp, T Function(Map<String, dynamic>) fromJson) {
-    if (resp.statusCode >= 200 && resp.statusCode < 300) {
-      final Map<String, dynamic> data = json.decode(resp.body);
-      if (data.containsKey('data')) {
-        return fromJson(data['data']);
-      } else {
-        return fromJson(data);
+  T _handleResponse<T>(http.Response response, T Function(Map<String, dynamic>) fromJson) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decoded = json.decode(response.body) as Map<String, dynamic>;
+      return fromJson(decoded);
+    } else if (response.statusCode >= 400 && response.statusCode < 500) {
+      final decoded = json.decode(response.body);
+      final message = decoded is Map<String, dynamic> && decoded['error'] != null
+          ? decoded['error']
+          : 'Client error: ${response.statusCode}';
+      throw ApiException(message.toString());
+    } else if (response.statusCode >= 500 && response.statusCode < 600) {
+      throw ServerException('Server error: ${response.statusCode}');
+    } else {
+      throw ApiException('Unexpected error: ${response.statusCode}');
+    }
+  }
+
+  Future<List<Message>> getMessages() async {
+    try {
+      final response = await _client
+          .get(Uri.parse('$baseUrl/api/messages'), headers: _getHeaders())
+          .timeout(timeout);
+      final apiResponse = _handleResponse<ApiResponse<List<Message>>>(
+        response,
+        (json) => ApiResponse<List<Message>>(
+          success: json['success'] as bool,
+          data: (json['data'] as List<dynamic>?)?.map((e) => Message.fromJson(e as Map<String, dynamic>)).toList(),
+          error: json['error'] as String?,
+        ),
+      );
+      if (apiResponse.data == null) {
+        return [];
       }
-    } else if (resp.statusCode >= 400 && resp.statusCode < 500) {
-      throw ClientErr('Ошибка клиента: ${resp.body}');
-    } else if (resp.statusCode >= 500) {
-      throw ServerErr('Ошибка сервера: ${resp.body}');
-    } else {
-      throw ClientErr('Неожиданный статус: ${resp.statusCode}');
+      return apiResponse.data!;
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } on Exception catch (e) {
+      rethrow;
     }
   }
 
-  Future<List<ChatMsg>> fetchAll() async {
-    final resp = await _http
-        .get(Uri.parse('$endpoint/api/messages'), headers: _headers)
-        .timeout(reqTimeout);
-    if (resp.statusCode == 200) {
-      final decoded = json.decode(resp.body);
-      final list = (decoded['data'] as List)
-          .map((e) => ChatMsg.fromJson(e as Map<String, dynamic>))
-          .toList();
-      return list;
-    } else {
-      throw ClientErr('Ошибка загрузки: ${resp.body}');
+  Future<Message> createMessage(CreateMessageRequest request) async {
+    final validation = request.validate();
+    if (validation != null) {
+      throw ValidationException(validation);
+    }
+    try {
+      final response = await _client
+          .post(Uri.parse('$baseUrl/api/messages'),
+              headers: _getHeaders(), body: json.encode(request.toJson()))
+          .timeout(timeout);
+      final apiResponse = _handleResponse<ApiResponse<Message>>(
+        response,
+        (json) => ApiResponse<Message>(
+          success: json['success'] as bool,
+          data: json['data'] != null ? Message.fromJson(json['data']) : null,
+          error: json['error'] as String?,
+        ),
+      );
+      if (apiResponse.data == null) {
+        throw ApiException('No message returned');
+      }
+      return apiResponse.data!;
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } on Exception catch (e) {
+      rethrow;
     }
   }
 
-  Future<ChatMsg> addMsg(NewMsgReq req) async {
-    final err = req.check();
-    if (err != null) throw ValidationErr(err);
-    final resp = await _http
-        .post(Uri.parse('$endpoint/api/messages'),
-            headers: _headers, body: json.encode(req.toJson()))
-        .timeout(reqTimeout);
-    return _parse<ChatMsg>(resp, (json) => ChatMsg.fromJson(json));
-  }
-
-  Future<ChatMsg> editMsg(int msgId, EditMsgReq req) async {
-    final err = req.check();
-    if (err != null) throw ValidationErr(err);
-    final resp = await _http
-        .put(Uri.parse('$endpoint/api/messages/$msgId'),
-            headers: _headers, body: json.encode(req.toJson()))
-        .timeout(reqTimeout);
-    return _parse<ChatMsg>(resp, (json) => ChatMsg.fromJson(json));
-  }
-
-  Future<void> removeMsg(int msgId) async {
-    final resp = await _http
-        .delete(Uri.parse('$endpoint/api/messages/$msgId'), headers: _headers)
-        .timeout(reqTimeout);
-    if (resp.statusCode != 204) {
-      throw ClientErr('Ошибка удаления: ${resp.body}');
+  Future<Message> updateMessage(int id, UpdateMessageRequest request) async {
+    final validation = request.validate();
+    if (validation != null) {
+      throw ValidationException(validation);
+    }
+    try {
+      final response = await _client
+          .put(Uri.parse('$baseUrl/api/messages/$id'),
+              headers: _getHeaders(), body: json.encode(request.toJson()))
+          .timeout(timeout);
+      final apiResponse = _handleResponse<ApiResponse<Message>>(
+        response,
+        (json) => ApiResponse<Message>(
+          success: json['success'] as bool,
+          data: json['data'] != null ? Message.fromJson(json['data']) : null,
+          error: json['error'] as String?,
+        ),
+      );
+      if (apiResponse.data == null) {
+        throw ApiException('No message returned');
+      }
+      return apiResponse.data!;
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } on Exception catch (e) {
+      rethrow;
     }
   }
 
-  Future<StatusInfo> fetchStatus(int code) async {
-    if (code < 100 || code > 599) {
-      throw ValidationErr('Некорректный код статуса');
+  Future<void> deleteMessage(int id) async {
+    try {
+      final response = await _client
+          .delete(Uri.parse('$baseUrl/api/messages/$id'), headers: _getHeaders())
+          .timeout(timeout);
+      if (response.statusCode != 204) {
+        throw ApiException('Failed to delete message');
+      }
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } on Exception catch (e) {
+      rethrow;
     }
-    final resp = await _http
-        .get(Uri.parse('$endpoint/api/status/$code'), headers: _headers)
-        .timeout(reqTimeout);
-    return _parse<StatusInfo>(resp, (json) => StatusInfo.fromJson(json));
   }
 
-  Future<Map<String, dynamic>> ping() async {
-    final resp = await _http
-        .get(Uri.parse('$endpoint/api/health'), headers: _headers)
-        .timeout(reqTimeout);
-    return json.decode(resp.body);
+  Future<HTTPStatusResponse> getHTTPStatus(int statusCode) async {
+    if (statusCode < 100 || statusCode > 599) {
+      throw ValidationException('Invalid HTTP status code');
+    }
+    try {
+      final response = await _client
+          .get(Uri.parse('$baseUrl/api/status/$statusCode'), headers: _getHeaders())
+          .timeout(timeout);
+      final apiResponse = _handleResponse<ApiResponse<HTTPStatusResponse>>(
+        response,
+        (json) => ApiResponse<HTTPStatusResponse>(
+          success: json['success'] as bool,
+          data: json['data'] != null ? HTTPStatusResponse.fromJson(json['data']) : null,
+          error: json['error'] as String?,
+        ),
+      );
+      if (apiResponse.data == null) {
+        throw ApiException('No status returned');
+      }
+      return apiResponse.data!;
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } on Exception catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> healthCheck() async {
+    try {
+      final response = await _client
+          .get(Uri.parse('$baseUrl/api/health'), headers: _getHeaders())
+          .timeout(timeout);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      } else {
+        throw ApiException('Health check failed');
+      }
+    } on http.ClientException catch (e) {
+      throw NetworkException(e.message);
+    } on Exception catch (e) {
+      rethrow;
+    }
   }
 }
 
-class ClientErr implements Exception {
-  final String msg;
-  ClientErr(this.msg);
+class ApiException implements Exception {
+  final String message;
+  ApiException(this.message);
   @override
-  String toString() => 'ClientErr: $msg';
+  String toString() => 'ApiException: $message';
 }
 
-class ServerErr extends ClientErr {
-  ServerErr(String msg) : super(msg);
+class NetworkException extends ApiException {
+  NetworkException(String message) : super(message);
 }
 
-class ValidationErr extends ClientErr {
-  ValidationErr(String msg) : super(msg);
+class ServerException extends ApiException {
+  ServerException(String message) : super(message);
+}
+
+class ValidationException extends ApiException {
+  ValidationException(String message) : super(message);
 }
