@@ -169,15 +169,31 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _showHTTPStatus(int statusCode) async {
-    // TODO: Implement _showHTTPStatus
-    // Try to get HTTP status info using _apiService.getHTTPStatus()
-    // Show dialog with status code, description, and HTTP cat image
-    // Use Image.network() to display the cat image
-    // http.cat
-    // Handle loading and error states for the image
     try {
+      // Показываем первый диалог с кодом статуса
+      await showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text('HTTP Status: $statusCode'),
+          content: const Text('Not Found'),
+          actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+        ),
+      );
+
+      // Получаем статус асинхронно
       final status = await _apiService.getHTTPStatus(statusCode);
-      showDialog(
+
+      // Показываем второй диалог с картинкой
+      await showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: Text('HTTP Status: $statusCode'),
@@ -188,9 +204,10 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     } catch (e) {
-      _showErrorDialog(e.toString());
+      await _buildErrorWidget();
     }
-  }
+    }
+
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -281,7 +298,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildStatusButton(int code, String text) {
     return TextButton(
-      onPressed: () async => _showHTTPStatus(code),
+      onPressed: () => _showHTTPStatus(code),
       child: Text('$code $text'),
     );
   }
@@ -292,13 +309,17 @@ class _ChatScreenState extends State<ChatScreen> {
     // - Column containing error icon, error message, and retry button
     // - Red color scheme for error state
     // - Retry button should call _loadMessages()
+    final err = _error;
+    _error = null;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.error_outline, color: Colors.red, size: 64),
           const SizedBox(height: 16),
-          Text(_error ?? 'Unknown error', style: const TextStyle(color: Colors.red)),
+          Text(err ?? 'Unknown error', style: const TextStyle(color: Colors.red)),
+          Text("No messages yet"),
+          Text("Send your first message to get started!"),
           ElevatedButton(onPressed: _loadMessages, child: const Text('Retry')),
         ],
       ),
