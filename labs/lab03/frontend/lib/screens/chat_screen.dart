@@ -22,6 +22,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late final ApiService _apiService = ApiService();
   late List<Message> _messages = [];
   late bool _isLoading = false;
+  late bool _hasLoaded = false;
   late String? _error;
   late final TextEditingController _usernameController = TextEditingController();
   late final TextEditingController _messageController = TextEditingController();
@@ -51,17 +52,17 @@ class _ChatScreenState extends State<ChatScreen> {
       _isLoading = true;
       _error = null;
     });
-
-    try{
+    try {
       final messages = await _apiService.getMessages();
       _messages = messages;
-    } catch(e){
+    } catch (e) {
       setState(() {
         _error = "Failed to load messages: $e";
       });
-    } finally{
+    } finally {
       setState(() {
         _isLoading = false;
+        _hasLoaded = true;
       });
     }
   }
@@ -228,7 +229,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final status = await _apiService.getHTTPStatus(statusCode);
-      // Показываем диалог
       if (!mounted) return;
       await showDialog(
         context: context,
@@ -282,7 +282,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Text(message.username.isNotEmpty ? message.username[0].toUpperCase() : '?'),
       ),
       title: Text(
-        '${message.username} • ${message.timestamp.toLocal().toString().split('.')[0]}',
+        '${message.username} ${message.timestamp.toLocal().toString().split('.')[0]}',
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       subtitle: Text(message.content),
@@ -344,27 +344,23 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              ElevatedButton(
-                onPressed: _sendMessage,
-                child: const Text('Send'),
+              Expanded(
+                child: ElevatedButton(onPressed: _sendMessage, child: const Text('Send')),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(200),
-                child: const Text('Status 200'),
+              Expanded(
+                child: ElevatedButton(onPressed: () => _showHTTPStatus(200), child: const Text('200')),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(404),
-                child: const Text('Status 404'),
+              Expanded(
+                child: ElevatedButton(onPressed: () => _showHTTPStatus(404), child: const Text('404')),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => _showHTTPStatus(500),
-                child: const Text('Status 500'),
+              Expanded(
+                child: ElevatedButton(onPressed: () => _showHTTPStatus(500), child: const Text('500')),
               ),
             ],
-          ),
+          )
         ],
       ),
     );// Placeholder
@@ -422,14 +418,22 @@ class _ChatScreenState extends State<ChatScreen> {
     // - BottomSheet with message input
     // - FloatingActionButton for refresh
     // Handle different states: loading, error, success
+    if (!_hasLoaded) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('REST API Chat'),  // ← вот он
+        ),
+        body: const Center(
+          child: Text('TODO: Implement chat functionality'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('REST API Chat'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadMessages,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadMessages),
         ],
       ),
       body: _isLoading
@@ -438,10 +442,8 @@ class _ChatScreenState extends State<ChatScreen> {
           ? _buildErrorWidget()
           : ListView.builder(
         itemCount: _messages.length,
-        itemBuilder: (context, index) {
-          final message = _messages[index];
-          return _buildMessageTile(message);
-        },
+        itemBuilder: (context, index) =>
+            _buildMessageTile(_messages[index]),
       ),
       bottomSheet: _buildMessageInput(),
       floatingActionButton: FloatingActionButton(

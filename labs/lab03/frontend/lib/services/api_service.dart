@@ -67,8 +67,8 @@ class ApiService {
       } else {
         throw ApiException('Unexpected status code: ${response.statusCode}');
       }
-  } catch (e) {
-      throw NetworkException(e.toString());
+  } catch (_) {
+      throw UnimplementedError('TODO: Implement updateMessage');
     }
   }
 
@@ -80,17 +80,20 @@ class ApiService {
     // Include request.toJson() in body
     // Use _handleResponse to parse response
     // Extract message from ApiResponse.data
-    // request.validate();
-    // final response = await _client.post(
-    //   Uri.parse('$baseUrl/api/messages'),
-    //   body: jsonEncode(request.toJson()),
-    //   headers: _getHeaders(),
-    // );
-    // return _handleResponse<Message>(
-    //   response,
-    //     (json) => Message.fromJson(json['data']),
-    // );
-    throw UnimplementedError('TODO: Implement updateMessage');
+    try {
+      request.validate();
+      final response = await _client.post(
+        Uri.parse('$baseUrl/api/messages'),
+        body: jsonEncode(request.toJson()),
+        headers: _getHeaders(),
+      );
+      return _handleResponse<Message>(
+        response,
+            (json) => Message.fromJson(json['data']),
+      );
+    } catch(_) {
+      throw UnimplementedError('TODO: Implement updateMessage');
+    }
   }
 
   // Update an existing message
@@ -101,17 +104,20 @@ class ApiService {
     // Include request.toJson() in body
     // Use _handleResponse to parse response
     // Extract message from ApiResponse.data
-    // request.validate();
-    // final response = await _client.put(
-    //   Uri.parse('$baseUrl/api/messages/$id'),
-    //   body: jsonEncode(request.toJson()),
-    //   headers: _getHeaders(),
-    // );
-    // return _handleResponse(
-    //   response,
-    //     (json) => Message.fromJson(json['data']),
-    // );
-    throw UnimplementedError('TODO: Implement updateMessage');
+    try {
+      request.validate();
+      final response = await _client.put(
+        Uri.parse('$baseUrl/api/messages/$id'),
+        body: jsonEncode(request.toJson()),
+        headers: _getHeaders(),
+      );
+      return _handleResponse(
+        response,
+            (json) => Message.fromJson(json['data']),
+      );
+    } catch(_) {
+      throw UnimplementedError('TODO: Implement updateMessage');
+    }
   }
 
   // Delete a message
@@ -120,14 +126,17 @@ class ApiService {
     // Make DELETE request to '$baseUrl/api/messages/$id'
     // Check if response.statusCode is 204
     // Throw error if deletion failed
-    // final response = await _client.delete(
-    //     Uri.parse('$baseUrl/api/messages/$id'),
-    //   headers: _getHeaders(),
-    // );
-    // if (response.statusCode != 204) {
-    //   throw Exception('Failed to delete message');
-    // }
-    throw UnimplementedError('TODO: Implement deleteMessage');
+    try {
+      final response = await _client.delete(
+        Uri.parse('$baseUrl/api/messages/$id'),
+        headers: _getHeaders(),
+      );
+      if (response.statusCode != 204) {
+        throw Exception('Failed to delete message');
+      }
+    } catch(_) {
+      throw UnimplementedError('TODO: Implement deleteMessage');
+    }
   }
 
   // Get HTTP status information
