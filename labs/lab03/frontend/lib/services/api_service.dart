@@ -126,8 +126,8 @@ class ApiService {
       if (apiResponse.statusCode == 204) {
         return;
       }
-      if (apiResponse.statusCode >= 200 && apiResponse.statusCode < 300) {
-        return;
+      if (apiResponse.statusCode == 404) {
+        throw ApiException('Failed to delete message');
       }
       if (apiResponse.statusCode >= 400 && apiResponse.statusCode < 500) {
         throw NetworkException('Client error: ${apiResponse.statusCode}');
@@ -146,6 +146,9 @@ class ApiService {
 
   // Get HTTP status information
   Future<HTTPStatusResponse> getHTTPStatus(int statusCode) async {
+    if (statusCode < 100 || statusCode >= 600) {
+      throw ApiException('Invalid HTTP status code: $statusCode. Must be between 100 and 599.');
+    }
     try {
       final response = await _client
           .get(Uri.parse('$baseUrl/api/status/$statusCode'), headers: _getHeaders())
