@@ -199,7 +199,7 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 
 	response := models.HTTPStatusResponse{
 		StatusCode:  code,
-		ImageURL:    "https://http.cat/" + vars["code"],
+		ImageURL:    "http://localhost:8080/api/cat/" + vars["code"],
 		Description: getHTTPStatusDescription(code),
 	}
 
