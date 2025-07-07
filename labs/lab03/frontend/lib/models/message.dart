@@ -1,103 +1,112 @@
-import 'package:json_annotation/json_annotation.dart';
+// If you want to use freezed, you can use the following command:
+// dart pub add freezed_annotation
+// dart pub add json_annotation
+// dart pub add build_runner
+// dart run build_runner build
 
-part 'message.g.dart';
+class Message {
+  final int id;
+  final String username;
+  final String content;
+  final DateTime timestamp;
 
-@JsonSerializable()
-class ChatMsg {
-  final int msgId;
-  final String user;
-  final String body;
-  final DateTime sentAt;
+  Message({required this.id, required this.username, required this.content, required this.timestamp});
 
-  ChatMsg({
-    required this.msgId,
-    required this.user,
-    required this.body,
-    required this.sentAt,
-  });
+  factory Message.fromJson(Map<String, dynamic> json) {
+    return Message(
+      id: json['id'],
+      username: json['username'],
+      content: json['content'],
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
 
-  factory ChatMsg.fromJson(Map<String, dynamic> json) => ChatMsg(
-        msgId: json['id'] as int,
-        user: json['username'] as String,
-        body: json['content'] as String,
-        sentAt: DateTime.parse(json['timestamp'] as String),
-      );
-  Map<String, dynamic> toJson() => {
-        'id': msgId,
-        'username': user,
-        'content': body,
-        'timestamp': sentAt.toIso8601String(),
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'content': content,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
 }
 
-@JsonSerializable()
-class NewMsgReq {
-  final String user;
-  final String body;
+class CreateMessageRequest {
+  final String username;
+  final String content;
 
-  NewMsgReq({required this.user, required this.body});
+  CreateMessageRequest({required this.username, required this.content});
 
-  Map<String, dynamic> toJson() => {
-        'username': user,
-        'content': body,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'username': username,
+      'content': content,
+    };
+  }
 
-  String? check() {
-    if (user.trim().isEmpty) return 'Имя обязательно';
-    if (body.trim().isEmpty) return 'Текст обязателен';
+  String? validate() {
+    if (username.isEmpty) {
+      return "Username is required";
+    }
+    if (content.isEmpty) {
+      return "Content is required";
+    }
     return null;
   }
 }
 
-@JsonSerializable()
-class EditMsgReq {
-  final String body;
+class UpdateMessageRequest {
+  final String content;
 
-  EditMsgReq({required this.body});
+  UpdateMessageRequest({required this.content});
 
-  Map<String, dynamic> toJson() => {
-        'content': body,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'content': content,
+    };
+  }
 
-  String? check() {
-    if (body.trim().isEmpty) return 'Текст обязателен';
+  String? validate() {
+    if (content.isEmpty) {
+      return "Content is required";
+    }
     return null;
   }
 }
 
-@JsonSerializable()
-class StatusInfo {
-  @JsonKey(name: 'status_code')
-  final int code;
-  @JsonKey(name: 'image_url')
-  final String img;
-  final String desc;
+class HTTPStatusResponse {
+  final int statusCode;
+  final String imageUrl;
+  final String description;
 
-  StatusInfo({required this.code, required this.img, required this.desc});
+  HTTPStatusResponse({required this.statusCode, required this.imageUrl, required this.description});
 
-  factory StatusInfo.fromJson(Map<String, dynamic> json) => StatusInfo(
-        code: json['status_code'] as int,
-        img: json['image_url'] as String,
-        desc: json['description'] as String,
-      );
+  factory HTTPStatusResponse.fromJson(Map<String, dynamic> json) {
+    return HTTPStatusResponse(
+      statusCode: json['status_code'],
+      imageUrl: json['image_url'],
+      description: json['description'],
+    );
+  }
 }
 
-@JsonSerializable(genericArgumentFactories: true)
-class ApiWrap<T> {
-  final bool ok;
-  final T? payload;
-  final String? err;
+class ApiResponse<T> {
+  final bool success;
+  final T? data;
+  final String? error;
 
-  ApiWrap({required this.ok, this.payload, this.err});
+  ApiResponse({required this.success, this.data, this.error});
 
-  factory ApiWrap.fromJson(
-    Map<String, dynamic> json,
-    T Function(Object? json) fromJsonT,
-  ) {
-    return ApiWrap<T>(
-      ok: json['success'] as bool,
-      payload: json['data'] != null ? fromJsonT(json['data']) : null,
-      err: json['error'] as String?,
+  factory ApiResponse.fromJson(Map<String, dynamic> json, T Function(Map<String, dynamic>)? fromJsonT) {
+    T? parsedData;
+    if (json['data'] != null && fromJsonT != null) {
+      parsedData = fromJsonT(json['data']);
+    }
+
+    return ApiResponse<T>(
+      success: json['success'],
+      data: parsedData,
+      error: json['error'],
     );
   }
 }
