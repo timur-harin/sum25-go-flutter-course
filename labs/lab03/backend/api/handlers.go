@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"lab03-backend/models"
 	"lab03-backend/storage"
 	"log"
@@ -22,7 +23,6 @@ type Handler struct {
 // NewHandler creates a new handler instance
 func NewHandler(storage *storage.MemoryStorage) *Handler {
 	// TODO: Return a new Handler instance with provided storage
-
 	return &Handler{Storage: storage}
 }
 
@@ -47,8 +47,8 @@ func (h *Handler) SetupRoutes() *mux.Router {
 	ApiSubRouter.HandleFunc("/status/{code}", h.GetHTTPStatus).Methods("GET")
 	// GET /health -> h.HealthCheck
 	ApiSubRouter.HandleFunc("/health", h.HealthCheck).Methods("GET")
+	ApiSubRouter.HandleFunc("/cat/{code}", h.ProxyCatImage).Methods("GET")
 	// TODO: Return the router
-
 	return Router
 }
 
@@ -65,7 +65,6 @@ func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	// Write JSON response with status 200
 	h.writeJSON(w, http.StatusOK, response)
 	// Handle any errors appropriately
-
 }
 
 // CreateMessage handles POST /api/messages
@@ -133,11 +132,11 @@ func (h *Handler) UpdateMessage(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
+	// Create successful API response
 	response := models.APIResponse{
 		Success: true,
 		Data:    updatedMsg,
 	}
-	// Create successful API response
 	// Write JSON response with status 200
 	h.writeJSON(w, http.StatusOK, response)
 	// Handle validation, parsing, and storage errors appropriately
@@ -162,22 +161,14 @@ func (h *Handler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	err = h.Storage.Delete(id)
 	if err != nil {
 		h.writeError(w, http.StatusNotFound, err.Error())
+		return
 	}
 	// Write response with status 204 (No Content)
-	response := models.APIResponse{
-		Success: true,
-	}
+	w.WriteHeader(http.StatusNoContent)
 	// Handle parsing and storage errors appropriately
-	h.writeJSON(w, http.StatusNoContent, response)
 }
 
 // GetHTTPStatus handles GET /api/status/{code}
-type HTTPStatusResponse struct {
-	StatusCode  int    `json:"statusCode"`
-	ImageURL    string `json:"imageUrl"`
-	Description string `json:"description"`
-}
-
 func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement GetHTTPStatus handler
 	// Extract status code from URL path variables
@@ -200,12 +191,14 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 	// Create HTTPStatusResponse with:
 	//   - StatusCode: parsed code
 	//   - ImageURL: "https://http.cat/{code}"
+
 	//   - Description: HTTP status description
+	localURL := fmt.Sprintf("http://localhost:8080/api/cat/%d", code)
 	response := models.APIResponse{
 		Success: true,
 		Data: models.HTTPStatusResponse{
 			StatusCode:  code,
-			ImageURL:    fmt.Sprintf("https://http.cat/%d", code),
+			ImageURL:    localURL,
 			Description: getHTTPStatusDescription(code),
 		},
 	}
@@ -213,6 +206,53 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 	// Write JSON response with status 200
 	h.writeJSON(w, http.StatusOK, response)
 	// Handle parsing and validation errors appropriately
+}
+
+func (h *Handler) ProxyCatImage(w http.ResponseWriter, r *http.Request) {
+	// Extract status code from URL path variables
+	vars := mux.Vars(r)
+	codeStr, ok := vars["code"]
+	if !ok {
+		h.writeError(w, http.StatusBadRequest, getHTTPStatusDescription(http.StatusBadRequest))
+		return
+	}
+	code, err := strconv.Atoi(codeStr)
+	if err != nil {
+		h.writeError(w, http.StatusBadRequest, getHTTPStatusDescription(http.StatusBadRequest))
+		return
+	}
+
+	// Construct the HTTP Cats URL
+	catURL := fmt.Sprintf("https://http.cat/%d.jpg", code)
+
+	// Make request to http.cat
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(catURL)
+	if err != nil {
+		h.writeError(w, http.StatusInternalServerError, "Failed to fetch image from http.cat")
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check if the status code is supported by http.cat
+	if resp.StatusCode != http.StatusOK {
+		h.writeError(w, resp.StatusCode, getHTTPStatusDescription(resp.StatusCode))
+		return
+	}
+
+	// Set response headers to match http.cat's response
+	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+	w.Header().Set("Content-Length", resp.Header.Get("Content-Length"))
+	w.WriteHeader(http.StatusOK)
+
+	// Stream the image data to the client
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		if !isHeaderWritten(w) {
+			h.writeError(w, http.StatusInternalServerError, "Failed to stream image")
+		}
+		return
+	}
 }
 
 // HealthCheck handles GET /api/health
@@ -233,7 +273,7 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	response := models.APIResponse{
 		Success: true,
 		Data: HealthCheckResponse{
-			Status:        "ok",
+			Status:        "healthy",
 			Message:       "API is running",
 			Timestamp:     time.Now(),
 			TotalMessages: h.Storage.Count(),
@@ -336,9 +376,13 @@ func corsMiddleware(next http.Handler) http.Handler {
 	// Call next handler for non-OPTIONS requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Implement CORS logic here
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			origin = "*"
+		}
+		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
