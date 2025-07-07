@@ -47,6 +47,9 @@ class _ChatScreenState extends State<ChatScreen> {
       final request = CreateMessageRequest(username: username, content: content);
       await Provider.of<ChatProvider>(context, listen: false).createMessage(request);
       _messageController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message sent!')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error sending message: $e')),
@@ -270,7 +273,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: TextField(
                   controller: _messageController,
                   decoration: const InputDecoration(
-                    labelText: 'Message',
+                    labelText: 'Enter your message',
                     border: OutlineInputBorder(),
                   ),
                   onSubmitted: (_) => _sendMessage(context),
@@ -377,37 +380,44 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Consumer<ChatProvider>(
-        builder: (context, chatProvider, _) {
-          if (chatProvider.isLoading) {
-            return _buildLoadingWidget();
-          } else if (chatProvider.error != null) {
-            return _buildErrorWidget(context, chatProvider.error);
-          } else if (chatProvider.messages.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text('No messages yet'),
-                  SizedBox(height: 8),
-                  Text('Send your first message to get started!'),
-                ],
-              ),
-            );
-          } else {
-            return ListView.builder(
-              itemCount: chatProvider.messages.length,
-              itemBuilder: (context, index) {
-                return _buildMessageTile(context, chatProvider.messages[index]);
+      body: Column(
+        children: [
+          Expanded(
+            child: Consumer<ChatProvider>(
+              builder: (context, chatProvider, _) {
+                if (chatProvider.isLoading) {
+                  return _buildLoadingWidget();
+                } else if (chatProvider.error != null) {
+                  return _buildErrorWidget(context, chatProvider.error);
+                } else if (chatProvider.messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Text('No messages yet'),
+                        SizedBox(height: 8),
+                        Text('Send your first message to get started!'),
+                      ],
+                    ),
+                  );
+                } else {
+                  return ListView.builder(
+                    itemCount: chatProvider.messages.length,
+                    itemBuilder: (context, index) {
+                      return _buildMessageTile(context, chatProvider.messages[index]);
+                    },
+                  );
+                }
               },
-            );
-          }
-        },
+            ),
+          ),
+          _buildMessageInput(context),
+        ],
       ),
-      bottomSheet: _buildMessageInput(context),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Provider.of<ChatProvider>(context, listen: false).loadMessages(),
         child: const Icon(Icons.refresh),
+        tooltip: 'Refresh',
       ),
     );
   }
