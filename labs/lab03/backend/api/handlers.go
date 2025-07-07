@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -41,6 +42,12 @@ func (h *Handler) SetupRoutes() *mux.Router {
 	api.HandleFunc("/messages/{id}", h.DeleteMessage).Methods("DELETE")
 	api.HandleFunc("/status/{code}", h.GetHTTPStatus).Methods("GET")
 	api.HandleFunc("/cat/{code}", h.GetCatImage).Methods("GET")
+	api.HandleFunc("/cat/{code}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.WriteHeader(http.StatusOK)
+	}).Methods("OPTIONS")
 	api.HandleFunc("/health", h.HealthCheck).Methods("GET")
 
 	return router
@@ -162,7 +169,7 @@ func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
 
 	response := models.HTTPStatusResponse{
 		StatusCode:  code,
-		ImageURL:    "/api/cat/" + strconv.Itoa(code),
+		ImageURL:    "http://localhost:8080/api/cat/" + strconv.Itoa(code),
 		Description: getHTTPStatusDescription(code),
 	}
 
@@ -197,15 +204,19 @@ func (h *Handler) GetCatImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	// Copy headers
+	// Copy headers, но пропускаю все access-control- (без учёта регистра)
 	for key, values := range resp.Header {
+		lowerKey := strings.ToLower(key)
+		if strings.HasPrefix(lowerKey, "access-control-") {
+			continue
+		}
 		for _, value := range values {
 			w.Header().Add(key, value)
 		}
 	}
 
 	// Set CORS headers
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
@@ -281,7 +292,7 @@ func getHTTPStatusDescription(code int) string {
 // CORS middleware
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
