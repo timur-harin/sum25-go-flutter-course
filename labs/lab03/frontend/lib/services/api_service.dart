@@ -85,7 +85,7 @@ class ApiService {
     try {
       final response = await _client
           .post(Uri.parse('$baseUrl/api/messages'),
-          headers: _getHeaders(), body: request.toJson())
+          headers: _getHeaders(), body: jsonEncode(request.toJson()))
           .timeout(timeout);
 
       return _handleResponse<Message>(response, Message.fromJson);
@@ -107,7 +107,7 @@ class ApiService {
     try {
       final response = await _client
           .put(Uri.parse('$baseUrl/api/messages/$id'),
-          headers: _getHeaders(), body: request.toJson())
+          headers: _getHeaders(), body: jsonEncode(request.toJson()))
           .timeout(timeout);
 
       return _handleResponse<Message>(response, Message.fromJson);
