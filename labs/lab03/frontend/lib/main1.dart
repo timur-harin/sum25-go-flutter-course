@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/chat_screen.dart';
 import 'services/api_service.dart';
-import 'models/message.dart';
+import 'package:lab03_frontend/models/message.dart';
 
 void main() {
   runApp(const MyApp());
@@ -73,7 +73,7 @@ class ChatProvider extends ChangeNotifier {
     try {
       _messages = await _apiService.getMessages();
       _error = null;
-    } catch (e) {
+    } on ApiException catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
@@ -92,7 +92,7 @@ class ChatProvider extends ChangeNotifier {
       _messages.add(newMessage);
       _error = null;
       notifyListeners();
-    } catch (e) {
+    } on ApiException catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
@@ -113,7 +113,7 @@ class ChatProvider extends ChangeNotifier {
         _messages[index] = updated;
       }
       _error = null;
-    } catch (e) {
+    } on ApiException catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
