@@ -7,33 +7,73 @@ class ProfileCard extends StatelessWidget {
   final String? avatarUrl;
 
   const ProfileCard({
-    super.key,
+    Key? key,
     required this.name,
     required this.email,
     required this.age,
     this.avatarUrl,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Define text style for name and avatar initial
+    final textStyle = TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+      color: Colors.grey[600],
+    );
+
+    // Determine initial for avatar: '?' if name empty, else first letter
+    final initial = name.isEmpty ? '?' : name[0].toUpperCase();
+
+    // Build avatar widget
+    final avatar = (avatarUrl != null && avatarUrl!.isNotEmpty)
+        ? CircleAvatar(
+            radius: 36,
+            backgroundImage: NetworkImage(avatarUrl!),
+          )
+        : CircleAvatar(
+            radius: 36,
+            child: Text(
+              initial,
+              style: textStyle,
+            ),
+          );
+
     return Card(
-      margin: const EdgeInsets.all(16.0),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
-            const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
-            
+            avatar,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: textStyle,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Age: $age',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
