@@ -17,6 +17,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Автоматическая загрузка сообщений через Provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatProvider>(context, listen: false).loadMessages();
+    });
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _messageController.dispose();
