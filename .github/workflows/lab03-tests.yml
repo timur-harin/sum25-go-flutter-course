@@ -61,13 +61,20 @@ jobs:
             echo "handlers_passed=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Start backend server
+        run: |
+          cd labs/lab03/backend
+          go run main.go &
+          echo $! > backend.pid
+          sleep 5  # Wait for server to start
+
       - name: Run Flutter tests
         id: flutter-tests
         run: |
           cd labs/lab03/frontend
           echo "api_service_passed=false" >> $GITHUB_OUTPUT
           echo "chat_screen_passed=false" >> $GITHUB_OUTPUT
-          echo "http_status_passed=false" >> $GITHUB_OUTPUT
+          echo "integration_passed=false" >> $GITHUB_OUTPUT
 
           if flutter test test/api_service_test.dart; then
             echo "api_service_passed=true" >> $GITHUB_OUTPUT
@@ -75,8 +82,16 @@ jobs:
           if flutter test test/chat_screen_test.dart; then
             echo "chat_screen_passed=true" >> $GITHUB_OUTPUT
           fi
-          if flutter test test/http_status_test.dart; then
-            echo "http_status_passed=true" >> $GITHUB_OUTPUT
+          if flutter test test/integration_test.dart; then
+            echo "integration_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Stop backend server
+        if: always()
+        run: |
+          if [ -f labs/lab03/backend/backend.pid ]; then
+            kill $(cat labs/lab03/backend/backend.pid) || true
+            rm labs/lab03/backend/backend.pid
           fi
 
       - name: Calculate score
@@ -88,7 +103,7 @@ jobs:
           if [[ "${{ steps.go-tests.outputs.handlers_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           if [[ "${{ steps.flutter-tests.outputs.api_service_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           if [[ "${{ steps.flutter-tests.outputs.chat_screen_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
-          if [[ "${{ steps.flutter-tests.outputs.http_status_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.flutter-tests.outputs.integration_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
       - name: Comment PR with score
@@ -109,7 +124,7 @@ jobs:
               'Flutter Frontend Tasks': {
                 'API Service Integration': ${{ steps.flutter-tests.outputs.api_service_passed }},
                 'Chat Screen UI': ${{ steps.flutter-tests.outputs.chat_screen_passed }},
-                'HTTP Status & Cat API': ${{ steps.flutter-tests.outputs.http_status_passed }}
+                'Integration Test': ${{ steps.flutter-tests.outputs.integration_passed }}
               }
             };
 
@@ -146,7 +161,7 @@ jobs:
             comment += `**Frontend (Flutter):**\n`;
             comment += `- **API Service**: HTTP client with error handling and timeouts\n`;
             comment += `- **Chat Screen**: Message list, CRUD operations, loading/error states\n`;
-            comment += `- **HTTP Status**: Integration with HTTP Cat API for status visualization\n\n`;
+            comment += `- **Integration Test**: Integration with HTTP Cat API for status visualization\n\n`;
 
             if (score < maxScore) {
               comment += `### 💡 Next Steps:\n`;
@@ -165,7 +180,7 @@ jobs:
               if (!${{ steps.flutter-tests.outputs.chat_screen_passed }}) {
                 comment += `- Build chat UI with message operations and state management\n`;
               }
-              if (!${{ steps.flutter-tests.outputs.http_status_passed }}) {
+              if (!${{ steps.flutter-tests.outputs.integration_passed }}) {
                 comment += `- Integrate HTTP Cat API for status code visualization\n`;
               }
             }
@@ -199,7 +214,7 @@ jobs:
               'Flutter Frontend Tasks': {
                 'API Service Integration': ${{ steps.flutter-tests.outputs.api_service_passed }},
                 'Chat Screen UI': ${{ steps.flutter-tests.outputs.chat_screen_passed }},
-                'HTTP Status & Cat API': ${{ steps.flutter-tests.outputs.http_status_passed }}
+                'Integration Test': ${{ steps.flutter-tests.outputs.integration_passed }}
               }
             };
 
