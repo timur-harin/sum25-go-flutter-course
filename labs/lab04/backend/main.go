@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"lab04-backend/database"
+	"lab04-backend/models"
 	"lab04-backend/repository"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -12,26 +13,53 @@ import (
 
 func main() {
 	// TODO: Initialize database connection
+	// Initialize DB
 	db, err := database.InitDB()
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := database.CloseDB(db); err != nil {
+			log.Println("Warning: failed to close DB:", err)
+		}
+	}()
 
-	// TODO: Run migrations (using goose-based approach)
+	// Run migrations
 	if err := database.RunMigrations(db); err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// TODO: Create repository instances
+	// Create repositories
 	userRepo := repository.NewUserRepository(db)
-	postRepo := repository.NewPostRepository(db)
+	fmt.Println("Database initialized and migrations applied!")
 
-	// Demo operations
-	fmt.Println("Database initialized successfully!")
-	fmt.Printf("User repository: %T\n", userRepo)
-	fmt.Printf("Post repository: %T\n", postRepo)
+	// DEMO: Create a new user
+	newUserReq := &models.CreateUserRequest{
+		Name:  "Alice Example",
+		Email: "alice@example.com",
+	}
+	user, err := userRepo.Create(newUserReq)
+	if err != nil {
+		log.Fatal("Failed to create user:", err)
+	}
+	fmt.Printf("Created User: %+v\n", user)
 
-	// TODO: Add some demo data operations here
-	// You can test your CRUD operations
+	// DEMO: Fetch user by ID
+	fetched, err := userRepo.GetByID(user.ID)
+	if err != nil {
+		log.Fatal("Failed to fetch user by ID:", err)
+	}
+	fmt.Printf(" User by ID: %+v\n", fetched)
+
+	// DEMO: List all users
+	users, err := userRepo.GetAll()
+	if err != nil {
+		log.Fatal("Failed to get all users:", err)
+	}
+	fmt.Println("All Users:")
+	for _, u := range users {
+		fmt.Printf("- %+v\n", u)
+	}
+
+	fmt.Println("Demo completed successfully!")
 }
