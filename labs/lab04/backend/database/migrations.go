@@ -10,7 +10,7 @@ import (
 )
 
 // Get path to migrations directory (relative to backend directory)
-var migrationsDir = "./migrations"
+var migrationsDir = "../migrations"
 
 // RunMigrations runs database migrations using goose
 func RunMigrations(db *sql.DB) error {
