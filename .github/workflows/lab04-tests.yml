@@ -1,0 +1,248 @@
+name: Lab 04 Tests
+
+on:
+  push:
+    branches: [lab04-*]
+  pull_request:
+    paths:
+      - 'labs/lab04/**'
+      - '.github/workflows/lab04-tests.yml'
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  test:
+    name: Run Lab 04 Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.1'
+
+      - name: Install Go dependencies
+        run: |
+          cd labs/lab04/backend
+          if [ ! -f go.mod ]; then
+            go mod init lab04-backend
+          fi
+          go mod tidy
+
+      - name: Install Flutter dependencies
+        run: |
+          cd labs/lab04/frontend
+          flutter pub get
+
+      - name: Run Go tests (NECESSARY TASKS ONLY)
+        id: go-tests
+        run: |
+          cd labs/lab04/backend
+          echo "models_passed=false" >> $GITHUB_OUTPUT
+          echo "database_passed=false" >> $GITHUB_OUTPUT
+          echo "user_repository_passed=false" >> $GITHUB_OUTPUT
+
+          # Test 1: Models & Validation (REQUIRED)
+          if go test ./models/...; then
+            echo "models_passed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Test 2: Database Infrastructure (REQUIRED)
+          if go test ./database/...; then
+            echo "database_passed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Test 3: User Repository - Manual SQL (REQUIRED)  
+          if go test ./repository/... -run "TestUserRepository"; then
+            echo "user_repository_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Flutter tests (ALL REQUIRED)
+        id: flutter-tests
+        run: |
+          cd labs/lab04/frontend
+          echo "preferences_passed=false" >> $GITHUB_OUTPUT
+          echo "database_service_passed=false" >> $GITHUB_OUTPUT
+          echo "secure_storage_passed=false" >> $GITHUB_OUTPUT
+
+          # Test 4: SharedPreferences Service (REQUIRED)
+          if flutter test test/preferences_service_test.dart; then
+            echo "preferences_passed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Test 5: SQLite Database Service (REQUIRED)
+          if flutter test test/database_service_test.dart; then
+            echo "database_service_passed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Test 6: Secure Storage Service (REQUIRED)
+          if flutter test test/secure_storage_service_test.dart; then
+            echo "secure_storage_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate score
+        id: score
+        run: |
+          TOTAL=0
+          if [[ "${{ steps.go-tests.outputs.models_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.go-tests.outputs.database_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.go-tests.outputs.user_repository_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.flutter-tests.outputs.preferences_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.flutter-tests.outputs.database_service_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.flutter-tests.outputs.secure_storage_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with score
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = ${{ steps.score.outputs.total }};
+            const maxScore = 6;
+            const percentage = (score / maxScore) * 100;
+
+            const results = {
+              'Go Backend - NECESSARY Tasks': {
+                '🔴 Data Models (User & Post)': ${{ steps.go-tests.outputs.models_passed }},
+                '🔴 Database Infrastructure': ${{ steps.go-tests.outputs.database_passed }},
+                '🔴 Manual SQL Repository': ${{ steps.go-tests.outputs.user_repository_passed }}
+              },
+              'Flutter Frontend - NECESSARY Tasks': {
+                '🔴 SharedPreferences Service': ${{ steps.flutter-tests.outputs.preferences_passed }},
+                '🔴 SQLite Database Service': ${{ steps.flutter-tests.outputs.database_service_passed }},
+                '🔴 Secure Storage Service': ${{ steps.flutter-tests.outputs.secure_storage_passed }}
+              }
+            };
+
+            let comment = `## Lab 04 Test Results - Database & Persistence\n\n`;
+            comment += `### 🎯 Score: ${score}/${maxScore} (${percentage}%) - NECESSARY TASKS ONLY\n\n`;
+            
+            if (percentage >= 100) {
+              comment += `🎉 **Excellent work!** All necessary database components implemented correctly!\n\n`;
+              comment += `💡 **Next Steps**: Try the OPTIONAL tasks (Scany, Squirrel, GORM) for advanced learning!\n\n`;
+            } else if (percentage >= 80) {
+              comment += `🚀 **Great progress!** Almost mastered the core database operations!\n\n`;
+            } else if (percentage >= 60) {
+              comment += `💪 **Good start!** Keep working on the remaining necessary components.\n\n`;
+            } else {
+              comment += `📚 **Getting started!** Focus on the 3 necessary Go tasks first.\n\n`;
+            }
+
+            comment += `### 📋 NECESSARY Task Completion:\n\n`;
+
+            for (const [category, tasks] of Object.entries(results)) {
+              comment += `#### ${category}\n`;
+              for (const [task, passed] of Object.entries(tasks)) {
+                const status = passed ? '✅' : '❌';
+                comment += `- ${status} ${task}\n`;
+              }
+              comment += '\n';
+            }
+
+            comment += `### 🔧 Component Details:\n\n`;
+            comment += `**Backend (Go) - 3 NECESSARY Tasks:**\n`;
+            comment += `- **🔴 Models**: User & Post structs with validation and JSON serialization\n`;
+            comment += `- **🔴 Database**: Connection management and goose migrations\n`;
+            comment += `- **🔴 Repository**: Manual SQL CRUD operations using database/sql\n\n`;
+            
+            comment += `**Frontend (Flutter) - 3 NECESSARY Tasks:**\n`;
+            comment += `- **🔴 SharedPreferences**: Simple key-value storage for app settings\n`;
+            comment += `- **🔴 SQLite Service**: Local database operations with sqflite package\n`;
+            comment += `- **🔴 Secure Storage**: Encrypted storage for sensitive user data\n\n`;
+
+            comment += `### 🎯 OPTIONAL Learning Tasks:\n`;
+            comment += `After completing necessary tasks, explore these advanced patterns:\n`;
+            comment += `- **🟡 Scany Mapping**: Automatic struct mapping with raw SQL\n`;
+            comment += `- **🟡 Squirrel Builder**: Dynamic query building with fluent API\n`;
+            comment += `- **🟡 GORM ORM**: Full object-relational mapping with associations\n\n`;
+
+            if (score < maxScore) {
+              comment += `### 💡 Next Steps:\n`;
+              if (!${{ steps.go-tests.outputs.models_passed }}) {
+                comment += `- Complete User and Post model validation methods\n`;
+              }
+              if (!${{ steps.go-tests.outputs.database_passed }}) {
+                comment += `- Implement database connection and goose migration functions\n`;
+              }
+              if (!${{ steps.go-tests.outputs.user_repository_passed }}) {
+                comment += `- Complete manual SQL CRUD operations in UserRepository\n`;
+              }
+              if (!${{ steps.flutter-tests.outputs.preferences_passed }}) {
+                comment += `- Implement SharedPreferences service methods\n`;
+              }
+              if (!${{ steps.flutter-tests.outputs.database_service_passed }}) {
+                comment += `- Build SQLite database service with CRUD operations\n`;
+              }
+              if (!${{ steps.flutter-tests.outputs.secure_storage_passed }}) {
+                comment += `- Complete secure storage service for sensitive data\n`;
+              }
+            }
+
+            comment += `\n### 🛠️ Migration Commands\n`;
+            comment += `Use these Makefile commands for database management:\n`;
+            comment += `- \`make migrate-up\` - Run all migrations\n`;
+            comment += `- \`make migrate-down\` - Rollback last migration\n`;
+            comment += `- \`make migrate-status\` - Check migration status\n`;
+            comment += `- \`make setup-db\` - Fresh database setup\n`;
+            comment += `\nExplore different storage patterns and database approaches! 🚀\n`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+            
+      - name: Create commit comment with score
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = ${{ steps.score.outputs.total }};
+            const maxScore = 6;
+            const percentage = (score / maxScore) * 100;
+
+            const results = {
+              'Go Backend - NECESSARY Tasks': {
+                '🔴 Data Models (User & Post)': ${{ steps.go-tests.outputs.models_passed }},
+                '🔴 Database Infrastructure': ${{ steps.go-tests.outputs.database_passed }},
+                '🔴 Manual SQL Repository': ${{ steps.go-tests.outputs.user_repository_passed }}
+              },
+              'Flutter Frontend - NECESSARY Tasks': {
+                '🔴 SharedPreferences Service': ${{ steps.flutter-tests.outputs.preferences_passed }},
+                '🔴 SQLite Database Service': ${{ steps.flutter-tests.outputs.database_service_passed }},
+                '🔴 Secure Storage Service': ${{ steps.flutter-tests.outputs.secure_storage_passed }}
+              }
+            };
+
+            let comment = `## Lab 04 Test Results - Database & Persistence\n\n`;
+            comment += `### 🎯 Score: ${score}/${maxScore} (${percentage}%) - NECESSARY TASKS\n\n`;
+
+            comment += `### 📋 Task Completion:\n\n`;
+
+            for (const [category, tasks] of Object.entries(results)) {
+              comment += `#### ${category}\n`;
+              for (const [task, passed] of Object.entries(tasks)) {
+                const status = passed ? '✅' : '❌';
+                comment += `- ${status} ${task}\n`;
+              }
+              comment += '\n';
+            }
+
+            comment += `\n🎓 **Database Mastery**: Focus on necessary tasks first, then explore optional approaches!\n`;
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            }); 
