@@ -17,6 +17,7 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	migrationsDir := "../migrations"
+
 	if err := goose.Up(db, migrationsDir); err != nil {
 		return fmt.Errorf("failed to run migrations: %v", err)
 	}
