@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"lab04-backend/models"
 )
@@ -84,7 +85,10 @@ func (r *UserRepository) Update(id int, req *models.UpdateUserRequest) (*models.
 		setClauses = append(setClauses, "email = ?")
 		args = append(args, *req.Email)
 	}
-	setClauses = append(setClauses, "updated_at = CURRENT_TIMESTAMP")
+	// Use explicit timestamp for updated_at
+	setClauses = append(setClauses, "updated_at = ?")
+	updatedAt := time.Now().UTC()
+	args = append(args, updatedAt)
 	query := "UPDATE users SET " + joinClauses(setClauses, ", ") + " WHERE id = ? AND deleted_at IS NULL"
 	args = append(args, id)
 	result, err := r.db.Exec(query, args...)
