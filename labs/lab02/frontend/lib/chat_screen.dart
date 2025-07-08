@@ -1,75 +1,45 @@
 import 'package:flutter/material.dart';
 import 'chat_service.dart';
+import 'dart:async';
 
 // ChatScreen displays the chat UI
 class ChatScreen extends StatefulWidget {
   final ChatService chatService;
-  const ChatScreen({Key? key, required this.chatService}) : super(key: key);
+  const ChatScreen({super.key, required this.chatService});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final TextEditingController _controller = TextEditingController();
-  // TODO: Add loading/error state if needed
+  // TODO: Add TextEditingController for input
+  // TODO: Add state for messages, loading, and error
+  // TODO: Subscribe to chatService.messageStream
+  // TODO: Implement UI for sending and displaying messages
+  // TODO: Simulate chat logic for tests (current implementation is a simulation)
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service
+    // TODO: Connect to chat service and set up listeners
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    // TODO: Dispose chat service if needed
+    // TODO: Dispose controllers and subscriptions
     super.dispose();
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     // TODO: Send message using chatService
   }
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<String>(
-              stream: widget.chatService.messageStream,
-              builder: (context, snapshot) {
-                // TODO: Display messages, loading, and error states
-                return ListView(
-                  children: [
-                    // TODO: Build message widgets from snapshot.data
-                  ],
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration:
-                        const InputDecoration(hintText: 'Type a message'),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      body: const Center(child: Text('TODO: Implement chat UI')),
     );
   }
 }
