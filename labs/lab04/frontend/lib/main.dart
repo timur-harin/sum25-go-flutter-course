@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'services/preferences_service.dart';
+import 'services/database_service.dart';
+import 'services/secure_storage_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
   try {
-    // TODO: Initialize PreferencesService
     await PreferencesService.init();
+    await DatabaseService.database;
 
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    const bool isTestMode = bool.fromEnvironment('TEST_MODE');
+    if (isTestMode) {
+      SecureStorageService.enableTestMode();
+    }
   } catch (e) {
     print('Error initializing services: $e');
   }
