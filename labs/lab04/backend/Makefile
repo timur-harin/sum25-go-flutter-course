@@ -3,7 +3,7 @@
 
 # Database configuration
 DATABASE_URL ?= ./lab04.db
-MIGRATIONS_DIR = ../migrations
+MIGRATIONS_DIR = ./migrations
 
 # Default target
 .PHONY: help
@@ -128,4 +128,4 @@ test-coverage:
 	@echo "📊 Running tests with coverage..."
 	@go test ./... -cover -coverprofile=coverage.out
 	@go tool cover -html=coverage.out -o coverage.html
-	@echo "✅ Coverage report generated: coverage.html" 
+	@echo "✅ Coverage report generated: coverage.html"
