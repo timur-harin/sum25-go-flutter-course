@@ -1,58 +1,72 @@
 package database
 
 import (
-	"database/sql"
-	"fmt"
-	"time"
+    "database/sql"
+    "errors"
+    "fmt"
+    "time"
 
-	_ "github.com/mattn/go-sqlite3"
+    _ "github.com/mattn/go-sqlite3"
 )
 
 // Config holds database configuration
 type Config struct {
-	DatabasePath    string
-	MaxOpenConns    int
-	MaxIdleConns    int
-	ConnMaxLifetime time.Duration
-	ConnMaxIdleTime time.Duration
+    DatabasePath    string
+    MaxOpenConns    int
+    MaxIdleConns    int
+    ConnMaxLifetime time.Duration
+    ConnMaxIdleTime time.Duration
 }
 
 // DefaultConfig returns a default database configuration
 func DefaultConfig() *Config {
-	return &Config{
-		DatabasePath:    "./lab04.db",
-		MaxOpenConns:    25,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: 5 * time.Minute,
-		ConnMaxIdleTime: 2 * time.Minute,
-	}
+    return &Config{
+        DatabasePath:    "./lab04.db",
+        MaxOpenConns:    25,
+        MaxIdleConns:    5,
+        ConnMaxLifetime: 5 * time.Minute,
+        ConnMaxIdleTime: 2 * time.Minute,
+    }
 }
 
-// TODO: Implement InitDB function
+// InitDB opens a SQLite database using the DefaultConfig settings.
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
-	// - Open database connection using sqlite3 driver
-	// - Apply connection pool configuration from DefaultConfig()
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+    return InitDBWithConfig(DefaultConfig())
 }
 
-// TODO: Implement InitDBWithConfig function
+// InitDBWithConfig opens a SQLite database using custom settings.
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
-	// - Open database connection using the provided config
-	// - Apply all connection pool settings
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+    if config == nil {
+        return nil, errors.New("database config cannot be nil")
+    }
+
+    // enable foreign keys explicitly
+    dsn := fmt.Sprintf("file:%s?_foreign_keys=on", config.DatabasePath)
+
+    db, err := sql.Open("sqlite3", dsn)
+    if err != nil {
+        return nil, err
+    }
+
+    // apply pool settings
+    db.SetMaxOpenConns(config.MaxOpenConns)
+    db.SetMaxIdleConns(config.MaxIdleConns)
+    db.SetConnMaxLifetime(config.ConnMaxLifetime)
+    db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+
+    // verify the connection works
+    if err := db.Ping(); err != nil {
+        _ = db.Close()
+        return nil, err
+    }
+
+    return db, nil
 }
 
-// TODO: Implement CloseDB function
+// CloseDB closes the given sql.DB instance.
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
-	// - Check if db is not nil
-	// - Close the database connection
-	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+    if db == nil {
+        return errors.New("database handle is nil")
+    }
+    return db.Close()
 }
