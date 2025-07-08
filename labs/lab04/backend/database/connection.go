@@ -28,31 +28,68 @@ func DefaultConfig() *Config {
 	}
 }
 
-// TODO: Implement InitDB function
+// InitDB initializes a database connection using the default configuration
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
-	// - Open database connection using sqlite3 driver
-	// - Apply connection pool configuration from DefaultConfig()
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	// Get default configuration
+	config := DefaultConfig()
+
+	// Open database connection using sqlite3 driver
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		// Return error if connection could not be opened
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+
+	// Apply connection pool configuration
+	db.SetMaxOpenConns(config.MaxOpenConns)       // Set maximum number of open connections
+	db.SetMaxIdleConns(config.MaxIdleConns)       // Set maximum number of idle connections
+	db.SetConnMaxLifetime(config.ConnMaxLifetime) // Set maximum connection lifetime
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime) // Set maximum idle time for a connection
+
+	// Test connection with Ping()
+	if err := db.Ping(); err != nil {
+		// Close db if ping fails
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Return the database connection
+	return db, nil
 }
 
-// TODO: Implement InitDBWithConfig function
+// InitDBWithConfig initializes a database connection using a custom configuration
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
-	// - Open database connection using the provided config
-	// - Apply all connection pool settings
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+	// Open database connection using sqlite3 driver and provided config
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		// Return error if connection could not be opened
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+
+	// Apply all connection pool settings
+	db.SetMaxOpenConns(config.MaxOpenConns)       // Set maximum number of open connections
+	db.SetMaxIdleConns(config.MaxIdleConns)       // Set maximum number of idle connections
+	db.SetConnMaxLifetime(config.ConnMaxLifetime) // Set maximum connection lifetime
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime) // Set maximum idle time for a connection
+
+	// Test connection with Ping()
+	if err := db.Ping(); err != nil {
+		// Close db if ping fails
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Return the database connection
+	return db, nil
 }
 
-// TODO: Implement CloseDB function
+// CloseDB properly closes the database connection
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
-	// - Check if db is not nil
-	// - Close the database connection
-	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+	// Check if db is not nil
+	if db == nil {
+		// Return error if db is nil
+		return fmt.Errorf("database connection is nil")
+	}
+	// Close the database connection
+	return db.Close()
 }
