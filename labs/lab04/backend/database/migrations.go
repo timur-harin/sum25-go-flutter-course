@@ -3,8 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-
 	"github.com/pressly/goose/v3"
+	"path/filepath"
+	"runtime"
 )
 
 // RunMigrations runs database migrations using goose
@@ -19,7 +20,9 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	// Get path to migrations directory (relative to backend directory)
-	migrationsDir := "./migrations"
+	_, b, _, _ := runtime.Caller(0)
+	basePath := filepath.Dir(b)
+	migrationsDir := filepath.Join(basePath, "..", "migrations")
 
 	// Run migrations from the migrations directory
 	if err := goose.Up(db, migrationsDir); err != nil {
@@ -39,7 +42,9 @@ func RollbackMigration(db *sql.DB) error {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
-	migrationsDir := "./migrations"
+	_, b, _, _ := runtime.Caller(0)
+	basePath := filepath.Dir(b)
+	migrationsDir := filepath.Join(basePath, "..", "migrations")
 
 	if err := goose.Down(db, migrationsDir); err != nil {
 		return fmt.Errorf("failed to rollback migration: %v", err)
@@ -58,7 +63,9 @@ func GetMigrationStatus(db *sql.DB) error {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
-	migrationsDir := "./migrations"
+	_, b, _, _ := runtime.Caller(0)
+	basePath := filepath.Dir(b)
+	migrationsDir := filepath.Join(basePath, "..", "migrations")
 
 	if err := goose.Status(db, migrationsDir); err != nil {
 		return fmt.Errorf("failed to get migration status: %v", err)
@@ -73,7 +80,9 @@ func CreateMigration(name string) error {
 		return fmt.Errorf("migration name cannot be empty")
 	}
 
-	migrationsDir := "./migrations"
+	_, b, _, _ := runtime.Caller(0)
+	basePath := filepath.Dir(b)
+	migrationsDir := filepath.Join(basePath, "..", "migrations")
 
 	if err := goose.SetDialect("sqlite3"); err != nil {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
