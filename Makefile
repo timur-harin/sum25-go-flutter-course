@@ -125,4 +125,10 @@ docs:
 test-integration:
 	@echo "🔄 Running integration tests..."
 	cd backend && go test -tags=integration ./tests/...
-	cd frontend && flutter drive --driver=integration_test/test_driver.dart --target=integration_test/app_test.dart 
+	cd frontend && flutter drive --driver=integration_test/test_driver.dart --target=integration_test/app_test.dart
+
+# Peer Review System
+peer-review:
+	@echo "📋 Generating peer review assignments for all labs..."
+	@cd docs/peer-review && python3 peer_review_assigner.py participants.csv
+	@echo "✅ Peer review assignments generated!" 
