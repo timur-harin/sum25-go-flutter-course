@@ -12,21 +12,64 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  Map<String, String>? _user;
+  bool _loading = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _fetchUser();
+  }
+
+  void _fetchUser() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final user = await widget.userService.fetchUser();
+      setState(() {
+        _user = user;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      _loading = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: Center(
+          child: _loading
+              ? CircularProgressIndicator(
+                  color: Colors.greenAccent,
+                )
+              : _error != null
+                  ? Text("error: $_error!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red))
+                  : _user != null
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _user!["name"] ?? '',
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _user!['email'] ?? '',
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        )
+                      : Text("?")),
     );
   }
 }
