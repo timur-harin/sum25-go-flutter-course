@@ -23,6 +23,19 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
+  factory User.fromMap(Map<String, Object?> first) {
+    final createdAt = DateTime.parse(first['created_at'] as String);
+    final updatedAt = DateTime.parse(first['updated_at'] as String);
+
+    return User(
+      id: first['id'] as int,
+      name: first['name'] as String,
+      email: first['email'] as String,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
   // TODO: Implement copyWith method
   User copyWith({
     int? id,
