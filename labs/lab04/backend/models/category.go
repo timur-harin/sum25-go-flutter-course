@@ -1,9 +1,10 @@
 package models
 
 import (
-	"time"
-
+	"errors"
 	"gorm.io/gorm"
+	"log"
+	"time"
 )
 
 // Category represents a blog post category using GORM model conventions
@@ -51,6 +52,19 @@ func (c *Category) BeforeCreate(tx *gorm.DB) error {
 	// - Set default values
 	// - Perform any pre-creation logic
 	// Example: if c.Color == "" { c.Color = "#007bff" }
+	if !c.IsActive() {
+		return errors.New("category is not active")
+	}
+	if c.Name == "" {
+		c.Name = "LOL"
+	}
+	if c.Description == "" {
+		c.Description = "LoL"
+	}
+	if c.Color == "" {
+		c.Color = "#000000"
+	}
+	c.CreatedAt = time.Now()
 	return nil
 }
 
@@ -61,7 +75,18 @@ func (c *Category) AfterCreate(tx *gorm.DB) error {
 	// - Send notifications
 	// - Update cache
 	// Example: log.Printf("Category created: %s", c.Name)
+	log.Println("Created:", c.Name, ", ", c.Description, ", ", c.Active)
+	sendNotifications(c.Name, c.Description)
+
+	err := tx.Model(&c).Update("active", c.Active).Error
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func sendNotifications(name string, description string) {
+	log.Println("Was created:", name, ", ", description)
 }
 
 // TODO: Implement BeforeUpdate hook
@@ -70,7 +95,27 @@ func (c *Category) BeforeUpdate(tx *gorm.DB) error {
 	// - Validate changes
 	// - Prevent certain updates
 	// - Clean up related data
+	if !c.IsActive() {
+		return errors.New("category is not active")
+	}
+	if c.Name == "" {
+		return errors.New("category is not valid")
+	}
+	if c.Description == "" {
+		return errors.New("category is not valid")
+	}
+	if c.Color == "" {
+		return errors.New("category is not valid")
+	}
+	if tx.Statement.Changed("ID") {
+		return errors.New("id cannot be changed")
+	}
+	ClearCategoryCache(c.ID)
 	return nil
+}
+
+func ClearCategoryCache(categoryID uint) {
+	log.Println("Clearing cache of ", categoryID, "category")
 }
 
 // TODO: Implement Validate method for CreateCategoryRequest
@@ -81,6 +126,7 @@ func (req *CreateCategoryRequest) Validate() error {
 	// - Description should not exceed limits
 	// Example using validator package:
 	// return validator.New().Struct(req)
+
 	return nil
 }
 
