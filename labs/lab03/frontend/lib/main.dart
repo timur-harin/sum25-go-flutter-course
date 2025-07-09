@@ -1,12 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'screens/chat_screen.dart';
-import 'services/api_service.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
+it push origin main
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
