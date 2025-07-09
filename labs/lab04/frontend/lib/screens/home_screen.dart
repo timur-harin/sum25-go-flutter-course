@@ -54,8 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-
-            // SharedPreferences Section
             _buildStorageSection(
               'SharedPreferences',
               'Simple key-value storage for app settings',
@@ -66,8 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-
-            // SQLite Section
             _buildStorageSection(
               'SQLite Database',
               'Local SQL database for structured data',
@@ -78,8 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-
-            // Secure Storage Section
             _buildStorageSection(
               'Secure Storage',
               'Encrypted storage for sensitive data',
@@ -128,23 +122,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSharedPreferences() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing SharedPreferences...';
+      _statusMessage = 'Checking SharedPreferences functionality...';
     });
-
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
-      await PreferencesService.setString(
-          'test_key', 'Hello from SharedPreferences!');
-      final value = PreferencesService.getString('test_key');
-
+      await PreferencesService.setBool('pref_test', true);
+      final result = PreferencesService.getBool('pref_test');
       setState(() {
-        _statusMessage = 'SharedPreferences test result: $value';
+        _statusMessage = 'SharedPreferences outcome: $result';
       });
-    } catch (e) {
+    } catch (exception) {
       setState(() {
-        _statusMessage = 'SharedPreferences test failed: $e';
+        _statusMessage = 'Error in SharedPreferences test: $exception';
       });
     } finally {
       setState(() {
@@ -156,22 +144,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSQLite() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing SQLite database...';
+      _statusMessage = 'Examining SQLite database...';
     });
-
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
-      final userCount = await DatabaseService.getUserCount();
-
+      int totalUsers = await DatabaseService.getUserCount();
       setState(() {
-        _statusMessage =
-            'SQLite test result: Found $userCount users in database';
+        _statusMessage = 'SQLite check: Discovered $totalUsers users';
       });
-    } catch (e) {
+    } catch (error) {
       setState(() {
-        _statusMessage = 'SQLite test failed: $e';
+        _statusMessage = 'SQLite error: $error';
       });
     } finally {
       setState(() {
@@ -183,22 +165,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSecureStorage() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing Secure Storage...';
+      _statusMessage = 'Evaluating Secure Storage...';
     });
-
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
-      await SecureStorageService.saveSecureData('test_secure', 'Secret data');
-      final value = await SecureStorageService.getSecureData('test_secure');
-
+      await SecureStorageService.saveSecureData('secure_key', 'Confidential info');
+      final retrieved = await SecureStorageService.getSecureData('secure_key');
       setState(() {
-        _statusMessage = 'Secure Storage test result: $value';
+        _statusMessage = 'Secure Storage outcome: $retrieved';
       });
-    } catch (e) {
+    } catch (error) {
       setState(() {
-        _statusMessage = 'Secure Storage test failed: $e';
+        _statusMessage = 'Secure Storage error: $error';
       });
     } finally {
       setState(() {
