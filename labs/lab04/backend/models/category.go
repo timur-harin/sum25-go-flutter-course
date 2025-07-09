@@ -1,13 +1,16 @@
 package models
 
 import (
+	"fmt"
+	"log"
+	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
 
 // Category represents a blog post category using GORM model conventions
-// This model demonstrates GORM ORM patterns and relationships
 type Category struct {
 	ID          uint           `json:"id" gorm:"primaryKey"`
 	Name        string         `json:"name" gorm:"size:100;not null;uniqueIndex"`
@@ -16,9 +19,8 @@ type Category struct {
 	Active      bool           `json:"active" gorm:"default:true"`
 	CreatedAt   time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"` // Soft delete support
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 
-	// GORM Associations (demonstrates ORM relationships)
 	Posts []Post `json:"posts,omitempty" gorm:"many2many:post_categories;"`
 }
 
@@ -37,91 +39,75 @@ type UpdateCategoryRequest struct {
 	Active      *bool   `json:"active,omitempty"`
 }
 
-// TODO: Implement GORM model methods and hooks
-
-// TableName specifies the table name for GORM (optional - GORM auto-infers)
+// TableName overrides GORM table naming (optional)
 func (Category) TableName() string {
 	return "categories"
 }
 
-// TODO: Implement BeforeCreate hook
+// BeforeCreate hook - run before saving a new category
 func (c *Category) BeforeCreate(tx *gorm.DB) error {
-	// TODO: GORM BeforeCreate hook
-	// - Validate data before creation
-	// - Set default values
-	// - Perform any pre-creation logic
-	// Example: if c.Color == "" { c.Color = "#007bff" }
+	if strings.TrimSpace(c.Color) == "" {
+		c.Color = "#007bff"
+	}
 	return nil
 }
 
-// TODO: Implement AfterCreate hook
+// AfterCreate hook - run after creating a category
 func (c *Category) AfterCreate(tx *gorm.DB) error {
-	// TODO: GORM AfterCreate hook
-	// - Log creation
-	// - Send notifications
-	// - Update cache
-	// Example: log.Printf("Category created: %s", c.Name)
+	log.Printf("Category created: ID=%d, Name=%s", c.ID, c.Name)
 	return nil
 }
 
-// TODO: Implement BeforeUpdate hook
+// BeforeUpdate hook - run before updating a category
 func (c *Category) BeforeUpdate(tx *gorm.DB) error {
-	// TODO: GORM BeforeUpdate hook
-	// - Validate changes
-	// - Prevent certain updates
-	// - Clean up related data
+	// Example: ensure name isn't empty
+	if strings.TrimSpace(c.Name) == "" {
+		return fmt.Errorf("category name cannot be empty")
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateCategoryRequest
+// Validate validates the CreateCategoryRequest
 func (req *CreateCategoryRequest) Validate() error {
-	// TODO: Add validation logic for GORM model
-	// - Name should be unique (checked at database level via GORM)
-	// - Color should be valid hex color
-	// - Description should not exceed limits
-	// Example using validator package:
-	// return validator.New().Struct(req)
-	return nil
+	validate := validator.New()
+	return validate.Struct(req)
 }
 
-// TODO: Implement ToCategory method
+// ToCategory converts CreateCategoryRequest to a Category model
 func (req *CreateCategoryRequest) ToCategory() *Category {
-	// TODO: Convert request to GORM model
-	// - Map fields from request to model
-	// - Set default values
-	// Example:
-	// return &Category{
-	//     Name:        req.Name,
-	//     Description: req.Description,
-	//     Color:       req.Color,
-	//     Active:      true,
-	// }
-	return nil
+	color := req.Color
+	if strings.TrimSpace(color) == "" {
+		color = "#007bff"
+	}
+
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       color,
+		Active:      true,
+	}
 }
 
-// TODO: Implement GORM scopes (reusable query logic)
+// ActiveCategories GORM scope
 func ActiveCategories(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for active categories
-	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
+// CategoriesWithPosts GORM scope
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for categories with posts
-	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.
+		Joins("JOIN post_categories ON categories.id = post_categories.category_id").
+		Joins("JOIN posts ON post_categories.post_id = posts.id").
+		Group("categories.id")
 }
 
-// TODO: Implement model validation methods
+// IsActive returns true if the category is active
 func (c *Category) IsActive() bool {
-	// TODO: Check if category is active
 	return c.Active
 }
 
+// PostCount returns the number of posts in a category
 func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
+	count := db.Model(c).Association("Posts").Count()
+	return count, nil
 }
