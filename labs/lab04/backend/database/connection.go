@@ -44,7 +44,6 @@ func InitDBWithConfig(config *Config) (*sql.DB, error) {
 	// - Open database connection using the provided config
 	// - Apply all connection pool settings
 	// - Test connection with Ping()
-	// - Return the database connection or error
 	db, err := sql.Open("sqlite", config.DatabasePath)
 	if err != nil {
 		return nil, err
