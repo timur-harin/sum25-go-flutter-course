@@ -11,10 +11,6 @@ void main() async {
     await PreferencesService.init();
     await DatabaseService.database;
 
-    const bool isTestMode = bool.fromEnvironment('TEST_MODE');
-    if (isTestMode) {
-      SecureStorageService.enableTestMode();
-    }
   } catch (e) {
     print('Error initializing services: $e');
   }

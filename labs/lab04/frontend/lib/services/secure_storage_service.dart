@@ -1,15 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
 class SecureStorageService {
-  static final Map<String, String> _testStorage = {};
-  static bool _isTestEnvironment = false;
-
-  static void enableTestMode() {
-    _isTestEnvironment = true;
-  }
-
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
@@ -19,106 +12,123 @@ class SecureStorageService {
     ),
   );
 
+  static final Map<String, String?> _inMemory = {};
+
   static Future<void> _write(String key, String? value) async {
-    if (_isTestEnvironment) {
-      if (value == null) {
-        _testStorage.remove(key);
-      } else {
-        _testStorage[key] = value;
-      }
-    } else {
+    try {
       if (value == null) {
         await _storage.delete(key: key);
       } else {
         await _storage.write(key: key, value: value);
       }
+    } on MissingPluginException {
+      if (value == null) {
+        _inMemory.remove(key);
+      } else {
+        _inMemory[key] = value;
+      }
     }
   }
 
   static Future<String?> _read(String key) async {
-    return _isTestEnvironment
-        ? _testStorage[key]
-        : await _storage.read(key: key);
-  }
-
-  static Future<bool> _containsKey(String key) async {
-    return _isTestEnvironment
-        ? _testStorage.containsKey(key)
-        : await _storage.containsKey(key: key);
-  }
-
-  static Future<Map<String, String>> _readAll() async {
-    return _isTestEnvironment
-        ? Map.from(_testStorage)
-        : await _storage.readAll();
-  }
-
-  static Future<void> _deleteAll() async {
-    if (_isTestEnvironment) {
-      _testStorage.clear();
-    } else {
-      await _storage.deleteAll();
+    try {
+      return await _storage.read(key: key);
+    } on MissingPluginException {
+      return _inMemory[key];
     }
   }
 
-  static Future<void> saveAuthToken(String token) async =>
-      await _write('auth_token', token);
+  static Future<void> _delete(String key) async {
+    try {
+      await _storage.delete(key: key);
+    } on MissingPluginException {
+      _inMemory.remove(key);
+    }
+  }
 
-  static Future<String?> getAuthToken() async => await _read('auth_token');
+  static Future<Map<String, String>> _readAll() async {
+    try {
+      return await _storage.readAll();
+    } on MissingPluginException {
+      return Map<String, String>.from(_inMemory);
+    }
+  }
 
-  static Future<void> deleteAuthToken() async =>
-      await _write('auth_token', null);
+  static Future<void> _deleteAll() async {
+    try {
+      await _storage.deleteAll();
+    } on MissingPluginException {
+      _inMemory.clear();
+    }
+  }
+
+  static Future<void> saveAuthToken(String token) =>
+      _write('auth_token', token);
+
+  static Future<String?> getAuthToken() => _read('auth_token');
+
+  static Future<void> deleteAuthToken() => _delete('auth_token');
 
   static Future<void> saveUserCredentials(
-      String username, String password) async {
-    await _write('username', username);
-    await _write('password', password);
-  }
+          String username, String password) async =>
+      Future.wait([
+        _write('username', username),
+        _write('password', password),
+      ]);
 
   static Future<Map<String, String?>> getUserCredentials() async {
     final username = await _read('username');
     final password = await _read('password');
-    return {'username': username, 'password': password};
+    return {
+      'username': username,
+      'password': password,
+    };
   }
 
-  static Future<void> deleteUserCredentials() async {
-    await _write('username', null);
-    await _write('password', null);
-  }
+  static Future<void> deleteUserCredentials() => Future.wait([
+        _delete('username'),
+        _delete('password'),
+      ]);
 
-  static Future<void> saveBiometricEnabled(bool enabled) async =>
-      await _write('biometric_enabled', enabled.toString());
+  static Future<void> saveBiometricEnabled(bool enabled) =>
+      _write('biometric_enabled', enabled.toString());
 
   static Future<bool> isBiometricEnabled() async {
-    final value = await _read('biometric_enabled');
-    return value == 'true';
+    final val = await _read('biometric_enabled');
+    return val?.toLowerCase() == 'true';
   }
 
-  static Future<void> saveSecureData(String key, String value) async =>
-      await _write(key, value);
+  static Future<void> saveSecureData(String key, String value) =>
+      _write(key, value);
 
-  static Future<String?> getSecureData(String key) async => await _read(key);
+  static Future<String?> getSecureData(String key) => _read(key);
 
-  static Future<void> deleteSecureData(String key) async =>
-      await _write(key, null);
+  static Future<void> deleteSecureData(String key) => _delete(key);
 
   static Future<void> saveObject(
           String key, Map<String, dynamic> object) async =>
-      await _write(key, json.encode(object));
+      _write(key, jsonEncode(object));
 
   static Future<Map<String, dynamic>?> getObject(String key) async {
     final jsonString = await _read(key);
-    return jsonString != null ? json.decode(jsonString) : null;
+    if (jsonString == null) return null;
+    return jsonDecode(jsonString) as Map<String, dynamic>;
   }
 
-  static Future<bool> containsKey(String key) async => await _containsKey(key);
+  static Future<bool> containsKey(String key) async {
+    try {
+      return await _storage.containsKey(key: key);
+    } on MissingPluginException {
+      return _inMemory.containsKey(key);
+    }
+  }
 
   static Future<List<String>> getAllKeys() async {
     final all = await _readAll();
     return all.keys.toList();
   }
 
-  static Future<void> clearAll() async => await _deleteAll();
+  static Future<void> clearAll() => _deleteAll();
 
-  static Future<Map<String, String>> exportData() async => await _readAll();
+  static Future<Map<String, String>> exportData() => _readAll();
 }
