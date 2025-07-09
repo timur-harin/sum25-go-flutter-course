@@ -1,9 +1,20 @@
 package models
 
 import (
+	"fmt"
+	"log"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
+)
+
+const (
+	DefaultColor     = "#007bff"
+	MinNameLength    = 2
+	MaxNameLength    = 100
+	MaxDescLength    = 500
+	DefaultHexLength = 7
 )
 
 // Category represents a blog post category using GORM model conventions
@@ -51,6 +62,19 @@ func (c *Category) BeforeCreate(tx *gorm.DB) error {
 	// - Set default values
 	// - Perform any pre-creation logic
 	// Example: if c.Color == "" { c.Color = "#007bff" }
+
+	if c.Color == "" {
+		c.Color = DefaultColor
+	}
+
+	if len(c.Name) < MinNameLength || len(c.Name) > MaxNameLength {
+		return fmt.Errorf("name length must be between %d and %d characters", MinNameLength, MaxNameLength)
+	}
+
+	if len(c.Description) > MaxDescLength {
+		return fmt.Errorf("description length must not exceed %d characters", MaxDescLength)
+	}
+
 	return nil
 }
 
@@ -60,7 +84,8 @@ func (c *Category) AfterCreate(tx *gorm.DB) error {
 	// - Log creation
 	// - Send notifications
 	// - Update cache
-	// Example: log.Printf("Category created: %s", c.Name)
+	log.Printf("Category created: %s", c.Name)
+
 	return nil
 }
 
@@ -70,6 +95,15 @@ func (c *Category) BeforeUpdate(tx *gorm.DB) error {
 	// - Validate changes
 	// - Prevent certain updates
 	// - Clean up related data
+
+	if c.Name != "" && (len(c.Name) < MinNameLength || len(c.Name) > MaxNameLength) {
+		return fmt.Errorf("name length must be between %d and %d characters", MinNameLength, MaxNameLength)
+	}
+
+	if len(c.Description) > MaxDescLength {
+		return fmt.Errorf("description length must not exceed %d characters", MaxDescLength)
+	}
+
 	return nil
 }
 
@@ -80,8 +114,9 @@ func (req *CreateCategoryRequest) Validate() error {
 	// - Color should be valid hex color
 	// - Description should not exceed limits
 	// Example using validator package:
-	// return validator.New().Struct(req)
-	return nil
+
+	validate := validator.New()
+	return validate.Struct(req)
 }
 
 // TODO: Implement ToCategory method
@@ -96,20 +131,26 @@ func (req *CreateCategoryRequest) ToCategory() *Category {
 	//     Color:       req.Color,
 	//     Active:      true,
 	// }
+
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       req.Color,
+		Active:      true,
+	}
+
 	return nil
 }
 
 // TODO: Implement GORM scopes (reusable query logic)
 func ActiveCategories(db *gorm.DB) *gorm.DB {
 	// TODO: GORM scope for active categories
-	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
 	// TODO: GORM scope for categories with posts
-	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.Joins("Posts").Where("posts.id IS NOT NULL")
 }
 
 // TODO: Implement model validation methods
@@ -118,10 +159,10 @@ func (c *Category) IsActive() bool {
 	return c.Active
 }
 
-func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
-}
+// func (c *Category) PostCount(db *gorm.DB) (int64, error) {
+// 	// TODO: Get post count for this category using GORM association
+// 	var count int64
+// 	err := db.Model(c).Association("Posts").Count(&count)
+// return count, err
+//
+// }

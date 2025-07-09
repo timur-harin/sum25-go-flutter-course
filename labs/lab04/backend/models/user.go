@@ -2,6 +2,9 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"net/mail"
 	"time"
 )
 
@@ -26,12 +29,27 @@ type UpdateUserRequest struct {
 	Email *string `json:"email,omitempty"`
 }
 
+var (
+	ErrInvalidName  = errors.New("name should not be empty and should be at least 2 characters")
+	ErrInvalidEmail = errors.New("invalid email format")
+)
+
 // TODO: Implement Validate method for User
 func (u *User) Validate() error {
 	// TODO: Add validation logic
 	// - Name should not be empty and should be at least 2 characters
 	// - Email should be valid format
 	// Return appropriate errors if validation fails
+
+	if len(u.Name) < 2 {
+		return ErrInvalidName
+	}
+
+	_, err := mail.ParseAddress(u.Email)
+	if err != nil {
+		return ErrInvalidEmail
+	}
+
 	return nil
 }
 
@@ -41,26 +59,66 @@ func (req *CreateUserRequest) Validate() error {
 	// - Name should not be empty and should be at least 2 characters
 	// - Email should be valid format and not empty
 	// Return appropriate errors if validation fails
+
+	if len(req.Name) < 2 {
+		return ErrInvalidName
+	}
+
+	_, err := mail.ParseAddress(req.Email)
+	if err != nil {
+		return ErrInvalidEmail
+	}
+
 	return nil
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
+// CreateUserRequest converts CreateUserRequest to User
 func (req *CreateUserRequest) ToUser() *User {
-	// TODO: Convert CreateUserRequest to User
-	// Set timestamps to current time
-	return nil
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
-// TODO: Implement ScanRow method for User
+// ScanRow scans a row from sql.Row into the User. Returns error if scan failed
 func (u *User) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into User struct
-	// Handle the case where row might be nil
-	return nil
+	return row.Scan(
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
 }
 
-// TODO: Implement ScanRows method for User slice
+// ScanUsers scans rows into User slice. Returns error if scan failed
 func ScanUsers(rows *sql.Rows) ([]User, error) {
-	// TODO: Scan multiple database rows into User slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	if rows == nil {
+		return nil, sql.ErrNoRows
+	}
+	defer rows.Close()
+
+	users := make([]User, 0, 8)
+
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return users, nil
 }
