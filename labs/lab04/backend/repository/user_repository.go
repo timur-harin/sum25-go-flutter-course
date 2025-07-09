@@ -1,10 +1,11 @@
 package repository
 
 import (
-	"database/sql"
-	"fmt"
-
-	"lab04-backend/models"
+    "database/sql"
+    "errors"
+    "fmt"
+    "strings"
+    "lab04-backend/models"
 )
 
 // UserRepository handles database operations for users
