@@ -28,31 +28,62 @@ func DefaultConfig() *Config {
 	}
 }
 
-// TODO: Implement InitDB function
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
 	// - Open database connection using sqlite3 driver
+	config := DefaultConfig()
+
+	// Open database connection using sqlite3 driver
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		return nil, fmt.Errorf("DB: connection failed: %w", err)
+	}
+
 	// - Apply connection pool configuration from DefaultConfig()
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	db.SetMaxIdleConns(config.MaxIdleConns)
+	db.SetConnMaxLifetime(config.ConnMaxLifetime)
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+
 	// - Test connection with Ping()
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("DB: ping failed: %w", err)
+	}
+
 	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	return db, nil
 }
 
 // TODO: Implement InitDBWithConfig function
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
-	// - Open database connection using the provided config
-	// - Apply all connection pool settings
+	// Open database connection using sqlite3 driver
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		return nil, fmt.Errorf("DB: connection failed: %w", err)
+	}
+
+	// - Apply connection pool configuration from DefaultConfig()
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	db.SetMaxIdleConns(config.MaxIdleConns)
+	db.SetConnMaxLifetime(config.ConnMaxLifetime)
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+
 	// - Test connection with Ping()
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("DB: ping failed: %w", err)
+	}
+
 	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+	return db, nil
 }
 
 // TODO: Implement CloseDB function
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
 	// - Check if db is not nil
+	if db == nil {
+		return fmt.Errorf("DB connection cannot be nil")
+	}
 	// - Close the database connection
-	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+	return db.Close()
 }
