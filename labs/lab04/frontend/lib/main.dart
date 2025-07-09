@@ -6,20 +6,17 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await _initializeAppServices();
-
-  runApp(const MyApp());
-}
-
-Future<void> _initializeAppServices() async {
   try {
-    await Future.wait([
-      PreferencesService.init(),
-      DatabaseService.database, 
-    ]);
+    // TODO: Initialize PreferencesService
+    await PreferencesService.init();
+
+    // TODO: Add any other service initialization here
+    // For example: await DatabaseService.database;
   } catch (e) {
     print('Error initializing services: $e');
   }
+  
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

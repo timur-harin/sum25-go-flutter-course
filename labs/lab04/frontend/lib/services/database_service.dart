@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/user.dart';
 
@@ -15,7 +16,7 @@ class DatabaseService {
       return _database!;
     }
     _database = await _initDatabase();
-    throw _database!;
+    return _database!;
   }
 
   // TODO: Implement _initDatabase method
@@ -25,13 +26,13 @@ class DatabaseService {
     // - Join with database name
     // - Open database with version and callbacks
     try {
-    final path = join(await getDatabasesPath(), _dbName);
-    return await openDatabase(
-      path, 
-      version: _version,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade
-    );
+      final dbPath = await getDatabasePath();
+      return await openDatabase(
+        dbPath,
+        version: _version,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
     } catch (e) {
       throw Exception('failed to initialize database: $e');
     }
@@ -82,8 +83,11 @@ class DatabaseService {
     // - Get database instance
     // - Insert user data
     try {
-      final db = await database;
-      final now = DateTime.now();
+      if (_database == null) {
+        await database;
+      }
+      final db = _database!;
+      final now = DateTime.now().toIso8601String();
 
       final id = await db.insert('users', {
         'name': request.name,
@@ -95,8 +99,8 @@ class DatabaseService {
         id: id,
         name: request.name,
         email: request.email,
-        createdAt: now,
-        updatedAt: now
+        createdAt: DateTime.parse(now),
+        updatedAt: DateTime.parse(now)
       );
     } catch (e) {
       throw Exception('failed to create user: $e');
@@ -117,7 +121,8 @@ class DatabaseService {
         limit: 1,
       );
       if (maps.isEmpty) return null;
-      return User.fromJson(maps.first);
+      final data = maps.first;
+      return User.fromJson(data);
     } catch (e) {
       throw Exception('failed to get user: $e');
     }
@@ -131,7 +136,7 @@ class DatabaseService {
     try {
       final db = await database;
       final maps = await db.query('users', orderBy: 'created_at DESC');
-      return List.generate(maps.length, (i) => User.fromJson(maps[i]));
+      return maps.map((data) => User.fromJson(data)).toList();
     } catch (e) {
       throw Exception('failed to get all users: $e');
     }
@@ -146,14 +151,24 @@ class DatabaseService {
     try {
       final db = await database;
       updates['updated_at'] = DateTime.now().toIso8601String();
-      await db.update(
+      final number = await db.update(
         'users',
         updates,
         where: 'id = ?',
         whereArgs: [id],
       );
+
+      if (number == 0) {
+        throw Exception('user with id not found: $id');
+      }
+
       final updatedUser = await getUser(id);
-      return updatedUser!;
+
+      if (updatedUser == null) {
+        throw Exception('user with id not found: $id');
+      }
+      
+      return updatedUser;
     } catch (e) {
       throw Exception('failed to update user: $e');
     }
@@ -166,11 +181,14 @@ class DatabaseService {
     // - Consider cascading deletes for related data
     try {
     final db = await database;
-    await db.delete(
+    final number = await db.delete(
       'users',
       where: 'id = ?',
       whereArgs: [id],
     );
+    if (number == 0) {
+      throw Exception('user with id not found: $id');
+    }
     } catch (e) {
       throw Exception('failed to update user: $e');
     }
@@ -182,8 +200,8 @@ class DatabaseService {
       // TODO: Count total number of users
       // - Query count from users table
       final db = await database;
-      return Sqflite.firstIntValue(
-        await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
+      final result = await db.rawQuery('SELECT COUNT(*) as count FROM users');
+      return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
       throw Exception('failed to get user count: $e');
     }
@@ -201,7 +219,7 @@ class DatabaseService {
         where: 'name LIKE ? OR email LIKE ?',
         whereArgs: ['%$query%', '%$query%'],
       );
-      return List.generate(maps.length, (i) => User.fromJson(maps[i]));
+      return maps.map((data) => User.fromJson(data)).toList();
     } catch (e) {
       throw Exception('failed to search users: $e');
     }
@@ -238,7 +256,7 @@ class DatabaseService {
   static Future<String> getDatabasePath() async {
     // TODO: Get the full path to the database file
     // - Return the complete path to the database file
-    final db = await database;
-    return db.path;
+    final databasesPath = await getDatabasesPath();
+    return join(databasesPath, _dbName);
   }
 }
