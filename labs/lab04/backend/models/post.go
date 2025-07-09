@@ -79,8 +79,6 @@ func (req *CreatePostRequest) ToPost() *Post {
 	}
 }
 
-
-
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
 	defer rows.Close()
 	var posts []Post

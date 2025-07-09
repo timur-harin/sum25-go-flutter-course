@@ -16,6 +16,7 @@ type Config struct {
 	ConnMaxIdleTime time.Duration
 }
 
+
 func DefaultConfig() *Config {
 	return &Config{
 		DatabasePath:    "./lab04.db",
