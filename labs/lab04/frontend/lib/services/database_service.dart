@@ -11,7 +11,11 @@ class DatabaseService {
   static Future<Database> get database async {
     // TODO: Return existing database or initialize new one
     // Use the null-aware operator to check if _database exists
-    throw UnimplementedError('TODO: implement database getter');
+    if (_database != null) {
+      return _database!;
+    }
+    _database = await _initDatabase();
+    throw _database!;
   }
 
   // TODO: Implement _initDatabase method
@@ -20,7 +24,13 @@ class DatabaseService {
     // - Get the databases path
     // - Join with database name
     // - Open database with version and callbacks
-    throw UnimplementedError('TODO: implement _initDatabase method');
+    final path = join(await getDatabasesPath(), _dbName);
+    return await openDatabase(
+      path, 
+      version: _version,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade
+    );
   }
 
   // TODO: Implement _onCreate method
@@ -29,7 +39,28 @@ class DatabaseService {
     // Create users table with: id, name, email, created_at, updated_at
     // Create posts table with: id, user_id, title, content, published, created_at, updated_at
     // Include proper PRIMARY KEY and FOREIGN KEY constraints
-    throw UnimplementedError('TODO: implement _onCreate method');
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR(30) NOT NULL,
+        email VARCHAR(30) NOT NULL UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        published BOOLEAN NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   // TODO: Implement _onUpgrade method
@@ -46,8 +77,22 @@ class DatabaseService {
     // TODO: Insert user into database
     // - Get database instance
     // - Insert user data
-    // - Return User object with generated ID and timestamps
-    throw UnimplementedError('TODO: implement createUser method');
+    final db = await database;
+    final now = DateTime.now();
+
+    final id = await db.insert('users', {
+      'name': request.name,
+      'email': request.email,
+      'created_at': now,
+      'updated_at': now
+    });
+    return User(
+      id: id,
+      name: request.name,
+      email: request.email,
+      createdAt: now,
+      updatedAt: now
+    );
   }
 
   // TODO: Implement getUser method
@@ -55,7 +100,15 @@ class DatabaseService {
     // TODO: Get user by ID from database
     // - Query users table by ID
     // - Return User object or null if not found
-    throw UnimplementedError('TODO: implement getUser method');
+    final db = await database;
+    final maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return User.fromJson(maps.first);
   }
 
   // TODO: Implement getAllUsers method
@@ -63,7 +116,9 @@ class DatabaseService {
     // TODO: Get all users from database
     // - Query all users ordered by created_at
     // - Convert query results to User objects
-    throw UnimplementedError('TODO: implement getAllUsers method');
+    final db = await database;
+    final maps = await db.query('users', orderBy: 'created_at DESC');
+    return List.generate(maps.length, (i) => User.fromJson(maps[i]));
   }
 
   // TODO: Implement updateUser method
@@ -72,7 +127,16 @@ class DatabaseService {
     // - Update user with provided data
     // - Update the updated_at timestamp
     // - Return updated User object
-    throw UnimplementedError('TODO: implement updateUser method');
+    final db = await database;
+    updates['updated_at'] = DateTime.now().toIso8601String();
+    await db.update(
+      'users',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    final updatedUser = await getUser(id);
+    return updatedUser!;
   }
 
   // TODO: Implement deleteUser method
@@ -80,14 +144,21 @@ class DatabaseService {
     // TODO: Delete user from database
     // - Delete user by ID
     // - Consider cascading deletes for related data
-    throw UnimplementedError('TODO: implement deleteUser method');
+    final db = await database;
+    await db.delete(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   // TODO: Implement getUserCount method
   static Future<int> getUserCount() async {
     // TODO: Count total number of users
     // - Query count from users table
-    throw UnimplementedError('TODO: implement getUserCount method');
+    final db = await database;
+    return Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
   }
 
   // TODO: Implement searchUsers method
@@ -95,7 +166,13 @@ class DatabaseService {
     // TODO: Search users by name or email
     // - Use LIKE operator for pattern matching
     // - Search in both name and email fields
-    throw UnimplementedError('TODO: implement searchUsers method');
+    final db = await database;
+    final maps = await db.query(
+      'users',
+      where: 'name LIKE ? OR email LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
+    );
+    return List.generate(maps.length, (i) => User.fromJson(maps[i]));
   }
 
   // Database utility methods
@@ -105,7 +182,10 @@ class DatabaseService {
     // TODO: Close database connection
     // - Close the database if it exists
     // - Set _database to null
-    throw UnimplementedError('TODO: implement closeDatabase method');
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 
   // TODO: Implement clearAllData method
@@ -113,13 +193,16 @@ class DatabaseService {
     // TODO: Clear all data from database (for testing)
     // - Delete all records from all tables
     // - Reset auto-increment counters if needed
-    throw UnimplementedError('TODO: implement clearAllData method');
+    final db = await database;
+    await db.delete('posts');
+    await db.delete('users');
   }
 
   // TODO: Implement getDatabasePath method
   static Future<String> getDatabasePath() async {
     // TODO: Get the full path to the database file
     // - Return the complete path to the database file
-    throw UnimplementedError('TODO: implement getDatabasePath method');
+    final db = await database;
+    return db.path;
   }
 }
