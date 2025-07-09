@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -34,38 +33,53 @@ type UpdatePostRequest struct {
 	Published *bool   `json:"published,omitempty"`
 }
 
+// Validate method for Post
 func (p *Post) Validate() error {
-	if p.UserID <= 0 {
-		return errors.New("user ID must be positive")
-	}
+	// Title validation
 	if strings.TrimSpace(p.Title) == "" {
-		return errors.New("title is required")
+		return fmt.Errorf("title cannot be empty")
 	}
-	if len(p.Title) < 5 {
-		return errors.New("title must be at least 5 characters")
+	if len(strings.TrimSpace(p.Title)) < 5 {
+		return fmt.Errorf("title must be at least 5 characters long")
 	}
+
+	// Content validation for published posts
 	if p.Published && strings.TrimSpace(p.Content) == "" {
-		return errors.New("content is required when published")
+		return fmt.Errorf("content cannot be empty for published posts")
 	}
+
+	// UserID validation
+	if p.UserID <= 0 {
+		return fmt.Errorf("user_id must be greater than 0")
+	}
+
 	return nil
 }
 
+// Validate method for CreatePostRequest
 func (req *CreatePostRequest) Validate() error {
-	if req.UserID <= 0 {
-		return errors.New("user ID must be positive")
-	}
+	// Title validation
 	if strings.TrimSpace(req.Title) == "" {
-		return errors.New("title is required")
+		return fmt.Errorf("title cannot be empty")
 	}
-	if len(req.Title) < 5 {
-		return errors.New("title must be at least 5 characters")
+	if len(strings.TrimSpace(req.Title)) < 5 {
+		return fmt.Errorf("title must be at least 5 characters long")
 	}
+
+	// UserID validation
+	if req.UserID <= 0 {
+		return fmt.Errorf("user_id must be greater than 0")
+	}
+
+	// Content validation for published posts
 	if req.Published && strings.TrimSpace(req.Content) == "" {
-		return errors.New("content is required when published")
+		return fmt.Errorf("content cannot be empty for published posts")
 	}
+
 	return nil
 }
 
+// ToPost method for CreatePostRequest
 func (req *CreatePostRequest) ToPost() *Post {
 	now := time.Now()
 	return &Post{
@@ -78,44 +92,35 @@ func (req *CreatePostRequest) ToPost() *Post {
 	}
 }
 
+// ScanRow method for Post
 func (p *Post) ScanRow(row *sql.Row) error {
 	if row == nil {
-		return errors.New("row is nil")
+		return fmt.Errorf("row is nil")
 	}
-	return row.Scan(
-		&p.ID,
-		&p.UserID,
-		&p.Title,
-		&p.Content,
-		&p.Published,
-		&p.CreatedAt,
-		&p.UpdatedAt,
-	)
+
+	return row.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.Published, &p.CreatedAt, &p.UpdatedAt)
 }
 
+// ScanRows method for Post slice
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
-	defer rows.Close()
-	posts := []Post{}
+	if rows == nil {
+		return nil, fmt.Errorf("rows is nil")
+	}
 
+	defer rows.Close()
+
+	var posts []Post
 	for rows.Next() {
 		var post Post
-		err := rows.Scan(
-			&post.ID,
-			&post.UserID,
-			&post.Title,
-			&post.Content,
-			&post.Published,
-			&post.CreatedAt,
-			&post.UpdatedAt,
-		)
+		err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.Published, &post.CreatedAt, &post.UpdatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan post: %w", err)
+			return nil, fmt.Errorf("error scanning post row: %w", err)
 		}
 		posts = append(posts, post)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("row iteration error: %w", err)
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
 	}
 
 	return posts, nil
