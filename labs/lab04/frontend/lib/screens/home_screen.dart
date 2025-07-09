@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/preferences_service.dart';
 import '../services/database_service.dart';
 import '../services/secure_storage_service.dart';
@@ -133,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       // TODO: Implement SharedPreferences test
+      final _prefs = await SharedPreferences.getInstance();
       // This will test when students implement the methods
 
       await PreferencesService.setString(
