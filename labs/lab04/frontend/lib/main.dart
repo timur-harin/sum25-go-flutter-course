@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/preferences_service.dart';
 import 'screens/home_screen.dart';
+import 'services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,7 @@ void main() async {
 
     // TODO: Add any other service initialization here
     // For example: await DatabaseService.database;
+    await DatabaseService.database;
   } catch (e) {
     print('Error initializing services: $e');
   }

@@ -16,7 +16,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := database.CloseDB(db); err != nil {
+			log.Println("Warning: failed to close DB:", err)
+		}
+	}()
 
 	// TODO: Run migrations (using goose-based approach)
 	if err := database.RunMigrations(db); err != nil {
@@ -34,4 +38,13 @@ func main() {
 
 	// TODO: Add some demo data operations here
 	// You can test your CRUD operations
+	newUser := &models.CreateUserRequest{
+		Name:  "name",
+		Email: "test@test.com",
+	}
+	user, err := userRepo.Create(newUser)
+	if err != nil {
+		log.Fatal("Failed to create user:", err)
+	}
+	fmt.Printf("Created User: %+v\n", user)
 }
