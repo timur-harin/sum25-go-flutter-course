@@ -14,10 +14,13 @@ type UserRepository struct {
 	db *sql.DB
 }
 
+// NewUserRepository creates a new UserRepository instance with the given database connection
 func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db}
 }
 
+// Create validates and inserts a new user record into the database.
+// Returns the created user or an error if validation fails or insert fails.
 func (r *UserRepository) Create(req *models.CreateUserRequest) (*models.User, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
@@ -43,6 +46,8 @@ func (r *UserRepository) Create(req *models.CreateUserRequest) (*models.User, er
 	return user, nil
 }
 
+// GetByID retrieves a user by their ID from the database.
+// Returns the user or an error if the user is not found or query fails.
 func (r *UserRepository) GetByID(id int) (*models.User, error) {
 	query := `
 		SELECT id, name, email, created_at, updated_at
@@ -59,6 +64,8 @@ func (r *UserRepository) GetByID(id int) (*models.User, error) {
 	return user, nil
 }
 
+// GetByEmail retrieves a user by their email address from the database.
+// Returns the user or an error if the user is not found or query fails.
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	query := `
 		SELECT id, name, email, created_at, updated_at
@@ -75,6 +82,8 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	return user, nil
 }
 
+// GetAll retrieves all non-deleted users from the database ordered by creation time.
+// Returns a slice of users or an error if the query fails.
 func (r *UserRepository) GetAll() ([]models.User, error) {
 	query := `
 		SELECT id, name, email, created_at, updated_at
@@ -96,8 +105,9 @@ func (r *UserRepository) GetAll() ([]models.User, error) {
 	return users, nil
 }
 
+// Update modifies an existing user's details in the database.
+// Returns the updated user or an error if the user doesn't exist or update fails.
 func (r *UserRepository) Update(id int, req *models.UpdateUserRequest) (*models.User, error) {
-	// First check if user exists
 	_, err := r.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -120,26 +130,22 @@ func (r *UserRepository) Update(id int, req *models.UpdateUserRequest) (*models.
 		return nil, fmt.Errorf("no fields to update")
 	}
 
-	// Always update the updated_at timestamp
 	setValues = append(setValues, "updated_at = ?")
 	args = append(args, time.Now())
 
-	// Create update query
 	updateQuery := fmt.Sprintf(`
-        UPDATE users 
-        SET %s
-        WHERE id = ? AND deleted_at IS NULL`,
+		UPDATE users 
+		SET %s
+		WHERE id = ? AND deleted_at IS NULL`,
 		strings.Join(setValues, ", "))
 
 	args = append(args, id)
 
-	// Execute update
 	_, err = r.db.Exec(updateQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %v", err)
 	}
 
-	// Get updated user
 	updatedUser, err := r.GetByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get updated user: %v", err)
@@ -148,6 +154,8 @@ func (r *UserRepository) Update(id int, req *models.UpdateUserRequest) (*models.
 	return updatedUser, nil
 }
 
+// Delete performs a soft delete on a user by setting their deleted_at timestamp.
+// Returns an error if the user doesn't exist or deletion fails.
 func (r *UserRepository) Delete(id int) error {
 	query := `
 		UPDATE users
@@ -171,6 +179,8 @@ func (r *UserRepository) Delete(id int) error {
 	return nil
 }
 
+// Count returns the total number of non-deleted users in the database.
+// Returns the count or an error if the query fails.
 func (r *UserRepository) Count() (int, error) {
 	query := `
 		SELECT COUNT(*) 

@@ -39,14 +39,12 @@ var (
 	ErrInvalidUserID  = errors.New("user_id should be greater than 0")
 )
 
-// TODO: Implement Validate method for Post
+// Validate checks if the Post fields meet the required criteria:
+// - Title must be at least 5 characters long
+// - Content must not be empty if post is published
+// - UserID must be greater than 0
+// Returns appropriate error if validation fails
 func (p *Post) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - Content should not be empty if published is true
-	// - UserID should be greater than 0
-	// Return appropriate errors if validation fails
-
 	if len(p.Title) < 5 {
 		return ErrInvalidTitle
 	}
@@ -62,14 +60,12 @@ func (p *Post) Validate() error {
 	return nil
 }
 
-// TODO: Implement Validate method for CreatePostRequest
+// Validate checks if the CreatePostRequest fields meet the required criteria:
+// - Title must be at least 5 characters long
+// - UserID must be greater than 0
+// - Content must not be empty if post is to be published
+// Returns appropriate error if validation fails
 func (req *CreatePostRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - UserID should be greater than 0
-	// - Content should not be empty if published is true
-	// Return appropriate errors if validation fails
-
 	if len(req.Title) < 5 {
 		return ErrInvalidTitle
 	}
@@ -85,11 +81,10 @@ func (req *CreatePostRequest) Validate() error {
 	return nil
 }
 
-// TODO: Implement ToPost method for CreatePostRequest
+// ToPost converts a CreatePostRequest into a Post struct
+// Sets CreatedAt and UpdatedAt timestamps to current time
+// Returns a pointer to the new Post
 func (req *CreatePostRequest) ToPost() *Post {
-	// TODO: Convert CreatePostRequest to Post
-	// Set timestamps to current time
-
 	return &Post{
 		UserID:    req.UserID,
 		Title:     req.Title,
@@ -100,7 +95,8 @@ func (req *CreatePostRequest) ToPost() *Post {
 	}
 }
 
-// ScanRow scans a row from sql.Row into the Post. Returns error if scan failed
+// ScanRow scans a database row into the Post struct fields
+// Takes a *sql.Row as input and returns error if scan fails
 func (p *Post) ScanRow(row *sql.Row) error {
 	return row.Scan(
 		&p.ID,
@@ -113,7 +109,9 @@ func (p *Post) ScanRow(row *sql.Row) error {
 	)
 }
 
-// ScanPosts scans rows into Post slice. Returns error if scan failed
+// ScanPosts scans multiple database rows into a slice of Posts
+// Takes *sql.Rows as input and returns the Post slice and error if scan fails
+// Returns sql.ErrNoRows if rows is nil
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
 	if rows == nil {
 		return nil, sql.ErrNoRows

@@ -34,13 +34,10 @@ var (
 	ErrInvalidEmail = errors.New("invalid email format")
 )
 
-// TODO: Implement Validate method for User
+// Validate checks if the user data is valid.
+// Name must be at least 2 characters and email must be in valid format.
+// Returns ErrInvalidName or ErrInvalidEmail if validation fails.
 func (u *User) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format
-	// Return appropriate errors if validation fails
-
 	if len(u.Name) < 2 {
 		return ErrInvalidName
 	}
@@ -53,13 +50,10 @@ func (u *User) Validate() error {
 	return nil
 }
 
-// TODO: Implement Validate method for CreateUserRequest
+// Validate checks if the create user request data is valid.
+// Name must be at least 2 characters and email must be in valid format.
+// Returns ErrInvalidName or ErrInvalidEmail if validation fails.
 func (req *CreateUserRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format and not empty
-	// Return appropriate errors if validation fails
-
 	if len(req.Name) < 2 {
 		return ErrInvalidName
 	}
@@ -72,7 +66,8 @@ func (req *CreateUserRequest) Validate() error {
 	return nil
 }
 
-// CreateUserRequest converts CreateUserRequest to User
+// ToUser converts CreateUserRequest to a User model with current timestamp
+// for CreatedAt and UpdatedAt fields.
 func (req *CreateUserRequest) ToUser() *User {
 	return &User{
 		Name:      req.Name,
@@ -82,7 +77,8 @@ func (req *CreateUserRequest) ToUser() *User {
 	}
 }
 
-// ScanRow scans a row from sql.Row into the User. Returns error if scan failed
+// ScanRow scans a database row into User struct fields.
+// Returns error if scanning fails.
 func (u *User) ScanRow(row *sql.Row) error {
 	return row.Scan(
 		&u.ID,
@@ -93,7 +89,9 @@ func (u *User) ScanRow(row *sql.Row) error {
 	)
 }
 
-// ScanUsers scans rows into User slice. Returns error if scan failed
+// ScanUsers scans multiple database rows into a slice of Users.
+// Returns the users slice and error if scanning fails.
+// Returns sql.ErrNoRows if rows is nil.
 func ScanUsers(rows *sql.Rows) ([]User, error) {
 	if rows == nil {
 		return nil, sql.ErrNoRows

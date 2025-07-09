@@ -138,8 +138,6 @@ func (req *CreateCategoryRequest) ToCategory() *Category {
 		Color:       req.Color,
 		Active:      true,
 	}
-
-	return nil
 }
 
 // TODO: Implement GORM scopes (reusable query logic)
