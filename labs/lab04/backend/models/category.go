@@ -1,6 +1,9 @@
 package models
 
 import (
+	"errors"
+	"log"
+	"regexp"
 	"time"
 
 	"gorm.io/gorm"
@@ -46,82 +49,109 @@ func (Category) TableName() string {
 
 // TODO: Implement BeforeCreate hook
 func (c *Category) BeforeCreate(tx *gorm.DB) error {
-	// TODO: GORM BeforeCreate hook
-	// - Validate data before creation
-	// - Set default values
-	// - Perform any pre-creation logic
-	// Example: if c.Color == "" { c.Color = "#007bff" }
+	if c.Color == "" {
+		c.Color = "#007bff"
+	}
+
+	// Validate name
+	if len(c.Name) < 2 || len(c.Name) > 100 {
+		return errors.New("name must be between 2-100 characters")
+	}
+
+	// Validate description length
+	if len(c.Description) > 500 {
+		return errors.New("description exceeds 500 character limit")
+	}
+
+	// Validate color format
+	if matched, _ := regexp.MatchString(`^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$`, c.Color); !matched {
+		return errors.New("invalid color format, must be hex color")
+	}
+
 	return nil
 }
 
 // TODO: Implement AfterCreate hook
 func (c *Category) AfterCreate(tx *gorm.DB) error {
-	// TODO: GORM AfterCreate hook
-	// - Log creation
-	// - Send notifications
-	// - Update cache
-	// Example: log.Printf("Category created: %s", c.Name)
+	log.Printf("Category created: %s", c.Name)
 	return nil
 }
 
 // TODO: Implement BeforeUpdate hook
 func (c *Category) BeforeUpdate(tx *gorm.DB) error {
-	// TODO: GORM BeforeUpdate hook
-	// - Validate changes
-	// - Prevent certain updates
-	// - Clean up related data
+	// Prevent updating to empty name
+	if c.Name == "" {
+		return errors.New("name cannot be empty")
+	}
+
+	// Prevent changing name to existing name
+	var count int64
+	tx.Model(&Category{}).Where("name = ? AND id <> ?", c.Name, c.ID).Count(&count)
+	if count > 0 {
+		return errors.New("category name already exists")
+	}
+
+	// Validate description length
+	if len(c.Description) > 500 {
+		return errors.New("description exceeds 500 character limit")
+	}
+
+	// Validate color format
+	if matched, _ := regexp.MatchString(`^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$`, c.Color); !matched {
+		return errors.New("invalid color format, must be hex color")
+	}
+
 	return nil
 }
 
 // TODO: Implement Validate method for CreateCategoryRequest
 func (req *CreateCategoryRequest) Validate() error {
-	// TODO: Add validation logic for GORM model
-	// - Name should be unique (checked at database level via GORM)
-	// - Color should be valid hex color
-	// - Description should not exceed limits
-	// Example using validator package:
-	// return validator.New().Struct(req)
+	// Validate name
+	if len(req.Name) < 2 || len(req.Name) > 100 {
+		return errors.New("name must be between 2-100 characters")
+	}
+
+	// Validate description length
+	if len(req.Description) > 500 {
+		return errors.New("description exceeds 500 character limit")
+	}
+
+	// Validate color format if provided
+	if req.Color != "" {
+		if matched, _ := regexp.MatchString(`^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$`, req.Color); !matched {
+			return errors.New("invalid color format, must be hex color")
+		}
+	}
 	return nil
 }
 
 // TODO: Implement ToCategory method
 func (req *CreateCategoryRequest) ToCategory() *Category {
-	// TODO: Convert request to GORM model
-	// - Map fields from request to model
-	// - Set default values
-	// Example:
-	// return &Category{
-	//     Name:        req.Name,
-	//     Description: req.Description,
-	//     Color:       req.Color,
-	//     Active:      true,
-	// }
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       req.Color,
+		Active:      true,
+	}
 	return nil
 }
 
 // TODO: Implement GORM scopes (reusable query logic)
 func ActiveCategories(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for active categories
-	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for categories with posts
-	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.Joins("Posts").Where("posts.id IS NOT NULL")
 }
 
 // TODO: Implement model validation methods
 func (c *Category) IsActive() bool {
-	// TODO: Check if category is active
 	return c.Active
 }
 
 func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
+	var count int64
+	err := db.Model(c).Association("Posts").Count(&count)
+	return count, err
 }
