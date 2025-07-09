@@ -24,6 +24,7 @@ class DatabaseService {
     // - Get the databases path
     // - Join with database name
     // - Open database with version and callbacks
+    try {
     final path = join(await getDatabasesPath(), _dbName);
     return await openDatabase(
       path, 
@@ -31,6 +32,9 @@ class DatabaseService {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade
     );
+    } catch (e) {
+      throw Exception('failed to initialize database: $e');
+    }
   }
 
   // TODO: Implement _onCreate method
@@ -77,22 +81,26 @@ class DatabaseService {
     // TODO: Insert user into database
     // - Get database instance
     // - Insert user data
-    final db = await database;
-    final now = DateTime.now();
+    try {
+      final db = await database;
+      final now = DateTime.now();
 
-    final id = await db.insert('users', {
-      'name': request.name,
-      'email': request.email,
-      'created_at': now,
-      'updated_at': now
-    });
-    return User(
-      id: id,
-      name: request.name,
-      email: request.email,
-      createdAt: now,
-      updatedAt: now
-    );
+      final id = await db.insert('users', {
+        'name': request.name,
+        'email': request.email,
+        'created_at': now,
+        'updated_at': now
+      });
+      return User(
+        id: id,
+        name: request.name,
+        email: request.email,
+        createdAt: now,
+        updatedAt: now
+      );
+    } catch (e) {
+      throw Exception('failed to create user: $e');
+    }
   }
 
   // TODO: Implement getUser method
@@ -100,15 +108,19 @@ class DatabaseService {
     // TODO: Get user by ID from database
     // - Query users table by ID
     // - Return User object or null if not found
-    final db = await database;
-    final maps = await db.query(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (maps.isEmpty) return null;
-    return User.fromJson(maps.first);
+    try {
+      final db = await database;
+      final maps = await db.query(
+        'users',
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (maps.isEmpty) return null;
+      return User.fromJson(maps.first);
+    } catch (e) {
+      throw Exception('failed to get user: $e');
+    }
   }
 
   // TODO: Implement getAllUsers method
@@ -116,9 +128,13 @@ class DatabaseService {
     // TODO: Get all users from database
     // - Query all users ordered by created_at
     // - Convert query results to User objects
-    final db = await database;
-    final maps = await db.query('users', orderBy: 'created_at DESC');
-    return List.generate(maps.length, (i) => User.fromJson(maps[i]));
+    try {
+      final db = await database;
+      final maps = await db.query('users', orderBy: 'created_at DESC');
+      return List.generate(maps.length, (i) => User.fromJson(maps[i]));
+    } catch (e) {
+      throw Exception('failed to get all users: $e');
+    }
   }
 
   // TODO: Implement updateUser method
@@ -127,16 +143,20 @@ class DatabaseService {
     // - Update user with provided data
     // - Update the updated_at timestamp
     // - Return updated User object
-    final db = await database;
-    updates['updated_at'] = DateTime.now().toIso8601String();
-    await db.update(
-      'users',
-      updates,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    final updatedUser = await getUser(id);
-    return updatedUser!;
+    try {
+      final db = await database;
+      updates['updated_at'] = DateTime.now().toIso8601String();
+      await db.update(
+        'users',
+        updates,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      final updatedUser = await getUser(id);
+      return updatedUser!;
+    } catch (e) {
+      throw Exception('failed to update user: $e');
+    }
   }
 
   // TODO: Implement deleteUser method
@@ -144,21 +164,29 @@ class DatabaseService {
     // TODO: Delete user from database
     // - Delete user by ID
     // - Consider cascading deletes for related data
+    try {
     final db = await database;
     await db.delete(
       'users',
       where: 'id = ?',
       whereArgs: [id],
     );
+    } catch (e) {
+      throw Exception('failed to update user: $e');
+    }
   }
 
   // TODO: Implement getUserCount method
   static Future<int> getUserCount() async {
-    // TODO: Count total number of users
-    // - Query count from users table
-    final db = await database;
-    return Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
+    try {
+      // TODO: Count total number of users
+      // - Query count from users table
+      final db = await database;
+      return Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
+    } catch (e) {
+      throw Exception('failed to get user count: $e');
+    }
   }
 
   // TODO: Implement searchUsers method
@@ -166,13 +194,17 @@ class DatabaseService {
     // TODO: Search users by name or email
     // - Use LIKE operator for pattern matching
     // - Search in both name and email fields
-    final db = await database;
-    final maps = await db.query(
-      'users',
-      where: 'name LIKE ? OR email LIKE ?',
-      whereArgs: ['%$query%', '%$query%'],
-    );
-    return List.generate(maps.length, (i) => User.fromJson(maps[i]));
+    try {
+      final db = await database;
+      final maps = await db.query(
+        'users',
+        where: 'name LIKE ? OR email LIKE ?',
+        whereArgs: ['%$query%', '%$query%'],
+      );
+      return List.generate(maps.length, (i) => User.fromJson(maps[i]));
+    } catch (e) {
+      throw Exception('failed to search users: $e');
+    }
   }
 
   // Database utility methods
@@ -193,9 +225,13 @@ class DatabaseService {
     // TODO: Clear all data from database (for testing)
     // - Delete all records from all tables
     // - Reset auto-increment counters if needed
-    final db = await database;
-    await db.delete('posts');
-    await db.delete('users');
+    try {
+      final db = await database;
+      await db.delete('posts');
+      await db.delete('users');
+    } catch (e) {
+      throw Exception('Failed to clear database: $e');
+    }
   }
 
   // TODO: Implement getDatabasePath method
