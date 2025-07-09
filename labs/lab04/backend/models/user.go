@@ -2,6 +2,9 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"regexp"
 	"time"
 )
 
@@ -26,41 +29,65 @@ type UpdateUserRequest struct {
 	Email *string `json:"email,omitempty"`
 }
 
-// TODO: Implement Validate method for User
+// Regexp for email validation
+var emailRegexp = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+
 func (u *User) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format
-	// Return appropriate errors if validation fails
+	if len(u.Name) < 2 {
+		return ErrInvalidName
+	}
+	if !emailRegexp.MatchString(u.Email) {
+		return ErrInvalidEmail
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateUserRequest
 func (req *CreateUserRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format and not empty
-	// Return appropriate errors if validation fails
+	if len(req.Name) < 2 {
+		return ErrInvalidName
+	}
+	if !emailRegexp.MatchString(req.Email) {
+		return ErrInvalidEmail
+	}
 	return nil
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
 func (req *CreateUserRequest) ToUser() *User {
-	// TODO: Convert CreateUserRequest to User
-	// Set timestamps to current time
-	return nil
+	timeNow := time.Now()
+
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: timeNow,
+		UpdatedAt: timeNow,
+	}
 }
 
-// TODO: Implement ScanRow method for User
 func (u *User) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into User struct
-	// Handle the case where row might be nil
-	return nil
+	if row == nil {
+		return fmt.Errorf("row is nil")
+	}
+
+	return row.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
 }
 
-// TODO: Implement ScanRows method for User slice
 func ScanUsers(rows *sql.Rows) ([]User, error) {
-	// TODO: Scan multiple database rows into User slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	defer rows.Close()
+
+	users := make([]User, 0, 5)
+	for rows.Next() {
+		var u User
+		err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan the row: %v", err)
+		}
+		users = append(users, u)
+	}
+
+	return users, nil
 }
+
+var (
+	ErrInvalidName  = errors.New("name must be at least 2 characters long")
+	ErrInvalidEmail = errors.New("invalid email format")
+)
