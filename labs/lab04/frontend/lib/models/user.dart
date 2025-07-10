@@ -23,7 +23,8 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
-  // TODO: Implement copyWith method
+  /// Creates a copy of this User with updated fields
+  /// Only non-null values will be updated, others remain unchanged
   User copyWith({
     int? id,
     String? name,
@@ -31,31 +32,41 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    // TODO: Create a copy of User with updated fields
-    // Return new User instance with updated values or original values if null
-    throw UnimplementedError('TODO: implement copyWith method');
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 
-  // TODO: Implement equality operator
+  /// Checks if two User objects are equal based on all fields
   @override
   bool operator ==(Object other) {
-    // TODO: Compare User objects for equality
-    // Check if other is User and all fields are equal
-    return super == other;
+    if (identical(this, other)) return true;
+    return other is User &&
+        other.id == id &&
+        other.name == name &&
+        other.email == email &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt;
   }
 
-  // TODO: Implement hashCode
+  /// Generates hash code based on all fields for efficient comparison
   @override
   int get hashCode {
-    // TODO: Generate hash code based on all fields
-    return super.hashCode;
+    return id.hashCode ^
+        name.hashCode ^
+        email.hashCode ^
+        createdAt.hashCode ^
+        updatedAt.hashCode;
   }
 
-  // TODO: Implement toString
+  /// Returns a string representation of the User for debugging
   @override
   String toString() {
-    // TODO: Return string representation of User
-    return super.toString();
+    return 'User(id: $id, name: $name, email: $email, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }
 
@@ -73,11 +84,21 @@ class CreateUserRequest {
       _$CreateUserRequestFromJson(json);
   Map<String, dynamic> toJson() => _$CreateUserRequestToJson(this);
 
-  // TODO: Implement validate method
+  /// Validates the user creation request
+  /// Returns true if both name and email are valid
   bool validate() {
-    // TODO: Validate user creation request
-    // - Name should not be empty and should be at least 2 characters
-    // - Email should be valid format
-    return false;
+    // Name validation: must be at least 2 characters and not empty
+    if (name.trim().isEmpty || name.trim().length < 2) {
+      return false;
+    }
+
+    // Email validation: must match standard email format
+    final emailRegex =
+        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(email.trim())) {
+      return false;
+    }
+
+    return true;
   }
 }
