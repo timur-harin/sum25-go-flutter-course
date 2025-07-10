@@ -2,7 +2,7 @@ package models
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"time"
 )
 
@@ -32,85 +32,82 @@ type UpdatePostRequest struct {
 	Published *bool   `json:"published,omitempty"`
 }
 
-// TODO: Implement Validate method for Post
-func (p *Post) Validate() error {
-	if p.UserID <= 0 {
-		return errors.New("user ID must be positive")
+// Implementation of Validate method for Post
+func (post *Post) Validate() error {
+	if post.UserID <= 0 {
+		return fmt.Errorf("user ID must be positive")
 	}
-	if len(p.Title) < 5 {
-		return errors.New("title must be at least 5 characters")
+	if len(post.Title) < 5 {
+		return fmt.Errorf("title must be at least 5 characters")
 	}
-	if p.Published && len(p.Content) == 0 {
-		return errors.New("content cannot be empty when published")
-	}
-	return nil
-}
-
-// TODO: Implement Validate method for CreatePostRequest
-func (req *CreatePostRequest) Validate() error {
-	if req.UserID <= 0 {
-		return errors.New("user ID must be positive")
-	}
-	if len(req.Title) < 5 {
-		return errors.New("title must be at least 5 characters")
-	}
-	if req.Published && len(req.Content) == 0 {
-		return errors.New("content cannot be empty when published")
+	if post.Published && post.Content == "" {
+		return fmt.Errorf("content cannot be empty when published")
 	}
 	return nil
 }
 
-// TODO: Implement ToPost method for CreatePostRequest
-func (req *CreatePostRequest) ToPost() *Post {
-	now := time.Now()
+// Implementation of Validate method for CreatePostRequest
+func (request *CreatePostRequest) Validate() error {
+	if request.UserID <= 0 {
+		return fmt.Errorf("user ID must be positive")
+	}
+	if len(request.Title) < 5 {
+		return fmt.Errorf("title must be at least 5 characters")
+	}
+	if request.Published && len(request.Content) == 0 {
+		return fmt.Errorf("content cannot be empty when published")
+	}
+	return nil
+}
+
+// Implementation of ToPost method for CreatePostRequest
+func (request *CreatePostRequest) ToPost() *Post {
 	return &Post{
-		UserID:    req.UserID,
-		Title:     req.Title,
-		Content:   req.Content,
-		Published: req.Published,
-		CreatedAt: now,
-		UpdatedAt: now,
+		UserID:    request.UserID,
+		Title:     request.Title,
+		Content:   request.Content,
+		Published: request.Published,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 }
 
-// TODO: Implement ScanRow method for Post
-func (p *Post) ScanRow(row *sql.Row) error {
-	return row.Scan(
-		&p.ID,
-		&p.UserID,
-		&p.Title,
-		&p.Content,
-		&p.Published,
-		&p.CreatedAt,
-		&p.UpdatedAt,
-	)
+// Implementation of ScanRow method for Post
+func (post *Post) ScanRow(row *sql.Row) error {
+	err := row.Scan(&post.ID,
+		&post.UserID,
+		&post.Title,
+		&post.Content,
+		&post.Published,
+		&post.CreatedAt,
+		&post.UpdatedAt)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// TODO: Implement ScanRows method for Post slice
+// Implementation of ScanRows method for Post slice
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
-	defer rows.Close()
-
 	var posts []Post
 	for rows.Next() {
-		var p Post
-		err := rows.Scan(
-			&p.ID,
-			&p.UserID,
-			&p.Title,
-			&p.Content,
-			&p.Published,
-			&p.CreatedAt,
-			&p.UpdatedAt,
-		)
+		var post Post
+		err := rows.Scan(&post.ID,
+			&post.UserID,
+			&post.Title,
+			&post.Content,
+			&post.Published,
+			&post.CreatedAt,
+			&post.UpdatedAt)
+
 		if err != nil {
 			return nil, err
 		}
-		posts = append(posts, p)
-	}
 
-	if err := rows.Err(); err != nil {
-		return nil, err
+		posts = append(posts, post)
 	}
-
+	rows.Close()
 	return posts, nil
 }
