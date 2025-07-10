@@ -40,5 +40,6 @@ func (e ValidationError) Error() string {
 
 // NewValidationError creates a new ValidationError
 func NewValidationError(field, message string) error {
+
 	return ValidationError{Field: field, Message: message}
 }
