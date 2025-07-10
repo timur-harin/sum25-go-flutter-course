@@ -50,7 +50,7 @@ class User extends Equatable {
     final trimmedName = name.trim();
     return trimmedName.isNotEmpty &&
         trimmedName.length >= 2 &&
-        trimmedName.length <= 50;
+        trimmedName.length <= 51;
   }
 
   /// Validates ID is positive
