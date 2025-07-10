@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	"github.com/pressly/goose/v3"
 )
@@ -18,7 +19,7 @@ func RunMigrations(db *sql.DB) error {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
-	// Get path to migrations directory (relative to backend directory)
+	// Path to migrations directory
 	migrationsDir := "../migrations"
 
 	// Run migrations from the migrations directory
@@ -29,20 +30,67 @@ func RunMigrations(db *sql.DB) error {
 	return nil
 }
 
-// TODO: Implement this function
 // RollbackMigration rolls back the last migration using goose
 func RollbackMigration(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+
+	migrationsDir := "../migrations"
+
+	if err := goose.Down(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to rollback migration: %v", err)
+	}
+
 	return nil
 }
 
-// TODO: Implement this function
 // GetMigrationStatus checks migration status using goose
 func GetMigrationStatus(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+
+	migrationsDir := "../migrations"
+
+	if err := goose.Status(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to get migration status: %v", err)
+	}
+
 	return nil
 }
 
-// TODO: Implement this function
-// CreateMigration creates a new migration file
+// CreateMigration creates a new migration file with the given name
 func CreateMigration(name string) error {
+	if name == "" {
+		return fmt.Errorf("migration name cannot be empty")
+	}
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+
+	migrationsDir := "../migrations"
+
+	// Ensure migrations directory exists
+	if _, err := os.Stat(migrationsDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(migrationsDir, 0755); err != nil {
+			return fmt.Errorf("failed to create migrations directory: %v", err)
+		}
+	}
+
+	// Create new migration file (up and down sql files)
+	if err := goose.Create(nil, migrationsDir, name, "sql"); err != nil {
+		return fmt.Errorf("failed to create migration: %v", err)
+	}
+
 	return nil
 }
