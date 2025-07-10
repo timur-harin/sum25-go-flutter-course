@@ -82,10 +82,8 @@ class AuthService {
   // Login method implementation
   Future<AuthResult> login(String email, String password) async {
     try {
-      // FIRST: Sanitize the email input
       final sanitizedEmail = FormValidator.sanitizeText(email);
 
-      // THEN: Validate the sanitized email and password
       final emailError = FormValidator.validateEmail(sanitizedEmail);
       final passwordError = FormValidator.validatePassword(password);
 
@@ -93,23 +91,19 @@ class AuthService {
         return AuthResult.validationError;
       }
 
-      // Find user by sanitized email
       final user = await _userRepository.findByEmail(sanitizedEmail);
       if (user == null) {
         return AuthResult.invalidCredentials;
       }
 
-      // Verify password using sanitized email
       final isPasswordValid =
           await _userRepository.verifyPassword(sanitizedEmail, password);
       if (!isPasswordValid) {
         return AuthResult.invalidCredentials;
       }
 
-      // Generate JWT token
       final token = _jwtService.generateToken(user.id.toString(), user.email);
 
-      // Update current state with authenticated user
       _currentState = _currentState.copyWith(
         isAuthenticated: true,
         currentUser: user,
