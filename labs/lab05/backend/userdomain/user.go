@@ -16,6 +16,7 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+
 func NewUser(email, name, password string) (*User, error) {
 	if err := ValidateEmail(email); err != nil {
 		return nil, err
