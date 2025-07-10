@@ -14,6 +14,9 @@ var ErrInvalidClaims = fmt.Errorf("invalid token claims")
 // ErrEmptyToken indicates the token string is empty
 var ErrEmptyToken = fmt.Errorf("token string cannot be empty")
 
+// ErrEmptySecretKey indicates the secret key is empty
+var ErrEmptySecretKey = fmt.Errorf("secret key cannot be empty")
+
 // InvalidSigningMethodError represents an error for invalid signing method
 type InvalidSigningMethodError struct {
 	Method interface{}
