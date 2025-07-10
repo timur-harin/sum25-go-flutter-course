@@ -205,7 +205,7 @@ void main() {
               createdAt: DateTime(2025, 1, 1)),
           User(
               id: 1,
-              name: 'A very long name but still within fifty chars limit',
+              name: 'Very long name but still within fifty chars limit',
               email: 'test@example.com',
               createdAt: DateTime(2025, 1, 1)),
         ];

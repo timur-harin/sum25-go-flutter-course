@@ -2,9 +2,10 @@ package userdomain
 
 import (
 	"errors"
-	_ "regexp"
+	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // User represents a user entity in the domain
@@ -12,75 +13,124 @@ type User struct {
 	ID        int       `json:"id"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
-	Password  string    `json:"-"` // Never serialize password
+	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// TODO: Implement NewUser function
 // NewUser creates a new user with validation
-// Requirements:
-// - Email must be valid format
-// - Name must be 2-50 characters
-// - Password must be at least 8 characters
-// - CreatedAt and UpdatedAt should be set to current time
 func NewUser(email, name, password string) (*User, error) {
-	// TODO: Implement this function
-	// Hint: Use ValidateEmail, ValidateName, ValidatePassword helper functions
-	return nil, errors.New("not implemented")
+	// Сначала нормализуем данные
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+	trimmedName := strings.TrimSpace(name)
+
+	user := &User{
+		Email:    normalizedEmail,
+		Name:     trimmedName,
+		Password: password,
+	}
+
+	// Теперь валидируем уже чистые данные
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
+
+	return user, nil
 }
 
-// TODO: Implement Validate method
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement validation logic
-	// Check email, name, and password validity
-	return errors.New("not implemented")
+	if err := ValidateEmail(u.Email); err != nil {
+		return err
+	}
+	if err := ValidateName(u.Name); err != nil {
+		return err
+	}
+	if err := ValidatePassword(u.Password); err != nil {
+		return err
+	}
+	return nil
 }
 
-// TODO: Implement ValidateEmail function
+var emailRegex = regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$`)
+
 // ValidateEmail checks if email format is valid
 func ValidateEmail(email string) error {
-	// TODO: Implement email validation
-	// Use regex pattern to validate email format
-	// Email should not be empty and should match standard email pattern
-	return errors.New("not implemented")
+	if email == "" {
+		return errors.New("email cannot be empty")
+	}
+	if !emailRegex.MatchString(email) {
+		return errors.New("invalid email format")
+	}
+	return nil
 }
 
-// TODO: Implement ValidateName function
 // ValidateName checks if name is valid
 func ValidateName(name string) error {
-	// TODO: Implement name validation
-	// Name should be 2-50 characters, trimmed of whitespace
-	// Should not be empty after trimming
-	return errors.New("not implemented")
+	trimmedName := strings.TrimSpace(name)
+	if len(trimmedName) < 2 {
+		return errors.New("name must be at least 2 characters long")
+	}
+	if len(trimmedName) > 50 {
+		return errors.New("name must not exceed 50 characters")
+	}
+	return nil
 }
 
-// TODO: Implement ValidatePassword function
 // ValidatePassword checks if password meets security requirements
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Password should be at least 8 characters
-	// Should contain at least one uppercase, lowercase, and number
-	return errors.New("not implemented")
+	if len(password) < 8 {
+		return errors.New("password must be at least 8 characters long")
+	}
+
+	var (
+		hasUpper  bool
+		hasLower  bool
+		hasNumber bool
+	)
+
+	for _, char := range password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		}
+	}
+
+	if !hasUpper || !hasLower || !hasNumber {
+		return errors.New("password must contain at least one uppercase letter, one lowercase letter, and one number")
+	}
+
+	return nil
 }
 
 // UpdateName updates the user's name with validation
 func (u *User) UpdateName(name string) error {
-	if err := ValidateName(name); err != nil {
+	trimmedName := strings.TrimSpace(name)
+	if err := ValidateName(trimmedName); err != nil {
 		return err
 	}
-	u.Name = strings.TrimSpace(name)
+	u.Name = trimmedName
 	u.UpdatedAt = time.Now()
 	return nil
 }
 
 // UpdateEmail updates the user's email with validation
 func (u *User) UpdateEmail(email string) error {
-	if err := ValidateEmail(email); err != nil {
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+
+	if err := ValidateEmail(normalizedEmail); err != nil {
 		return err
 	}
-	u.Email = strings.ToLower(strings.TrimSpace(email))
+
+	u.Email = normalizedEmail
 	u.UpdatedAt = time.Now()
 	return nil
 }
