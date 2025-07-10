@@ -2,6 +2,9 @@ package jwtservice
 
 import (
 	"errors"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 	_ "github.com/golang-jwt/jwt/v4"
 )
 
@@ -15,9 +18,11 @@ type JWTService struct {
 // Requirements:
 // - secretKey must not be empty
 func NewJWTService(secretKey string) (*JWTService, error) {
-	// TODO: Implement this function
-	// Validate secretKey and create service instance
-	return nil, errors.New("not implemented")
+	if secretKey == "" {
+		return nil, errors.New("secretKey is empty")
+	}
+	service := JWTService{secretKey: secretKey}
+	return &service, nil
 }
 
 // TODO: Implement GenerateToken method
@@ -28,10 +33,26 @@ func NewJWTService(secretKey string) (*JWTService, error) {
 // - Token expires in 24 hours
 // - Use HS256 signing method
 func (j *JWTService) GenerateToken(userID int, email string) (string, error) {
-	// TODO: Implement token generation
-	// Create claims with userID, email, and expiration
-	// Sign token with secret key
-	return "", errors.New("not implemented")
+	if userID <= 0 {
+		return "", errors.New("ID is negative")
+	} else if email == "" {
+		return "", errors.New("Email is empty")
+	}
+
+	claims := Claims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	strToken, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", err
+	}
+	return strToken, nil
 }
 
 // TODO: Implement ValidateToken method
@@ -41,8 +62,19 @@ func (j *JWTService) GenerateToken(userID int, email string) (string, error) {
 // - Verify token is not expired
 // - Return parsed claims on success
 func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
-	// TODO: Implement token validation
-	// Parse token and verify signature
-	// Return claims if valid
-	return nil, errors.New("not implemented")
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+
+		return []byte(j.secretKey), nil
+	})
+
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token claims")
+	}
+
+	return claims, nil
 }
