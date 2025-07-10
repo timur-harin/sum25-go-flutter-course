@@ -3,7 +3,8 @@
 
 # Database configuration
 DATABASE_URL ?= ./lab04.db
-MIGRATIONS_DIR = ./migrations
+
+MIGRATIONS_DIR = migrations
 
 # Default target
 .PHONY: help
