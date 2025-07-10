@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // Config holds database configuration
@@ -35,7 +35,7 @@ func InitDB() (*sql.DB, error) {
 	// - Apply connection pool configuration from DefaultConfig()
 	// - Test connection with Ping()
 	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	return InitDBWithConfig(DefaultConfig())
 }
 
 // TODO: Implement InitDBWithConfig function
@@ -44,7 +44,18 @@ func InitDBWithConfig(config *Config) (*sql.DB, error) {
 	// - Open database connection using the provided config
 	// - Apply all connection pool settings
 	// - Test connection with Ping()
-	// - Return the database connection or error
+	db, err := sql.Open("sqlite", config.DatabasePath)
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	db.SetMaxIdleConns(config.MaxIdleConns)
+	db.SetConnMaxLifetime(config.ConnMaxLifetime)
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
 }
 
@@ -54,5 +65,9 @@ func CloseDB(db *sql.DB) error {
 	// - Check if db is not nil
 	// - Close the database connection
 	// - Return any error that occurs
+	if db == nil {
+		return fmt.Errorf("db is nil")
+	}
+	return db.Close()
 	return fmt.Errorf("TODO: implement CloseDB function")
 }
