@@ -78,6 +78,13 @@
       ]
     },
     {
+      "name": "flutter_lints",
+      "version": "3.0.2",
+      "dependencies": [
+        "lints"
+      ]
+    },
+    {
       "name": "flutter_test",
       "version": "0.0.0",
       "dependencies": [
@@ -535,6 +542,11 @@
       ]
     },
     {
+      "name": "lints",
+      "version": "3.0.0",
+      "dependencies": []
+    },
+    {
       "name": "vm_service",
       "version": "15.0.0",
       "dependencies": []
@@ -870,18 +882,6 @@
         "meta",
         "path"
       ]
-    },
-    {
-      "name": "flutter_lints",
-      "version": "3.0.2",
-      "dependencies": [
-        "lints"
-      ]
-    },
-    {
-      "name": "lints",
-      "version": "3.0.0",
-      "dependencies": []
     }
   ],
   "configVersion": 1
