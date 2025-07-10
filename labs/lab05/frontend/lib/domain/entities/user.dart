@@ -45,7 +45,7 @@ class User extends Equatable {
     return emailRegex.hasMatch(email);
   }
 
-  /// Validates name is between 2-50 characters and not empty
+  /// Validates name is between 2-51 characters and not empty
   bool isValidName() {
     final trimmedName = name.trim();
     return trimmedName.isNotEmpty &&
