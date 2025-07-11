@@ -43,13 +43,16 @@ class AuthState {
 // Mock JWT service interface for dependency injection
 abstract class JWTServiceInterface {
   String generateToken(String userId, String email);
+
   bool validateToken(String token);
+
   Map<String, dynamic>? extractClaims(String token);
 }
 
 // Mock user repository interface
 abstract class UserRepositoryInterface {
   Future<User?> findByEmail(String email);
+
   Future<bool> verifyPassword(String email, String password);
 }
 
@@ -95,7 +98,41 @@ class AuthService {
   // - Return AuthResult.networkError if any exception occurs during the process
   Future<AuthResult> login(String email, String password) async {
     // TODO: Implement this method
-    throw UnimplementedError('AuthService login not implemented');
+    try {
+      final emailError = FormValidator.validateEmail(email);
+      final passwordError = FormValidator.validatePassword(password);
+
+      if (emailError != null || passwordError != null) {
+        return AuthResult.validationError;
+      }
+
+      final cleanEmail = FormValidator.sanitizeText(email);
+
+      // Поиск пользователя
+      final user = await _userRepository.findByEmail(cleanEmail);
+      if (user == null) {
+        return AuthResult.invalidCredentials;
+      }
+
+      final passwordValid =
+          await _userRepository.verifyPassword(cleanEmail, password);
+      if (!passwordValid) {
+        return AuthResult.invalidCredentials;
+      }
+
+      final token = _jwtService.generateToken(user.id.toString(), user.email);
+
+      _currentState = AuthState(
+        isAuthenticated: true,
+        currentUser: user,
+        token: token,
+        loginTime: DateTime.now(),
+      );
+
+      return AuthResult.success;
+    } catch (e) {
+      return AuthResult.networkError;
+    }
   }
 
   // TODO: Implement logout method
@@ -106,7 +143,7 @@ class AuthService {
   // - Method should complete without throwing exceptions
   Future<void> logout() async {
     // TODO: Implement this method
-    throw UnimplementedError('AuthService logout not implemented');
+    _currentState = const AuthState();
   }
 
   // TODO: Implement isSessionValid method
@@ -119,7 +156,13 @@ class AuthService {
   // - Return false if session has expired (24+ hours)
   bool isSessionValid() {
     // TODO: Implement this method
-    throw UnimplementedError('AuthService isSessionValid not implemented');
+    if (!_currentState.isAuthenticated || _currentState.loginTime == null) {
+      return false;
+    }
+
+    final now = DateTime.now();
+    final duration = now.difference(_currentState.loginTime!);
+    return duration.inHours < 24;
   }
 
   // TODO: Implement refreshAuth method
@@ -133,7 +176,23 @@ class AuthService {
   // - Handle any exceptions and return false if errors occur
   Future<bool> refreshAuth() async {
     // TODO: Implement this method
-    throw UnimplementedError('AuthService refreshAuth not implemented');
+    try {
+      if (!isSessionValid()) {
+        await logout();
+        return false;
+      }
+
+      final token = _currentState.token;
+      if (token == null || !_jwtService.validateToken(token)) {
+        await logout();
+        return false;
+      }
+
+      return true;
+    } catch (_) {
+      await logout();
+      return false;
+    }
   }
 
   // TODO: Implement getUserInfo method
@@ -148,7 +207,18 @@ class AuthService {
   //   - 'sessionValid': result of calling isSessionValid()
   Map<String, dynamic>? getUserInfo() {
     // TODO: Implement this method
-    throw UnimplementedError('AuthService getUserInfo not implemented');
+    if (!_currentState.isAuthenticated || _currentState.currentUser == null) {
+      return null;
+    }
+
+    final user = _currentState.currentUser!;
+    return {
+      'id': user.id,
+      'name': user.name,
+      'email': user.email,
+      'loginTime': _currentState.loginTime?.toIso8601String(),
+      'sessionValid': isSessionValid(),
+    };
   }
 }
 
