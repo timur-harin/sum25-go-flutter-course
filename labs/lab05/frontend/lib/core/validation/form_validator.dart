@@ -11,7 +11,7 @@ class FormValidator {
       return 'Email is too long';
     }
     if (!value.contains('@') || !value.contains('.')) {
-      return 'Invalid email format';
+      return 'invalid email format';
     }
     return null;
   }
@@ -35,8 +35,7 @@ class FormValidator {
   // sanitizeText removes basic dangerous characters
   static String sanitizeText(String? text) {
     if (text == null) return '';
-    var cleaned = text.replaceAll('<', '').replaceAll('>', '');
-    return cleaned.trim();
+    return text.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 
   // isValidLength checks if text is within length limits
