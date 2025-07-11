@@ -94,7 +94,7 @@ class AuthService {
   // - Return AuthResult.success on successful authentication
   // - Return AuthResult.networkError if any exception occurs during the process
   Future<AuthResult> login(String email, String password) async {
-    // TODO: Implement this method
+    
     throw UnimplementedError('AuthService login not implemented');
   }
 

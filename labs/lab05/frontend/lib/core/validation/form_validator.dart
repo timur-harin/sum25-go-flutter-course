@@ -9,9 +9,16 @@ class FormValidator {
   // - check basic email format (contains @ and .)
   // - check reasonable length (max 100 characters)
   static String? validateEmail(String? email) {
+    if (!isValidLength(email, maxLength: 100)) {
+      throw UnimplementedError("email is too long");
+    } 
+    final regex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+");
+    if (email == null || !regex.hasMatch(email)) {
+      throw UnimplementedError("email is not valid");
+    }
     // TODO: Implement email validation
     // Check for null/empty, basic format, and length
-    throw UnimplementedError('FormValidator validateEmail not implemented');
+    return null;
   }
 
   // TODO: Implement validatePassword method
@@ -22,9 +29,10 @@ class FormValidator {
   // - minimum 6 characters
   // - contains at least one letter and one number
   static String? validatePassword(String? password) {
-    // TODO: Implement password validation
-    // Check length and basic complexity
-    throw UnimplementedError('FormValidator validatePassword not implemented');
+    if (password == null || !isValidLength(password, minLength: 6) || !RegExp(r'\d').hasMatch(password) && !RegExp(r'[A-Za-z]').hasMatch(password)) {
+      throw UnimplementedError("password is not valid");
+    }
+    return null;
   }
 
   // TODO: Implement sanitizeText method
@@ -34,9 +42,11 @@ class FormValidator {
   // - trim whitespace
   // - return cleaned text
   static String sanitizeText(String? text) {
-    // TODO: Implement text sanitization
-    // Clean basic dangerous characters
-    throw UnimplementedError('FormValidator sanitizeText not implemented');
+    if (text != null) {
+      final cleared = text.replaceAll(RegExp(r'<[^>]*>'), '');
+      return cleared.trim();
+    }
+    throw UnimplementedError('text is empty');
   }
 
   // TODO: Implement isValidLength method
