@@ -97,14 +97,18 @@ class DatabaseService {
     )).toList();
   }
 
-  static Future<User?> updateUser(int id, Map<String, dynamic> updates) async {
+  static Future<User> updateUser(int id, Map<String, dynamic> updates) async {
     final db = await database;
     final values = <String, Object?>{};
     if (updates.containsKey('name')) values['name'] = updates['name'];
     if (updates.containsKey('email')) values['email'] = updates['email'];
     values['updated_at'] = DateTime.now().toIso8601String();
     await db.update('users', values, where: 'id = ?', whereArgs: [id]);
-    return await getUser(id);
+    final user = await getUser(id);
+    if (user == null) {
+      throw Exception('User not found after update');
+    }
+    return user;
   }
 
   static Future<int> deleteUser(int id) async {
