@@ -9,12 +9,16 @@ class FormValidator {
   // - check basic email format (contains @ and .)
   // - check reasonable length (max 100 characters)
   static String? validateEmail(String? email) {
-    if (!isValidLength(email, maxLength: 100)) {
-      throw UnimplementedError("email is too long");
-    } 
-    final regex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+");
-    if (email == null || !regex.hasMatch(email)) {
-      throw UnimplementedError("email is not valid");
+    if (email == null || email == "") {
+      return "required";
+    } else if (!isValidLength(email, maxLength: 100)) {
+      return "too long";
+    }
+     final regex = RegExp(
+    r"^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+  );
+    if (!regex.hasMatch(email)) {
+      return "invalid";
     }
     // TODO: Implement email validation
     // Check for null/empty, basic format, and length
@@ -29,8 +33,12 @@ class FormValidator {
   // - minimum 6 characters
   // - contains at least one letter and one number
   static String? validatePassword(String? password) {
-    if (password == null || !isValidLength(password, minLength: 6) || !RegExp(r'\d').hasMatch(password) && !RegExp(r'[A-Za-z]').hasMatch(password)) {
-      throw UnimplementedError("password is not valid");
+    if (password == null || password == "") {
+      return "required";
+    } else if (!isValidLength(password, minLength: 6)) {
+      return "6 characters";
+    } else if ( !RegExp(r'\d').hasMatch(password) || !RegExp(r'[A-Za-z]').hasMatch(password)) {
+      return "letter and number";
     }
     return null;
   }
@@ -42,11 +50,9 @@ class FormValidator {
   // - trim whitespace
   // - return cleaned text
   static String sanitizeText(String? text) {
-    if (text != null) {
-      final cleared = text.replaceAll(RegExp(r'<[^>]*>'), '');
-      return cleared.trim();
-    }
-    throw UnimplementedError('text is empty');
+    if (text == null) return '';
+    final cleared = text.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+    return cleared;
   }
 
   // TODO: Implement isValidLength method
@@ -56,8 +62,9 @@ class FormValidator {
   // - handle null text gracefully
   static bool isValidLength(String? text,
       {int minLength = 1, int maxLength = 100}) {
-    // TODO: Implement length validation
-    // Check text length bounds
-    throw UnimplementedError('FormValidator isValidLength not implemented');
+    if (text == null || text.length < minLength || text.length > maxLength) {
+      return false;
+    }
+    return true;
   }
 }
