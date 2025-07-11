@@ -11,7 +11,21 @@ class FormValidator {
   static String? validateEmail(String? email) {
     // TODO: Implement email validation
     // Check for null/empty, basic format, and length
-    throw UnimplementedError('FormValidator validateEmail not implemented');
+    if (email == null || email.trim().isEmpty) {
+      return 'Email is required';
+    }
+
+    final trimmedEmail = email.trim();
+
+    if (trimmedEmail.length > 100) {
+      return 'Email is too long';
+    }
+
+    if (!trimmedEmail.contains('@') || !trimmedEmail.contains('.')) {
+      return 'invalid email format';
+    }
+
+    return null;
   }
 
   // TODO: Implement validatePassword method
@@ -24,7 +38,22 @@ class FormValidator {
   static String? validatePassword(String? password) {
     // TODO: Implement password validation
     // Check length and basic complexity
-    throw UnimplementedError('FormValidator validatePassword not implemented');
+    if (password == null || password.isEmpty) {
+      return 'Password is required';
+    }
+
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+
+    final hasLetter = password.contains(RegExp(r'[a-zA-Z]'));
+    final hasNumber = password.contains(RegExp(r'[0-9]'));
+
+    if (!hasLetter || !hasNumber) {
+      return 'Password must contain letter and number';
+    }
+
+    return null;
   }
 
   // TODO: Implement sanitizeText method
@@ -36,7 +65,9 @@ class FormValidator {
   static String sanitizeText(String? text) {
     // TODO: Implement text sanitization
     // Clean basic dangerous characters
-    throw UnimplementedError('FormValidator sanitizeText not implemented');
+    if (text == null) return '';
+
+    return text.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 
   // TODO: Implement isValidLength method
@@ -48,6 +79,9 @@ class FormValidator {
       {int minLength = 1, int maxLength = 100}) {
     // TODO: Implement length validation
     // Check text length bounds
-    throw UnimplementedError('FormValidator isValidLength not implemented');
+    if (text == null) return false;
+
+    final length = text.trim().length;
+    return length >= minLength && length <= maxLength;
   }
 }
