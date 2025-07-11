@@ -15,6 +15,7 @@ class User extends Equatable {
     required this.email,
     required this.createdAt,
   });
+  
 
   @override
   List<Object> get props => [id, name, email, createdAt];
