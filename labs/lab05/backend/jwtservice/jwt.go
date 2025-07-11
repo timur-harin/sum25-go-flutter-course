@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Claims structure with user information and standard JWT claims
+// User structure with user information and standard JWT claims
 type User struct {
 	UserID int
 	Email  string
