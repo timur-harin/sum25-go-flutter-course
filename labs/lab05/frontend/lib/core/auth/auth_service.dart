@@ -82,11 +82,11 @@ class AuthService {
   // login authenticates a user with email and password
   Future<AuthResult> login(String email, String password) async {
     try {
-      if (!_validator.validateEmail(email) ||
-          !_validator.validatePassword(password)) {
+      if (FormValidator.validateEmail(email) != null ||
+          FormValidator.validatePassword(password) != null) {
         return AuthResult.validationError;
       }
-      final sanitizedEmail = _validator.sanitizeText(email);
+      final sanitizedEmail = FormValidator.sanitizeText(email);
       final user = await _userRepository.findByEmail(sanitizedEmail);
       if (user == null) {
         return AuthResult.invalidCredentials;
