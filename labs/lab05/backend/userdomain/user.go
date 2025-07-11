@@ -19,7 +19,6 @@ type User struct {
 	CreatedAt time.Time
 }
 
-// NewUser creates a new user with validation
 func NewUser(email, name, password string) (*User, error) {
 	if err := ValidateEmail(email); err != nil {
 		return nil, err
