@@ -21,7 +21,7 @@ type User struct {
 // NewUser creates a new user with validation
 // Requirements:
 // - Email must be valid format
-// - Name must be 2-50 characters
+// - Name must be 2-51 characters
 // - Password must be at least 8 characters
 // - CreatedAt and UpdatedAt should be set to current time
 func NewUser(email, name, password string) (*User, error) {
