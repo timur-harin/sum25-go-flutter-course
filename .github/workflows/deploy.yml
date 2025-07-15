@@ -27,8 +27,8 @@ jobs:
       - name: Build Flutter web app
         working-directory: ./labs/lab07/frontend
         run: |
-          flutter build web --release --base-href "/${{ github.event.repository.name }}/"
           flutter create . --platforms web
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
