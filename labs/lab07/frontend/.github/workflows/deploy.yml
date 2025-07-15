@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - lab07-khatipov-ilyas
     
   workflow_dispatch:
 
