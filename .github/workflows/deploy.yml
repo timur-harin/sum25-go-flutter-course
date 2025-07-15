@@ -32,6 +32,12 @@ jobs:
           flutter doctor -v
           cat labs/lab07/frontend/pubspec.lock || echo "No pubspec.lock"
 
+      - name: Enable Flutter web
+        run: flutter config --enable-web
+
+      - name: Show Flutter devices (debug)
+        run: flutter devices
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
