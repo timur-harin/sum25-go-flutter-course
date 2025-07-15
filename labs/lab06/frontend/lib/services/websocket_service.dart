@@ -50,9 +50,9 @@ class WebSocketService {
   static const String defaultUrl = 'ws://localhost:8081/ws';
 
   WebSocketChannel? _channel;
-  StreamController<WebSocketMessage> _messageController =
+  final StreamController<WebSocketMessage> _messageController =
       StreamController<WebSocketMessage>.broadcast();
-  StreamController<bool> _connectionController =
+  final StreamController<bool> _connectionController =
       StreamController<bool>.broadcast();
 
   String? _currentUserId;

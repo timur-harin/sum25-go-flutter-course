@@ -4,6 +4,7 @@ import 'dart:async';
 
 class MockChatService extends ChatService {
   final _controller = StreamController<String>.broadcast();
+  @override
   bool failSend = false;
   @override
   Stream<String> get messageStream => _controller.stream;

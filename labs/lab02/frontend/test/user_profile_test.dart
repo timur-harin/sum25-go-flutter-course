@@ -4,6 +4,7 @@ import 'package:lab02_chat/user_profile.dart';
 import 'package:lab02_chat/user_service.dart';
 
 class MockUserService extends UserService {
+  @override
   bool fail = false;
   @override
   Future<Map<String, String>> fetchUser() async {

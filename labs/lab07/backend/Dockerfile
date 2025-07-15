@@ -1,5 +1,10 @@
 # Build stage
-# TODO: Add build stage
+FROM golang:1.21 as builder
+WORKDIR /app
+COPY . .
+RUN go build -o hello
 
 # Final image
-# TODO: Add final image instructions
+FROM debian:bullseye-slim
+COPY --from=builder /app/hello /hello
+CMD ["/hello"]
