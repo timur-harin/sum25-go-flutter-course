@@ -1,5 +1,12 @@
 # Build stage
-# TODO: Add build stage
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o main main.go
 
 # Final image
-# TODO: Add final image instructions
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/main .
+EXPOSE 8080
+CMD ["./main"]
