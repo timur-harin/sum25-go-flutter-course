@@ -19,15 +19,18 @@ jobs:
 
       - name: Enable web
         run: flutter config --enable-web
+        working-directory: labs/lab07/frontend
 
       - name: Install dependencies
         run: flutter pub get
+        working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --base-href /<repository-name>/ --release  # Replace with your repo name
+        run: flutter build web --base-href /sum25-go-flutter-course/ --release
+        working-directory: labs/lab07/frontend
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3  # Deploy to gh-pages branch
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/web
+          publish_dir: labs/lab07/frontend/build/web
