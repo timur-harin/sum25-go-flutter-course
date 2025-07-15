@@ -1,9 +1,9 @@
-
 name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
     branches:
+      - main
       - lab07-mamajonov-khayotbek
 
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
       - name: Build web
         run: |
           flutter create . --platforms web
-          flutter build web --base-href /sum25-go-flutter-course/lab07-mamajonov-khayotbek/
+          flutter build web --release --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
@@ -35,5 +35,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: labs/lab07/frontend/build/web
-          destination_dir: lab07-mamajonov-khayotbek
 
