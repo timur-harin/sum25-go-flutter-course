@@ -6,7 +6,7 @@ This is a minimal Go Hello World app for Lab 07.
 - After publishing, your image will be available at:
 
 ```
-https://hub.docker.com/r/<your-dockerhub-username>/<your-image-name>
+https://hub.docker.com/r/shipanovdanila/go-hello-world
 ```
 
 Replace `<your-dockerhub-username>` and `<your-image-name>` with your actual Docker Hub username and image name. 
