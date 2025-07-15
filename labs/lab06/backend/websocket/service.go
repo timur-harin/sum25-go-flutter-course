@@ -144,9 +144,9 @@ func (h *Hub) run() {
 			h.mutex.RLock()
 			clientCount := len(h.clients)
 			h.mutex.RUnlock()
-			
+
 			log.Printf("📡 Broadcasting message from %s to %d clients: %s", message.User, clientCount, message.Content)
-			
+
 			h.mutex.RLock()
 			for client := range h.clients {
 				// Apply artificial delay if specified
@@ -192,7 +192,7 @@ func (h *Hub) broadcastToOthers(message Message, sender *Client) {
 			recipientCount++
 		}
 	}
-	
+
 	log.Printf("📤 Broadcasting to %d other clients (excluding %s): %s", recipientCount, sender.userID, message.Content)
 
 	for client := range h.clients {
