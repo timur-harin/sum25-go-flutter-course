@@ -23,7 +23,12 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --release
+        run: |
+          flutter create .
+          --platforms web
+          flutter build web
+          -- release --base-href /
+          sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
