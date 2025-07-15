@@ -45,14 +45,17 @@ jobs:
       - name: Create web directory if missing
         run: |
           cd labs/lab07/frontend
-          flutter create --platforms web .
+          flutter create --platforms web . --force
+        continue-on-error: true
         
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
 
-      - name: Build web
-        run: flutter build web --web-render html
+      - name: Clean and build web
+        run: |
+          flutter clean
+          flutter build web --release --base-href="/sum25-go-flutter-course/"
         working-directory: labs/lab07/frontend
         
       - name: Check build output (debug)
