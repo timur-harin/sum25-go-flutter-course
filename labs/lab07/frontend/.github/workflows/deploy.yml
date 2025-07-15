@@ -1,13 +1,10 @@
 name: Deploy Flutter Web to GitHub Pages
 
 on:
-  # Trigger the workflow on push to the 'main' branch
   push:
     branches:
       - main 
       
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch: 
 
 jobs:
@@ -20,7 +17,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x' # Use a stable Flutter version, e.g., '3.x' or '3.22.x'
+          flutter-version: '3.x'
           channel: 'stable'
 
       - name: Install dependencies
@@ -28,16 +25,12 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        # Build the Flutter web application for GitHub Pages
-        run: flutter build web --base-href /sum25-go-flutter-course/ --release
+        run: flutter build web --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          # Token for GitHub Pages deployment
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # The directory containing the built web assets
           publish_dir: labs/lab07/frontend/build/web
-          # Keep the CNAME file (if you use a custom domain)
           keep_files: true
