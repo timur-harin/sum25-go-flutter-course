@@ -1,0 +1,25 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [ lab07-permiakov-lev ]  # Trigger on pushes to lab07-permiakov-lev branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+    
+    - run: flutter pub get
+    - run: flutter create --platforms web .  # Создаем web-структуру если отсутствует
+    - run: flutter build web --release --base-href /sum25-go-flutter-course/
+    
+    - uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build/web
