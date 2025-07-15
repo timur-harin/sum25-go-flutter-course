@@ -131,7 +131,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
-<<<<<<< HEAD
             });
             
       - name: Create commit comment with score
@@ -174,6 +173,4 @@ jobs:
               repo: context.repo.repo,
               commit_sha: context.sha,
               body: comment
-=======
->>>>>>> bc404cb (add lab2 full)
             }); 
