@@ -221,19 +221,13 @@ Real-time & Distributed Systems
 #### Why do we need different communication protocols?
 - **HTTP Request/Response**: Good for traditional web pages, APIs
 - **Real-time needs**: Chat, live updates, gaming require instant communication
-- **Efficiency**: Different protocols optimize for different use cases
 - **Network constraints**: Mobile networks, firewalls, NAT traversal
 
 #### Common real-time scenarios
 ```
-Traditional HTTP:
-Client → Request → Server → Response → Client (high latency)
-
-WebSocket:
-Client ←→ Persistent Connection ←→ Server (instant bidirectional)
-
-Server-Sent Events:
-Client ← Stream of Updates ← Server (server-to-client only)
+- Traditional HTTP: Client → Request → Server → Response → Client (high latency)
+- WebSocket: Client ←→ Persistent Connection ←→ Server (instant bidirectional)
+- Server-Sent Events: Client ← Stream of Updates ← Server (server-to-client only)
 ```
 
 </div>
@@ -265,7 +259,7 @@ Client ← Stream of Updates ← Server (server-to-client only)
 
 ---
 
-# HTTP vs WebSocket: Concrete example
+# HTTP vs WebSocket
 
 <div class="slide-content">
 
@@ -287,11 +281,12 @@ Content-Length: 45
 {"messages": [], "has_new": false}
 ```
 
-**Problems:**
-- 🔴 Empty responses waste bandwidth
-- 🔴 2-second delay for new messages  
-- 🔴 HTTP headers overhead (200+ bytes each)
-- 🔴 Server resources wasted on empty polls
+<br/>
+
+- Empty responses waste bandwidth
+- 2-second delay for new messages  
+- HTTP headers overhead (200+ bytes)
+- Resources wasted on empty polls
 
 </div>
 
@@ -309,14 +304,15 @@ Connection: Upgrade
 {"type":"message","text":"Hi there!","user":"Jane"}
 ```
 
-**Benefits:**
-- ✅ Instant delivery (0ms delay)
-- ✅ Only 50 bytes per message
-- ✅ No HTTP header overhead
-- ✅ Bidirectional communication
-- ✅ Single persistent connection
+<br/>
 
-**Bandwidth comparison:** 200+ bytes (HTTP) vs 50 bytes (WebSocket)
+- Instant delivery (0ms delay)
+- Only 50 bytes per message
+- No HTTP header overhead
+- Bidirectional communication
+- Single persistent connection
+
+
 
 </div>
 
@@ -335,8 +331,6 @@ Connection: Upgrade
 
 #### Basic connection handling
 ```go
-package main
-
 import (
     "github.com/gorilla/websocket"
     "net/http"
@@ -355,7 +349,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
         return
     }
     defer conn.Close()
-    
     // ... connection handling code ...
 }
 ```
@@ -366,33 +359,25 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 #### Message broadcasting
 ```go
-// Simple message structure
-type Message struct {
+type Message struct { // Simple message structure
     Type    string `json:"type"`
     Content string `json:"content"`
     User    string `json:"user"`
-}
-
-// Broadcast to all connected clients
+} // Broadcast to all connected clients
 var clients = make(map[*websocket.Conn]bool)
-
 func broadcastMessage(message Message) {
     for client := range clients {
         err := client.WriteJSON(message)
         if err != nil {
             client.Close()
             delete(clients, client)
-        }
-    }
-}
-
+}}}
 func handleMessage(conn *websocket.Conn) {
     var msg Message
     err := conn.ReadJSON(&msg)
     if err == nil {
         broadcastMessage(msg) // Send to all clients
-    }
-}
+}}
 ```
 
 </div>
@@ -412,30 +397,27 @@ func handleMessage(conn *websocket.Conn) {
 
 #### Simple connection setup
 ```dart
-import 'dart:io';
-import 'dart:convert';
-
 class SimpleWebSocket {
   WebSocket? _socket;
-  
+  final _messageController = StreamController<String>.broadcast();
+  Stream<String> get messages => _messageController.stream;
   Future<void> connect(String url) async {
     _socket = await WebSocket.connect(url);
-    
-    // Listen for messages
     _socket!.listen((data) {
       final message = jsonDecode(data);
-      print('Received: ${message['content']}');
-    });
-  }
-  
+      _messageController.add('{message['user']}: {message['content']}');
+  });}
+
   void sendMessage(String content) {
     final message = {
       'type': 'message',
       'content': content,
       'user': 'CurrentUser'
-    };
-    
-    _socket?.add(jsonEncode(message));
+    }; _socket?.add(jsonEncode(message));}
+
+  void dispose() {
+    _messageController.close();
+    _socket?.close();
   }
 }
 ```
@@ -444,31 +426,32 @@ class SimpleWebSocket {
 
 <div>
 
-#### Usage in Flutter widget
+#### Receiving messages in Flutter widget
 ```dart
-class ChatWidget extends StatefulWidget {
-  @override
-  _ChatWidgetState createState() => _ChatWidgetState();
-}
-
 class _ChatWidgetState extends State<ChatWidget> {
   final _webSocket = SimpleWebSocket();
   final _messages = <String>[];
-  
+  late StreamSubscription<String> _subscription;
   @override
-  void initState() {
+  void initState() { // Will be called when the widget is created
     super.initState();
-    _webSocket.connect('ws://localhost:8080/chat');
-  }
-  
+    _webSocket.connect('ws://localhost:8080/chat').then((_) {
+      _subscription = _webSocket.messages.listen((msg) { // init subscription
+        setState(() {
+          _messages.add(msg);
+  });});});}
   void _sendMessage(String text) {
     _webSocket.sendMessage(text);
     setState(() {
       _messages.add('You: $text');
-    });
+  });}
+  @override
+  void dispose() {
+    _subscription.cancel();
+    _webSocket.dispose();
+    super.dispose();
   }
-  
-  // ... UI code ...
+  // ... UI code to display _messages ...
 }
 ```
 
@@ -480,14 +463,13 @@ class _ChatWidgetState extends State<ChatWidget> {
 
 ---
 
-# HTTP vs gRPC: Request size comparison
+# HTTP vs gRPC: size comparison
 
 <div class="slide-content">
 
 <div class="code-columns">
 <div>
 
-#### HTTP JSON Request (verbose)
 ```http
 POST /api/v1/users HTTP/1.1
 Host: api.example.com
@@ -496,7 +478,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Accept: application/json
 User-Agent: MyApp/1.0
 Content-Length: 156
-
 {
   "name": "John Doe",
   "email": "john.doe@example.com",
@@ -507,6 +488,8 @@ Content-Length: 156
 }
 ```
 
+<br/>
+
 **Total size: ~650 bytes**
 - Headers: ~480 bytes
 - JSON body: ~156 bytes
@@ -516,7 +499,6 @@ Content-Length: 156
 
 <div>
 
-#### gRPC Binary Request (efficient)
 ```protobuf
 // user.proto
 message CreateUserRequest {
@@ -529,10 +511,14 @@ message CreateUserRequest {
 }
 ```
 
+<br/>
+
 **Binary encoding:**
 ```
 0A 08 4A 6F 68 6E 20 44 6F 65 12 15 6A 6F 68 6E 2E 64 6F 65...
 ```
+
+<br/>
 
 **Total size: ~85 bytes**
 - HTTP/2 headers: ~20 bytes
@@ -545,81 +531,6 @@ message CreateUserRequest {
 
 </div>
 
----
-
-# Protocol Buffers efficiency example
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### JSON representation
-```json
-{
-  "users": [
-    {
-      "id": 12345,
-      "name": "John Doe",
-      "email": "john@example.com",
-      "active": true,
-      "created_at": 1642781234
-    },
-    {
-      "id": 12346,
-      "name": "Jane Smith", 
-      "email": "jane@example.com",
-      "active": true,
-      "created_at": 1642781235
-    }
-  ],
-  "total": 2,
-  "page": 1
-}
-```
-
-**Size: 267 bytes**
-
-</div>
-
-<div>
-
-#### Protocol Buffers binary
-```protobuf
-message User {
-  int32 id = 1;
-  string name = 2;
-  string email = 3;
-  bool active = 4;
-  int64 created_at = 5;
-}
-
-message ListUsersResponse {
-  repeated User users = 1;
-  int32 total = 2;
-  int32 page = 3;
-}
-```
-
-**Binary encoding:**
-```
-0A 2F 08 B9 60 12 08 4A 6F 68 6E 20 44 6F 65 1A 10 6A 6F 68 6E...
-```
-
-**Size: 89 bytes**
-**66% smaller!**
-
-#### Why Protocol Buffers are efficient:
-- Binary encoding vs text
-- Field numbers instead of field names
-- Variable-length integer encoding
-- No repetitive syntax like `{`, `}`, `"`
-
-</div>
-
-</div>
-
-</div>
 
 ---
 
@@ -632,77 +543,48 @@ message ListUsersResponse {
 <div class="code-columns">
 <div>
 
-#### JSON-RPC Request/Response
 ```json
-// Request
-{
+{ // Request
   "jsonrpc": "2.0",
   "method": "createUser",
   "params": {
     "name": "John Doe",
     "email": "john@example.com"
-  },
-  "id": 1
-}
-
-// Response
-{
+  }, "id": 1 }
+{ // Response
   "jsonrpc": "2.0",
   "result": {
     "id": 12345,
     "name": "John Doe",
     "email": "john@example.com",
     "created_at": 1642781234
-  },
-  "id": 1
-}
-
-// Error Response
-{
-  "jsonrpc": "2.0",
-  "error": {
-    "code": -32602,
-    "message": "Invalid params"
-  },
-  "id": 1
-}
+  }, "id": 1 }
 ```
 
 </div>
 
 <div>
 
-#### Go JSON-RPC server
 ```go
 type UserService struct{}
-
 type CreateUserParams struct {
     Name  string `json:"name"`
-    Email string `json:"email"`
-}
-
+    Email string `json:"email"` }
 type User struct {
     ID        int    `json:"id"`
     Name      string `json:"name"`
     Email     string `json:"email"`
-    CreatedAt int64  `json:"created_at"`
-}
-
+    CreatedAt int64  `json:"created_at"`}
 func (s *UserService) CreateUser(params CreateUserParams) (*User, error) {
     if params.Name == "" {
         return nil, fmt.Errorf("name is required")
-    }
-    
+    }   
     user := &User{
         ID:        generateID(),
         Name:      params.Name,
         Email:     params.Email,
         CreatedAt: time.Now().Unix(),
-    }
-    
-    return user, nil
-}
-
+    } return user, nil }
 // ... JSON-RPC handler setup ...
 ```
 
@@ -710,11 +592,78 @@ func (s *UserService) CreateUser(params CreateUserParams) (*User, error) {
 
 </div>
 
-#### When to use JSON-RPC:
-- ✅ Simple RPC needs without gRPC complexity
-- ✅ JavaScript clients (better JSON support)
-- ✅ Debugging (human-readable)
-- ❌ High-performance requirements (use gRPC)
+</div>
+
+
+---
+
+# WebRTC: Real-time Peer-to-Peer
+
+<div class="slide-content">
+
+### What is WebRTC?
+- **WebRTC (Web Real-Time Communication)** is a technology that enables direct, real-time audio, video, and data communication between browsers and mobile apps.
+- Built into all major browsers and supported by many mobile SDKs.
+- Designed for **low-latency, peer-to-peer** connections without requiring plugins or external software.
+
+### How does WebRTC work?
+- **Peer-to-peer**: Connects users directly, minimizing server load and latency.
+- **Media streams**: Supports audio, video, and arbitrary data channels.
+- **NAT traversal**: Uses ICE, STUN, and TURN protocols to connect users behind firewalls and NATs.
+- **Encryption**: All streams are encrypted end-to-end by default.
+- **Signaling**: Requires a signaling server (using WebSocket, HTTP, etc.) to exchange connection info, but media/data flows directly between peers.
+
+</div>
+
+---
+
+# WebRTC: Use Cases and Advantages
+
+<div class="slide-content">
+
+### What is WebRTC used for?
+- **Video calls**: Zoom, Google Meet, WhatsApp, and many others use WebRTC for real-time video.
+- **Voice calls**: High-quality, low-latency audio communication.
+- **Screen sharing**: Share desktop or app windows in real time.
+- **File transfer**: Send files directly between users without uploading to a server.
+- **Gaming**: Real-time multiplayer games with direct peer-to-peer data channels.
+
+### Why choose WebRTC over other protocols?
+- **Direct peer-to-peer**: No server bottleneck for data, reducing latency and cost.
+- **Media optimized**: Built-in support for adaptive bitrate, echo cancellation, and network resilience.
+- **Security**: End-to-end encryption is mandatory.
+- **Cross-platform**: Works in browsers, mobile apps, and even IoT devices.
+- **Scalability**: Offloads bandwidth from servers, making it ideal for large-scale video/voice applications.
+
+</div>
+
+---
+
+# When to use WebRTC?
+
+<div class="slide-content">
+
+
+<style scoped>
+img {
+  max-height: 350px !important;
+  max-width: 90% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+</style>
+
+![WebRTC](./assets/webrtc.png)
+
+- When you need **real-time, interactive audio/video** between users.
+- When **server bandwidth/cost** is a concern (media doesn't go through your server).
+- When **privacy** and **encryption** are required by design.
+- For **direct file/data transfer** between users without storing on a server.
+- For **low-latency, high-quality** communication (e.g., live collaboration, remote control, telemedicine).
+
+
+
 
 </div>
 
@@ -733,6 +682,16 @@ func (s *UserService) CreateUser(params CreateUserParams) (*User, error) {
 | **gRPC** | Microservices, high-performance | Fast, type-safe, streaming | Learning curve | ⭐⭐⭐⭐⭐ |
 | **JSON-RPC** | Simple RPC calls | Easy to implement | Limited features | ⭐⭐⭐ |
 | **WebRTC** | Video/audio calls | P2P, media streaming | Complex setup | ⭐⭐⭐⭐ |
+
+</div>
+
+---
+
+# Example of usage patterns
+
+<div class="slide-content">
+
+
 
 #### Real-world usage patterns:
 ```
@@ -756,7 +715,6 @@ User ←─ WebRTC ─→ User (P2P video call)
 
 <div class="slide-content">
 
-#### Why different protocols for different clients?
 
 ```
 External Clients                    API Gateway                    Internal Services
@@ -768,93 +726,24 @@ Web App ──────┤                         ├─── gRPC ──�
 3rd Party ────┘                         │                      └─── Payment Service
 ```
 
+<div class="code-columns">
+<div>
+
 #### External API requirements (HTTP/REST):
 - **Browser compatibility**: Native fetch API, no special libraries
-- **Simplicity**: Easy to understand and debug with curl/Postman
 - **Tooling**: Extensive ecosystem (Swagger, OpenAPI, etc.)
 - **Caching**: HTTP caching with CDNs and proxies
 - **Firewall friendly**: Port 80/443, well-known protocol
+
+</div>
+
+<div>
 
 #### Internal API requirements (gRPC):
 - **Performance**: 7x faster than JSON, binary Protocol Buffers
 - **Type safety**: Generated clients prevent API misuse
 - **Streaming**: Real-time data exchange between services
 - **Error handling**: Rich error codes and structured error details
-- **Service discovery**: Built-in load balancing and health checks
-
-</div>
-
----
-
-# gRPC performance benefits for microservices
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### HTTP/JSON inter-service call
-```http
-POST /api/orders HTTP/1.1
-Host: order-service:8080
-Content-Type: application/json
-Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiI...
-User-Agent: UserService/1.0
-Content-Length: 156
-
-{
-  "user_id": "user_123",
-  "items": [
-    {
-      "product_id": "prod_456", 
-      "quantity": 2,
-      "price": 29.99
-    }
-  ],
-  "shipping_address": {
-    "street": "123 Main St",
-    "city": "New York"
-  }
-}
-```
-
-**Size: ~580 bytes total**
-**Parsing: JSON unmarshaling overhead**
-
-</div>
-
-<div>
-
-#### gRPC inter-service call
-```protobuf
-// order.proto
-message CreateOrderRequest {
-  string user_id = 1;
-  repeated OrderItem items = 2;
-  Address shipping_address = 3;
-}
-
-message OrderItem {
-  string product_id = 1;
-  int32 quantity = 2;
-  double price = 3;
-}
-```
-
-**Binary representation:**
-```
-0A 08 75 73 65 72 5F 31 32 33 12 0F 0A 08 70 72...
-```
-
-**Size: ~95 bytes total**
-**Parsing: Direct binary deserialization**
-
-#### Performance comparison:
-- **87% smaller payload** (95 vs 580 bytes)
-- **5-7x faster serialization** (binary vs JSON)
-- **HTTP/2 multiplexing** (multiple requests on one connection)
-- **Built-in compression** (gzip by default)
 
 </div>
 
@@ -879,25 +768,6 @@ message OrderItem {
 | **High-frequency calls** | ✅ | ❌ | Lower latency, smaller payload |
 | **3rd party integrations** | ❌ | ✅ | Industry standard, tooling |
 | **Public API** | ❌ | ✅ | Documentation, accessibility |
-
-#### Hybrid architecture pattern:
-```
-External Layer (HTTP/REST)
-├── Mobile/Web clients use JSON APIs
-├── 3rd party integrations use REST
-└── Public documentation with OpenAPI
-
-Internal Layer (gRPC)  
-├── Service-to-service communication
-├── Real-time data streaming
-└── High-performance internal APIs
-```
-
-#### Benefits of this approach:
-- **Best of both worlds**: Simple external APIs, fast internal communication
-- **Clear boundaries**: Public vs private API separation
-- **Team productivity**: Type-safe internal development
-- **Performance**: Optimized for each use case
 
 </div>
 
@@ -931,10 +801,6 @@ message Result {
 }
 ```
 
-#### Generate code:
-```bash
-protoc --go_out=. --go-grpc_out=. calculator.proto
-```
 
 </div>
 
@@ -963,6 +829,11 @@ func main() {
     pb.RegisterCalculatorServer(server, &calculatorServer{})
     server.Serve(lis)
 }
+```
+
+#### Generate code:
+```bash
+protoc --go_out=. --go-grpc_out=. calculator.proto
 ```
 
 </div>
@@ -1049,7 +920,6 @@ for {
 <div class="code-columns">
 <div>
 
-#### User service proto definition
 ```protobuf
 // user_service.proto
 syntax = "proto3";
@@ -1076,7 +946,13 @@ message User {
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
 }
+```
 
+</div>
+
+<div>
+
+```protobuf
 message CreateUserRequest {
   string name = 1;
   string email = 2;
@@ -1094,10 +970,16 @@ message UserValidation {
 ```
 
 </div>
+</div>
+</div>
 
+---
+
+# User service with gRPC
+
+<div class="code-columns">
 <div>
 
-#### User service implementation
 ```go
 package user
 
@@ -1131,6 +1013,14 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
     if err != nil {
         return nil, status.Errorf(codes.Internal, "database error: %v", err)
     }
+```
+
+</div>
+
+
+<div>
+
+```go
     if exists {
         return nil, status.Errorf(codes.AlreadyExists, "user with email %s already exists", req.Email)
     }
@@ -1167,137 +1057,6 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 
 </div>
 
----
-
-# Order Service with inter-service communication
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Order service proto
-```protobuf
-// order_service.proto
-syntax = "proto3";
-package order;
-
-service OrderService {
-  rpc CreateOrder(CreateOrderRequest) returns (Order);
-  rpc GetOrder(GetOrderRequest) returns (Order);
-  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (Order);
-  rpc ListUserOrders(ListUserOrdersRequest) returns (stream Order);
-}
-
-message Order {
-  string id = 1;
-  string user_id = 2;
-  repeated OrderItem items = 3;
-  OrderStatus status = 4;
-  double total_amount = 5;
-  google.protobuf.Timestamp created_at = 6;
-}
-
-message OrderItem {
-  string product_id = 1;
-  int32 quantity = 2;
-  double price = 3;
-  string name = 4;
-}
-
-enum OrderStatus {
-  PENDING = 0;
-  CONFIRMED = 1;
-  SHIPPED = 2;
-  DELIVERED = 3;
-  CANCELLED = 4;
-}
-
-message CreateOrderRequest {
-  string user_id = 1;
-  repeated OrderItem items = 2;
-  string shipping_address = 3;
-}
-```
-
-</div>
-
-<div>
-
-#### Order service with user validation
-```go
-package order
-
-import (
-    "context"
-    "fmt"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/status"
-    userpb "github.com/example/user/proto"
-    orderpb "github.com/example/order/proto"
-)
-
-type OrderServer struct {
-    orderpb.UnimplementedOrderServiceServer
-    userClient userpb.UserServiceClient
-    db         *sql.DB
-}
-
-func NewOrderServer(userServiceAddr string, db *sql.DB) (*OrderServer, error) {
-    conn, err := grpc.Dial(userServiceAddr, grpc.WithInsecure())
-    if err != nil {
-        return nil, fmt.Errorf("failed to connect to user service: %v", err)
-    }
-    
-    return &OrderServer{
-        userClient: userpb.NewUserServiceClient(conn),
-        db:         db,
-    }, nil
-}
-
-func (s *OrderServer) CreateOrder(ctx context.Context, req *orderpb.CreateOrderRequest) (*orderpb.Order, error) {
-    // Validate user exists via gRPC call
-    userValidation, err := s.userClient.ValidateUser(ctx, &userpb.ValidateUserRequest{
-        UserId: req.UserId,
-    })
-    if err != nil {
-        return nil, status.Errorf(codes.InvalidArgument, "user validation failed: %v", err)
-    }
-    if !userValidation.IsValid {
-        return nil, status.Errorf(codes.InvalidArgument, "invalid user: %s", userValidation.Reason)
-    }
-    
-    // Calculate total
-    var totalAmount float64
-    for _, item := range req.Items {
-        totalAmount += item.Price * float64(item.Quantity)
-    }
-    
-    // Create order
-    order := &orderpb.Order{
-        Id:           generateOrderID(),
-        UserId:       req.UserId,
-        Items:        req.Items,
-        Status:       orderpb.OrderStatus_PENDING,
-        TotalAmount:  totalAmount,
-        CreatedAt:    timestamppb.Now(),
-    }
-    
-    // Save to database
-    if err := s.saveOrder(ctx, order); err != nil {
-        return nil, status.Errorf(codes.Internal, "failed to save order: %v", err)
-    }
-    
-    return order, nil
-}
-```
-
-</div>
-
-</div>
-
-</div>
 
 ---
 
@@ -1308,7 +1067,6 @@ func (s *OrderServer) CreateOrder(ctx context.Context, req *orderpb.CreateOrderR
 <div class="code-columns">
 <div>
 
-#### Notification service proto
 ```protobuf
 // notification_service.proto
 syntax = "proto3";
@@ -1334,7 +1092,13 @@ message Notification {
   map<string, string> data = 6;
   google.protobuf.Timestamp created_at = 7;
 }
+```
 
+</div>
+
+<div>
+
+```
 enum NotificationType {
   INFO = 0;
   WARNING = 1;
@@ -1360,9 +1124,19 @@ message SendNotificationRequest {
 
 </div>
 
+</div>
+
+</div>
+
+---
+
+# Notification service with streaming
+
+<div class="slide-content">
+
+<div class="code-columns">
 <div>
 
-#### Real-time notification streaming
 ```go
 package notification
 
@@ -1388,7 +1162,7 @@ func (s *NotificationServer) Subscribe(req *pb.SubscribeRequest, stream pb.Notif
     }
     s.subscribers[req.UserId] = append(s.subscribers[req.UserId], stream)
     s.mutex.Unlock()
-    
+
     // Send welcome notification
     welcomeNotification := &pb.Notification{
         Id:        generateNotificationID(),
@@ -1398,6 +1172,14 @@ func (s *NotificationServer) Subscribe(req *pb.SubscribeRequest, stream pb.Notif
         Message:   "You are now connected to notifications",
         CreatedAt: timestamppb.Now(),
     }
+
+```
+
+</div>
+
+<div>
+
+```go
     
     if err := stream.Send(welcomeNotification); err != nil {
         return err
@@ -1457,47 +1239,31 @@ func (s *NotificationServer) SendNotification(ctx context.Context, req *pb.SendN
 
 #### Authentication interceptor
 ```go
-package middleware
-
-import (
-    "context"
-    "strings"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/metadata"
-    "google.golang.org/grpc/status"
-)
-
 func AuthInterceptor(authService AuthService) grpc.UnaryServerInterceptor {
-    return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+    return func(ctx context.Context, req interface{}, 
+    info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
         // Skip auth for certain methods
         if isPublicMethod(info.FullMethod) {
             return handler(ctx, req)
         }
-        
         // Extract metadata
         md, ok := metadata.FromIncomingContext(ctx)
         if !ok {
             return nil, status.Errorf(codes.Unauthenticated, "missing metadata")
         }
-        
         // Get authorization header
         authHeaders := md.Get("authorization")
         if len(authHeaders) == 0 {
             return nil, status.Errorf(codes.Unauthenticated, "missing authorization token")
         }
-        
         token := strings.TrimPrefix(authHeaders[0], "Bearer ")
-        
         // Validate token
         userID, err := authService.ValidateToken(token)
         if err != nil {
             return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
         }
-        
         // Add user ID to context
-        ctx = context.WithValue(ctx, "user_id", userID)
-        
+        ctx = context.WithValue(ctx, "user_id", userID)       
         return handler(ctx, req)
     }
 }
@@ -1509,52 +1275,32 @@ func AuthInterceptor(authService AuthService) grpc.UnaryServerInterceptor {
 
 #### Logging and metrics interceptor
 ```go
-package middleware
-
-import (
-    "context"
-    "log"
-    "time"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/status"
-    "github.com/prometheus/client_golang/prometheus"
-)
-
 var (
     grpcRequestsTotal = prometheus.NewCounterVec(
         prometheus.CounterOpts{
             Name: "grpc_requests_total",
             Help: "Total number of gRPC requests",
         },
-        []string{"method", "status"},
-    )
-    
+        []string{"method", "status"},)
     grpcRequestDuration = prometheus.NewHistogramVec(
         prometheus.HistogramOpts{
             Name: "grpc_request_duration_seconds",
             Help: "gRPC request duration in seconds",
         },
-        []string{"method"},
-    )
-)
+        []string{"method"},))
 
-func LoggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func LoggingInterceptor(ctx context.Context, req interface{}, 
+    info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
     start := time.Now()
-    
     log.Printf("gRPC request started: %s", info.FullMethod)
-    
     resp, err := handler(ctx, req)
-    
     duration := time.Since(start)
     statusCode := status.Code(err)
-    
     log.Printf("gRPC request completed: %s, duration: %v, status: %s", 
         info.FullMethod, duration, statusCode)
-    
     // Record metrics
     grpcRequestsTotal.WithLabelValues(info.FullMethod, statusCode.String()).Inc()
-    grpcRequestDuration.WithLabelValues(info.FullMethod).Observe(duration.Seconds())
-    
+    grpcRequestDuration.WithLabelValues(info.FullMethod).Observe(duration.Seconds()) 
     return resp, err
 }
 ```
@@ -1567,153 +1313,7 @@ func LoggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 
 ---
 
-# Complete gRPC microservices setup
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Server setup with all services
-```go
-package main
-
-import (
-    "log"
-    "net"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/reflection"
-    userpb "github.com/example/user/proto"
-    orderpb "github.com/example/order/proto"
-    notificationpb "github.com/example/notification/proto"
-)
-
-func main() {
-    // Database connection
-    db, err := sql.Open("postgres", "postgres://user:pass@localhost/db")
-    if err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
-    }
-    defer db.Close()
-    
-    // Create gRPC server with interceptors
-    server := grpc.NewServer(
-        grpc.ChainUnaryInterceptor(
-            middleware.LoggingInterceptor,
-            middleware.AuthInterceptor(authService),
-            middleware.MetricsInterceptor,
-        ),
-        grpc.ChainStreamInterceptor(
-            middleware.StreamLoggingInterceptor,
-            middleware.StreamAuthInterceptor(authService),
-        ),
-    )
-    
-    // Register services
-    userServer := user.NewUserServer(db)
-    orderServer, _ := order.NewOrderServer("localhost:50051", db)
-    notificationServer := notification.NewNotificationServer()
-    
-    userpb.RegisterUserServiceServer(server, userServer)
-    orderpb.RegisterOrderServiceServer(server, orderServer)
-    notificationpb.RegisterNotificationServiceServer(server, notificationServer)
-    
-    // Enable reflection for development
-    reflection.Register(server)
-    
-    // Start server
-    listener, err := net.Listen("tcp", ":50051")
-    if err != nil {
-        log.Fatalf("Failed to listen: %v", err)
-    }
-    
-    log.Println("gRPC server starting on :50051")
-    if err := server.Serve(listener); err != nil {
-        log.Fatalf("Failed to serve: %v", err)
-    }
-}
-```
-
-</div>
-
-<div>
-
-#### Client connection pool
-```go
-package client
-
-import (
-    "context"
-    "sync"
-    "time"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/keepalive"
-    userpb "github.com/example/user/proto"
-    orderpb "github.com/example/order/proto"
-)
-
-type ServiceClients struct {
-    User  userpb.UserServiceClient
-    Order orderpb.OrderServiceClient
-    conns []*grpc.ClientConn
-    mutex sync.RWMutex
-}
-
-func NewServiceClients() (*ServiceClients, error) {
-    // Connection options for production
-    opts := []grpc.DialOption{
-        grpc.WithInsecure(), // Use TLS in production
-        grpc.WithKeepaliveParams(keepalive.ClientParameters{
-            Time:                10 * time.Second,
-            Timeout:             time.Second,
-            PermitWithoutStream: true,
-        }),
-        grpc.WithDefaultCallOptions(
-            grpc.MaxCallRecvMsgSize(4*1024*1024), // 4MB
-            grpc.MaxCallSendMsgSize(4*1024*1024), // 4MB
-        ),
-    }
-    
-    // Connect to User Service
-    userConn, err := grpc.Dial("user-service:50051", opts...)
-    if err != nil {
-        return nil, err
-    }
-    
-    // Connect to Order Service
-    orderConn, err := grpc.Dial("order-service:50052", opts...)
-    if err != nil {
-        userConn.Close()
-        return nil, err
-    }
-    
-    return &ServiceClients{
-        User:  userpb.NewUserServiceClient(userConn),
-        Order: orderpb.NewOrderServiceClient(orderConn),
-        conns: []*grpc.ClientConn{userConn, orderConn},
-    }, nil
-}
-
-func (sc *ServiceClients) Close() error {
-    sc.mutex.Lock()
-    defer sc.mutex.Unlock()
-    
-    for _, conn := range sc.conns {
-        conn.Close()
-    }
-    return nil
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Microservices: Why split your application?
+# Why split your application?
 
 <div class="slide-content">
 
@@ -1728,10 +1328,18 @@ Single Large Application
 ```
 
 **Problems:**
-- 🔴 One technology stack for everything
-- 🔴 Deploy entire app for small changes
-- 🔴 One team's bug affects everyone
-- 🔴 Difficult to scale individual features
+- One technology stack for everything
+- Deploy entire app for small changes
+- One team's bug affects everyone
+- Difficult to scale individual features
+
+</div>
+
+---
+
+# The microservices solution
+
+<div class="slide-content">
 
 #### The microservices solution:
 ```
@@ -1743,16 +1351,16 @@ Analytics (Scala) ←──────┘
 ```
 
 **Benefits:**
-- ✅ Each team picks best technology
-- ✅ Independent deployments
-- ✅ Failure isolation
-- ✅ Scale services individually
+- Each team picks best technology
+- Independent deployments
+- Failure isolation
+- Scale services individually
 
 </div>
 
 ---
 
-# Database design patterns for microservices
+# Databases for microservices
 
 <div class="slide-content">
 
@@ -1764,25 +1372,28 @@ Product Service ←→ Elasticsearch (Products DB)
 Analytics Service ←→ ClickHouse (Analytics DB)
 ```
 
+<div class="code-columns">
+<div>
+
 **Benefits:**
-- ✅ Service autonomy and independence
-- ✅ Technology diversity (choose best DB for use case)
-- ✅ Data isolation and security
-- ✅ Independent scaling
+- Service autonomy and independence
+- Technology diversity (choose best DB for use case)
+- Data isolation and security
+- Independent scaling
+
+</div>
+
+<div>
 
 **Challenges:**
-- 🔴 Cross-service queries become complex
-- 🔴 Data consistency across services
-- 🔴 Transaction management
-- 🔴 Data duplication
+- Cross-service queries become complex
+- Data consistency across services
+- Transaction management
+- Data duplication
 
-#### When to use shared vs separate databases:
-| Scenario | Database per Service | Shared Database |
-|----------|---------------------|-----------------|
-| **New project** | ✅ Recommended | ❌ Avoid |
-| **Legacy migration** | 🟡 Gradual transition | ✅ Start here |
-| **Strong consistency needed** | ❌ Complex | ✅ Simpler |
-| **Independent teams** | ✅ Essential | ❌ Coupling |
+</div>
+
+</div>
 
 </div>
 
@@ -1798,34 +1409,24 @@ Analytics Service ←→ ClickHouse (Analytics DB)
 #### Saga Pattern (Distributed Transactions)
 ```go
 type OrderSaga struct {
-    steps []SagaStep
-}
-
+    steps []SagaStep }
 type SagaStep struct {
     Execute     func() error
     Compensate  func() error
-    Executed    bool
-}
-
+    Executed    bool }
 func (s *OrderSaga) Execute() error {
     for i, step := range s.steps {
         if err := step.Execute(); err != nil {
-            // Compensate all executed steps
-            s.rollback(i)
+            s.rollback(i) // Compensate all executed steps
             return err
         }
         s.steps[i].Executed = true
-    }
-    return nil
-}
-
+    } return nil }
 func (s *OrderSaga) rollback(failedStep int) {
     for i := failedStep - 1; i >= 0; i-- {
         if s.steps[i].Executed {
             s.steps[i].Compensate()
-        }
-    }
-}
+}}}
 ```
 
 </div>
@@ -1853,20 +1454,13 @@ func CreateOrderSaga(orderID, userID string, items []Item) *OrderSaga {
                     return refundPayment(userID, total)
                 },
             },
-            {
-                Execute: func() error {
-                    return createOrder(orderID, userID, items)
-                },
-                Compensate: func() error {
-                    return cancelOrder(orderID)
-                },
-            },
+            // ...
         },
     }
 }
 ```
 
-**Saga ensures:** If any step fails, all previous steps are compensated (rolled back)
+
 
 </div>
 
@@ -1901,6 +1495,10 @@ type User struct {
 // - Who made changes?
 ```
 
+</div>
+
+<div>
+
 #### Event sourcing approach
 ```go
 type Event struct {
@@ -1925,10 +1523,20 @@ type EmailChanged struct {
 ```
 
 </div>
+</div>
+</div>
 
-<div>
+---
+
+# Event Sourcing pattern
+
+<div class="slide-content">
 
 #### Rebuilding state from events
+
+<div class="code-columns">
+<div>
+
 ```go
 func (u *User) ApplyEvent(event Event) {
     switch event.Type {
@@ -1949,7 +1557,14 @@ func (u *User) ApplyEvent(event Event) {
         u.Balance = data.NewBalance
     }
 }
+```
 
+</div>
+
+<div>
+
+
+```go
 func GetUserState(userID string) (*User, error) {
     events, err := getEventsByUserID(userID)
     if err != nil {
@@ -1965,8 +1580,6 @@ func GetUserState(userID string) (*User, error) {
 }
 ```
 
-**Benefits:** Complete audit trail, time travel, replay events
-
 </div>
 
 </div>
@@ -1975,14 +1588,15 @@ func GetUserState(userID string) (*User, error) {
 
 ---
 
-# CQRS (Command Query Responsibility Segregation)
+# CQRS 
 
 <div class="slide-content">
+
+#### Separation of reads and writes
 
 <div class="code-columns">
 <div>
 
-#### Separation of reads and writes
 ```go
 // Command side (writes)
 type UserCommandHandler struct {
@@ -1994,7 +1608,6 @@ func (h *UserCommandHandler) CreateUser(cmd CreateUserCommand) error {
     if cmd.Email == "" {
         return errors.New("email required")
     }
-    
     // Create event
     event := Event{
         Type: "UserCreated",
@@ -2005,10 +1618,17 @@ func (h *UserCommandHandler) CreateUser(cmd CreateUserCommand) error {
         },
         Timestamp: time.Now(),
     }
-    
     // Store event
     return h.eventStore.SaveEvent(event)
 }
+```
+
+</div>
+
+<div>
+
+```go
+// (Command Query Responsibility Segregation)
 
 func (h *UserCommandHandler) UpdateEmail(cmd UpdateEmailCommand) error {
     // Business logic validation
@@ -2031,10 +1651,20 @@ func (h *UserCommandHandler) UpdateEmail(cmd UpdateEmailCommand) error {
 ```
 
 </div>
+</div>
+</div>
 
-<div>
+---
+
+# CQRS 
+
+<div class="slide-content">
 
 #### Query side (reads)
+
+<div class="code-columns">
+<div>
+
 ```go
 // Query side (reads) - optimized for queries
 type UserQueryHandler struct {
@@ -2051,7 +1681,13 @@ type UserView struct {
     TotalOrders   int       `json:"total_orders"`
     // Denormalized data for fast queries
 }
+```
 
+</div>
+
+<div>
+
+```go
 func (h *UserQueryHandler) GetUser(userID string) (*UserView, error) {
     return h.readDB.FindUserByID(userID)
 }
@@ -2141,7 +1777,19 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 req.Header.Set("API-Version", "v2")
 ```
 
-#### gRPC versioning
+</div>
+</div>
+</div>
+
+---
+
+# gRPC versioning
+
+<div class="slide-content">
+
+<div class="code-columns">
+<div>
+
 ```protobuf
 // user_v1.proto
 syntax = "proto3";
@@ -2157,9 +1805,40 @@ package user.v2;
 
 service UserService {
   rpc GetUser(GetUserRequest) returns (User);
-  rpc GetUserProfile(GetUserProfileRequest) returns (UserProfile); // New method
+  rpc GetUserProfile(GetUserProfileRequest) 
+    returns (UserProfile); // New method
 }
 ```
+
+</div>
+
+<div>
+
+```go
+// Client-side usage example (Go)
+
+import (
+    userv1 "github.com/example/project/proto/user/v1"
+    userv2 "github.com/example/project/proto/user/v2"
+    "google.golang.org/grpc"
+)
+
+func main() {
+    conn, _ := grpc.Dial("user-service:50051", grpc.WithInsecure())
+    defer conn.Close()
+
+    // Use v1 client
+    clientV1 := userv1.NewUserServiceClient(conn)
+    user, _ := clientV1.GetUser(ctx, &userv1.GetUserRequest{Id: "123"})
+
+    // Use v2 client for new features
+    clientV2 := userv2.NewUserServiceClient(conn)
+    profile, _ := clientV2.GetUserProfile(ctx, 
+        &userv2.GetUserProfileRequest{Id: "123"})
+}
+```
+
+
 
 </div>
 
@@ -2169,7 +1848,7 @@ service UserService {
 
 ---
 
-# Backward compatibility strategies
+# Backward compatibility strategies 
 
 <div class="slide-content">
 
@@ -2196,6 +1875,10 @@ type UserV2 struct {
 
 // V1 clients ignore new fields, still work
 ```
+
+</div>
+
+<div>
 
 #### Non-breaking API evolution
 ```go
@@ -2225,6 +1908,17 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 </div>
 
+</div>
+
+</div>
+
+---
+
+# Backward compatibility strategies 
+
+<div class="slide-content">
+
+<div class="code-columns">
 <div>
 
 #### Breaking changes handling
@@ -2256,6 +1950,10 @@ func (h *UserHandler) GetUserDeprecated(w http.ResponseWriter, r *http.Request) 
 }
 ```
 
+</div>
+
+<div>
+
 #### Version support matrix
 ```
 Version | Status      | End of Life | Features
@@ -2274,914 +1972,17 @@ v4      | Beta        | -           | + Multi-tenancy
 
 ---
 
-# Microservices testing strategies
+# What we've learned about connections
 
 <div class="slide-content">
 
-#### Testing pyramid for microservices
-```
-                    E2E Tests
-                   (Few, Slow)
-                      /\
-                     /  \
-                    /    \
-              Contract Tests
-             (Some, Medium)
-                  /\
-                 /  \
-                /    \
-           Integration Tests
-          (More, Faster)
-              /\
-             /  \
-            /    \
-        Unit Tests
-    (Many, Fast)
-```
-
-#### Test types and responsibilities:
-- **Unit Tests**: Test individual functions and classes
-- **Integration Tests**: Test service with dependencies (databases, external APIs)
-- **Contract Tests**: Verify API contracts between services
-- **End-to-End Tests**: Test complete user workflows across all services
-
-#### Testing tools and frameworks:
-- **Go**: `testing`, `testify`, `ginkgo`, `gomega`
-- **Contract Testing**: `Pact`, `Spring Cloud Contract`
-- **Load Testing**: `k6`, `Artillery`, `JMeter`
-- **Chaos Testing**: `Chaos Monkey`, `Litmus`
-
-</div>
-
----
-
-# Unit testing example
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Service under test
-```go
-package user
-
-type UserService struct {
-    repo UserRepository
-    validator EmailValidator
-}
-
-type UserRepository interface {
-    Save(user *User) error
-    FindByID(id string) (*User, error)
-    FindByEmail(email string) (*User, error)
-}
-
-type EmailValidator interface {
-    IsValid(email string) bool
-}
-
-func (s *UserService) CreateUser(req CreateUserRequest) (*User, error) {
-    // Validation
-    if req.Name == "" {
-        return nil, errors.New("name is required")
-    }
-    
-    if !s.validator.IsValid(req.Email) {
-        return nil, errors.New("invalid email")
-    }
-    
-    // Check if user exists
-    existing, _ := s.repo.FindByEmail(req.Email)
-    if existing != nil {
-        return nil, errors.New("user already exists")
-    }
-    
-    // Create user
-    user := &User{
-        ID:    generateID(),
-        Name:  req.Name,
-        Email: req.Email,
-    }
-    
-    if err := s.repo.Save(user); err != nil {
-        return nil, err
-    }
-    
-    return user, nil
-}
-```
-
-</div>
-
-<div>
-
-#### Unit test with mocks
-```go
-package user
-
-import (
-    "testing"
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/mock"
-)
-
-type MockUserRepository struct {
-    mock.Mock
-}
-
-func (m *MockUserRepository) Save(user *User) error {
-    args := m.Called(user)
-    return args.Error(0)
-}
-
-func (m *MockUserRepository) FindByEmail(email string) (*User, error) {
-    args := m.Called(email)
-    return args.Get(0).(*User), args.Error(1)
-}
-
-type MockEmailValidator struct {
-    mock.Mock
-}
-
-func (m *MockEmailValidator) IsValid(email string) bool {
-    args := m.Called(email)
-    return args.Bool(0)
-}
-
-func TestUserService_CreateUser_Success(t *testing.T) {
-    // Arrange
-    mockRepo := new(MockUserRepository)
-    mockValidator := new(MockEmailValidator)
-    
-    service := &UserService{
-        repo: mockRepo,
-        validator: mockValidator,
-    }
-    
-    req := CreateUserRequest{
-        Name:  "John Doe",
-        Email: "john@example.com",
-    }
-    
-    mockValidator.On("IsValid", "john@example.com").Return(true)
-    mockRepo.On("FindByEmail", "john@example.com").Return((*User)(nil), errors.New("not found"))
-    mockRepo.On("Save", mock.AnythingOfType("*User")).Return(nil)
-    
-    // Act
-    user, err := service.CreateUser(req)
-    
-    // Assert
-    assert.NoError(t, err)
-    assert.Equal(t, "John Doe", user.Name)
-    assert.Equal(t, "john@example.com", user.Email)
-    mockRepo.AssertExpectations(t)
-    mockValidator.AssertExpectations(t)
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Integration testing with test containers
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Test with real database
-```go
-package user
-
-import (
-    "testing"
-    "github.com/testcontainers/testcontainers-go"
-    "github.com/testcontainers/testcontainers-go/modules/postgres"
-)
-
-func TestUserService_Integration(t *testing.T) {
-    // Start PostgreSQL container
-    ctx := context.Background()
-    pgContainer, err := postgres.RunContainer(ctx,
-        testcontainers.WithImage("postgres:15"),
-        postgres.WithDatabase("testdb"),
-        postgres.WithUsername("testuser"),
-        postgres.WithPassword("testpass"),
-    )
-    require.NoError(t, err)
-    defer pgContainer.Terminate(ctx)
-    
-    // Get connection string
-    connStr, err := pgContainer.ConnectionString(ctx)
-    require.NoError(t, err)
-    
-    // Setup database
-    db, err := sql.Open("postgres", connStr)
-    require.NoError(t, err)
-    defer db.Close()
-    
-    // Run migrations
-    err = runMigrations(db)
-    require.NoError(t, err)
-    
-    // Create service with real repository
-    repo := NewPostgresUserRepository(db)
-    validator := NewEmailValidator()
-    service := &UserService{
-        repo: repo,
-        validator: validator,
-    }
-    
-    // Test
-    user, err := service.CreateUser(CreateUserRequest{
-        Name:  "John Doe",
-        Email: "john@example.com",
-    })
-    
-    assert.NoError(t, err)
-    assert.NotEmpty(t, user.ID)
-}
-```
-
-</div>
-
-<div>
-
-#### Test with external API
-```go
-func TestUserService_WithExternalEmailValidator(t *testing.T) {
-    // Start HTTP server mock
-    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        if r.URL.Path == "/validate" {
-            email := r.URL.Query().Get("email")
-            if email == "valid@example.com" {
-                w.WriteHeader(http.StatusOK)
-                json.NewEncoder(w).Encode(map[string]bool{"valid": true})
-            } else {
-                w.WriteHeader(http.StatusOK)
-                json.NewEncoder(w).Encode(map[string]bool{"valid": false})
-            }
-        }
-    }))
-    defer server.Close()
-    
-    // Create service with HTTP email validator
-    validator := NewHTTPEmailValidator(server.URL)
-    service := &UserService{
-        repo: NewInMemoryUserRepository(),
-        validator: validator,
-    }
-    
-    // Test valid email
-    user, err := service.CreateUser(CreateUserRequest{
-        Name:  "John Doe",
-        Email: "valid@example.com",
-    })
-    assert.NoError(t, err)
-    assert.NotNil(t, user)
-    
-    // Test invalid email
-    _, err = service.CreateUser(CreateUserRequest{
-        Name:  "Jane Doe",
-        Email: "invalid@example.com",
-    })
-    assert.Error(t, err)
-    assert.Contains(t, err.Error(), "invalid email")
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Contract testing with Pact
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Consumer test (User Service)
-```go
-package user
-
-import (
-    "testing"
-    "github.com/pact-foundation/pact-go/dsl"
-)
-
-func TestUserService_GetUserFromOrderService(t *testing.T) {
-    // Create Pact
-    pact := &dsl.Pact{
-        Consumer: "UserService",
-        Provider: "OrderService",
-    }
-    defer pact.Teardown()
-    
-    // Define interaction
-    pact.
-        AddInteraction().
-        Given("user 123 exists").
-        UponReceiving("a request for user 123").
-        WithRequest(dsl.Request{
-            Method: "GET",
-            Path:   dsl.String("/users/123"),
-            Headers: dsl.MapMatcher{
-                "Content-Type": dsl.String("application/json"),
-            },
-        }).
-        WillRespondWith(dsl.Response{
-            Status: 200,
-            Headers: dsl.MapMatcher{
-                "Content-Type": dsl.String("application/json"),
-            },
-            Body: dsl.Match(&User{
-                ID:    "123",
-                Name:  "John Doe",
-                Email: "john@example.com",
-            }),
-        })
-    
-    // Test
-    err := pact.Verify(func() error {
-        client := NewOrderServiceClient(fmt.Sprintf("http://localhost:%d", pact.Server.Port))
-        user, err := client.GetUser("123")
-        
-        assert.Equal(t, "123", user.ID)
-        assert.Equal(t, "John Doe", user.Name)
-        return err
-    })
-    
-    assert.NoError(t, err)
-}
-```
-
-</div>
-
-<div>
-
-#### Provider test (Order Service)
-```go
-package order
-
-import (
-    "testing"
-    "github.com/pact-foundation/pact-go/dsl"
-)
-
-func TestOrderService_PactProvider(t *testing.T) {
-    // Setup test server
-    server := setupTestServer()
-    defer server.Close()
-    
-    // Create provider verifier
-    pact := &dsl.Pact{}
-    
-    // Verify against consumer contracts
-    _, err := pact.VerifyProvider(t, dsl.VerifyRequest{
-        ProviderBaseURL:        server.URL,
-        PactURLs:              []string{"./pacts/userservice-orderservice.json"},
-        ProviderStatesSetupURL: server.URL + "/setup",
-        StateHandlers: dsl.StateHandlers{
-            "user 123 exists": func() error {
-                // Setup test data
-                return createTestUser("123", "John Doe", "john@example.com")
-            },
-        },
-    })
-    
-    assert.NoError(t, err)
-}
-
-func setupTestServer() *httptest.Server {
-    mux := http.NewServeMux()
-    
-    mux.HandleFunc("/users/123", func(w http.ResponseWriter, r *http.Request) {
-        user := User{
-            ID:    "123",
-            Name:  "John Doe", 
-            Email: "john@example.com",
-        }
-        json.NewEncoder(w).Encode(user)
-    })
-    
-    return httptest.NewServer(mux)
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Service deployment patterns
-
-<div class="slide-content">
-
-#### Blue-Green deployment
-```
-Production (Green)     Staging (Blue)
-     │                      │
-     ├── Load Balancer ─────┤
-     │                      │
-Service v1.0           Service v1.1
-   ↓                      ↓
-Database               Database
-   (shared or replicated)
-```
-
-#### Rolling deployment
-```
-Instances: [v1.0] [v1.0] [v1.0] [v1.0]
-Step 1:    [v1.1] [v1.0] [v1.0] [v1.0]  25% updated
-Step 2:    [v1.1] [v1.1] [v1.0] [v1.0]  50% updated
-Step 3:    [v1.1] [v1.1] [v1.1] [v1.0]  75% updated
-Step 4:    [v1.1] [v1.1] [v1.1] [v1.1]  100% updated
-```
-
-#### Canary deployment
-```
-Traffic Split:
-90% → Production (v1.0)
-10% → Canary (v1.1)
-
-If metrics good:
-80% → Production (v1.0)  
-20% → Canary (v1.1)
-
-Continue until:
-0% → Production (v1.0)
-100% → Canary (v1.1)
-```
-
-</div>
-
----
-
-# Monitoring and observability
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### The three pillars of observability
-```
-Metrics     Logs        Traces
-   │          │           │
-   ├── CPU ───┼── ERROR ──┼── Request
-   ├── Memory─┼── WARN ───┼── Journey
-   ├── Disk ──┼── INFO ───┼── Across
-   └── Network└── DEBUG ──┘── Services
-```
-
-#### Distributed tracing example
-```go
-import (
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/trace"
-)
-
-func (s *UserService) CreateUser(ctx context.Context, req CreateUserRequest) (*User, error) {
-    // Start span
-    tracer := otel.Tracer("user-service")
-    ctx, span := tracer.Start(ctx, "CreateUser")
-    defer span.End()
-    
-    // Add attributes
-    span.SetAttributes(
-        attribute.String("user.email", req.Email),
-        attribute.String("user.name", req.Name),
-    )
-    
-    // Validate (traced)
-    if err := s.validate(ctx, req); err != nil {
-        span.SetStatus(codes.Error, err.Error())
-        return nil, err
-    }
-    
-    // Save to database (traced)
-    user, err := s.repo.Save(ctx, req)
-    if err != nil {
-        span.SetStatus(codes.Error, err.Error())
-        return nil, err
-    }
-    
-    span.SetStatus(codes.Ok, "User created successfully")
-    return user, nil
-}
-```
-
-</div>
-
-<div>
-
-#### Custom metrics
-```go
-import (
-    "github.com/prometheus/client_golang/prometheus"
-    "github.com/prometheus/client_golang/prometheus/promauto"
-)
-
-var (
-    userCreationsTotal = promauto.NewCounterVec(
-        prometheus.CounterOpts{
-            Name: "user_creations_total",
-            Help: "Total number of user creations",
-        },
-        []string{"status"},
-    )
-    
-    userCreationDuration = promauto.NewHistogramVec(
-        prometheus.HistogramOpts{
-            Name: "user_creation_duration_seconds",
-            Help: "Duration of user creation operations",
-            Buckets: prometheus.DefBuckets,
-        },
-        []string{"status"},
-    )
-    
-    activeUsers = promauto.NewGauge(
-        prometheus.GaugeOpts{
-            Name: "active_users_total",
-            Help: "Total number of active users",
-        },
-    )
-)
-
-func (s *UserService) CreateUser(ctx context.Context, req CreateUserRequest) (*User, error) {
-    start := time.Now()
-    
-    user, err := s.createUser(ctx, req)
-    
-    // Record metrics
-    duration := time.Since(start).Seconds()
-    
-    if err != nil {
-        userCreationsTotal.WithLabelValues("error").Inc()
-        userCreationDuration.WithLabelValues("error").Observe(duration)
-    } else {
-        userCreationsTotal.WithLabelValues("success").Inc()
-        userCreationDuration.WithLabelValues("success").Observe(duration)
-        activeUsers.Inc()
-    }
-    
-    return user, err
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Health checks and circuit breakers
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Health check implementation
-```go
-type HealthChecker struct {
-    db    *sql.DB
-    redis *redis.Client
-    deps  []Dependency
-}
-
-type HealthStatus struct {
-    Status      string            `json:"status"`
-    Version     string            `json:"version"`
-    Uptime      string            `json:"uptime"`
-    Dependencies map[string]string `json:"dependencies"`
-}
-
-func (h *HealthChecker) Check() HealthStatus {
-    status := HealthStatus{
-        Status:       "healthy",
-        Version:      "1.0.0",
-        Uptime:       time.Since(startTime).String(),
-        Dependencies: make(map[string]string),
-    }
-    
-    // Check database
-    if err := h.db.Ping(); err != nil {
-        status.Status = "unhealthy"
-        status.Dependencies["database"] = "failed"
-    } else {
-        status.Dependencies["database"] = "healthy"
-    }
-    
-    // Check Redis
-    if err := h.redis.Ping().Err(); err != nil {
-        status.Status = "degraded"
-        status.Dependencies["cache"] = "failed"
-    } else {
-        status.Dependencies["cache"] = "healthy"
-    }
-    
-    // Check external dependencies
-    for _, dep := range h.deps {
-        if err := dep.HealthCheck(); err != nil {
-            status.Status = "degraded"
-            status.Dependencies[dep.Name] = "failed"
-        } else {
-            status.Dependencies[dep.Name] = "healthy"
-        }
-    }
-    
-    return status
-}
-```
-
-</div>
-
-<div>
-
-#### Circuit breaker pattern
-```go
-type CircuitBreaker struct {
-    maxFailures   int
-    resetTimeout  time.Duration
-    failures      int
-    lastFailTime  time.Time
-    state         CircuitState
-    mutex         sync.RWMutex
-}
-
-type CircuitState int
-
-const (
-    Closed CircuitState = iota  // Normal operation
-    Open                        // Failing, blocking calls
-    HalfOpen                   // Testing if service recovered
-)
-
-func (cb *CircuitBreaker) Call(fn func() error) error {
-    cb.mutex.RLock()
-    state := cb.state
-    failures := cb.failures
-    cb.mutex.RUnlock()
-    
-    // Circuit is open, reject immediately
-    if state == Open {
-        if time.Since(cb.lastFailTime) < cb.resetTimeout {
-            return errors.New("circuit breaker open")
-        }
-        // Try to half-open
-        cb.mutex.Lock()
-        cb.state = HalfOpen
-        cb.mutex.Unlock()
-    }
-    
-    // Execute function
-    err := fn()
-    
-    cb.mutex.Lock()
-    defer cb.mutex.Unlock()
-    
-    if err != nil {
-        cb.failures++
-        cb.lastFailTime = time.Now()
-        
-        if cb.failures >= cb.maxFailures {
-            cb.state = Open
-        }
-        return err
-    }
-    
-    // Success - reset circuit
-    cb.failures = 0
-    cb.state = Closed
-    return nil
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Security considerations
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Service-to-service authentication
-```go
-import (
-    "github.com/golang-jwt/jwt/v4"
-)
-
-type ServiceClaims struct {
-    ServiceName string `json:"service_name"`
-    Permissions []string `json:"permissions"`
-    jwt.StandardClaims
-}
-
-func (s *AuthMiddleware) ValidateServiceToken(token string) (*ServiceClaims, error) {
-    claims := &ServiceClaims{}
-    
-    _, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-        return s.jwtSecret, nil
-    })
-    
-    if err != nil {
-        return nil, err
-    }
-    
-    // Validate service permissions
-    if !s.hasPermission(claims.ServiceName, claims.Permissions) {
-        return nil, errors.New("insufficient permissions")
-    }
-    
-    return claims, nil
-}
-
-func (s *AuthMiddleware) ServiceAuthMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        token := r.Header.Get("Authorization")
-        if token == "" {
-            http.Error(w, "Missing authorization", http.StatusUnauthorized)
-            return
-        }
-        
-        claims, err := s.ValidateServiceToken(strings.TrimPrefix(token, "Bearer "))
-        if err != nil {
-            http.Error(w, "Invalid token", http.StatusUnauthorized)
-            return
-        }
-        
-        // Add service info to context
-        ctx := context.WithValue(r.Context(), "service", claims.ServiceName)
-        next.ServeHTTP(w, r.WithContext(ctx))
-    })
-}
-```
-
-</div>
-
-<div>
-
-#### Input validation and sanitization
-```go
-import (
-    "github.com/go-playground/validator/v10"
-    "html"
-    "regexp"
-)
-
-type CreateUserRequest struct {
-    Name  string `json:"name" validate:"required,min=2,max=50"`
-    Email string `json:"email" validate:"required,email"`
-    Age   int    `json:"age" validate:"min=0,max=120"`
-}
-
-type Validator struct {
-    validator *validator.Validate
-}
-
-func NewValidator() *Validator {
-    v := validator.New()
-    
-    // Custom validation for phone numbers
-    v.RegisterValidation("phone", validatePhone)
-    
-    return &Validator{validator: v}
-}
-
-func (v *Validator) ValidateStruct(s interface{}) error {
-    return v.validator.Struct(s)
-}
-
-func validatePhone(fl validator.FieldLevel) bool {
-    phone := fl.Field().String()
-    phoneRegex := regexp.MustCompile(`^\+?[1-9]\d{1,14}$`)
-    return phoneRegex.MatchString(phone)
-}
-
-func (s *UserService) CreateUser(req CreateUserRequest) (*User, error) {
-    // Validate input
-    if err := s.validator.ValidateStruct(req); err != nil {
-        return nil, fmt.Errorf("validation failed: %w", err)
-    }
-    
-    // Sanitize input
-    req.Name = html.EscapeString(strings.TrimSpace(req.Name))
-    req.Email = strings.ToLower(strings.TrimSpace(req.Email))
-    
-    // Additional business validation
-    if s.isEmailBlacklisted(req.Email) {
-        return nil, errors.New("email domain not allowed")
-    }
-    
-    return s.createUser(req)
-}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# What we've learned about gRPC & microservices
-
-<div class="slide-content">
-
-## gRPC Architecture & Design
-- **Internal vs External APIs**: Why gRPC for services, HTTP for external clients
-- **Performance benefits**: 87% smaller payloads, 5-7x faster serialization
-- **Decision matrix**: When to use gRPC vs HTTP/REST APIs
-- **Hybrid architecture**: External HTTP layer with internal gRPC communication
-
-## gRPC Microservices Implementation
-- **User Service**: Complete CRUD operations with validation and database integration
-- **Order Service**: Inter-service communication with user validation via gRPC
-- **Notification Service**: Real-time streaming notifications to connected clients
-- **Service composition**: Building complex workflows across multiple services
-
-## gRPC Advanced Features
-- **Middleware & Interceptors**: Authentication, logging, and metrics collection
-- **Connection management**: Production-ready client pools and keepalive settings
-- **Streaming patterns**: Server, client, and bidirectional streaming implementations
-- **Error handling**: gRPC status codes and structured error responses
-
-</div>
-
----
-
-# What we've learned about microservices systems
-
-<div class="slide-content">
-
-## Database Design & Data Consistency
-- **Database per Service**: Independent data stores for service autonomy
-- **Saga Pattern**: Distributed transaction management with compensation
-- **Event Sourcing**: Complete audit trail and time-travel capabilities
-- **CQRS**: Separate read and write models for optimal performance
-
-## API Design & Versioning
-- **Versioning strategies**: URL, header, and semantic versioning approaches
-- **Backward compatibility**: Additive changes and deprecation strategies
-- **Breaking changes**: Graceful migration and sunset policies
-- **Contract management**: Clear API contracts and change procedures
-
-## Testing Strategies
-- **Testing pyramid**: Unit, integration, contract, and E2E testing
-- **Test containers**: Integration testing with real dependencies
-- **Contract testing**: API contract verification between services
-- **Mocking strategies**: Isolation and dependency management
-
-</div>
-
----
-
-# What we've learned (continued)
-
-<div class="slide-content">
-
-## Deployment & Operations
-- **Deployment patterns**: Blue-green, rolling, and canary deployments
-- **Health checks**: Service health monitoring and dependency checking
-- **Circuit breakers**: Failure isolation and graceful degradation
-- **Load balancing**: Traffic distribution and service discovery
-
-## Monitoring & Observability
-- **Three pillars**: Metrics, logs, and distributed tracing
-- **Custom metrics**: Business and technical metrics collection
-- **Distributed tracing**: Request journey across service boundaries
-- **Alerting**: Proactive monitoring and incident response
-
-## Security & Governance
-- **Service authentication**: JWT tokens and service-to-service auth
-- **Input validation**: Request sanitization and validation strategies
-- **Security boundaries**: Service isolation and permission management
-- **Compliance**: Audit trails and regulatory requirements
+1. **HTTP/JSON**: Simple, widely supported, and easy to debug, but inefficient for real-time or high-frequency communication due to overhead and latency.
+2. **WebSocket**: Enables instant, bidirectional communication over a single persistent connection—ideal for chat, gaming, and live updates.
+3. **gRPC**: High-performance, type-safe, binary protocol for service-to-service communication; supports streaming and is much more efficient than JSON over HTTP.
+4. **WebRTC**: Peer-to-peer protocol for real-time audio, video, and data; offloads bandwidth from servers and provides end-to-end encryption by default.
+5. **Protocol selection**: Choose the right protocol for your use case—HTTP for APIs, WebSocket for real-time, gRPC for microservices, WebRTC for direct media/data between users.
+6. **Hybrid architectures**: Combine protocols (e.g., HTTP for external clients, gRPC/WebSocket/WebRTC internally) for optimal performance and scalability.
+7. **Versioning and compatibility**: Use versioning strategies (URL, header, proto package) to evolve APIs and maintain backward compatibility.
 
 </div>
 
@@ -3197,7 +1998,6 @@ func (s *UserService) CreateUser(req CreateUserRequest) (*User, error) {
 **Resources:**
 - gRPC Documentation: https://grpc.io/docs/
 - WebSocket RFC: https://tools.ietf.org/html/rfc6455
-- Kubernetes Documentation: https://kubernetes.io/docs/
 - Microservices Patterns: https://microservices.io/patterns/
 - Course Repository: https://github.com/timur-harin/sum25-go-flutter-course
 
@@ -3209,4 +2009,4 @@ func (s *UserService) CreateUser(req CreateUserRequest) (*User, error) {
 
 ## Questions?
 
-</div> 
+</div>
