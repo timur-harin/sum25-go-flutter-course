@@ -31,4 +31,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages                # <-- вот это добавь
           publish_dir: labs/lab07/frontend/build/web
