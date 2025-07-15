@@ -94,8 +94,37 @@ class AuthService {
   // - Return AuthResult.success on successful authentication
   // - Return AuthResult.networkError if any exception occurs during the process
   Future<AuthResult> login(String email, String password) async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService login not implemented');
+    // TODO: Обернуть весь процесс в try/catch, чтобы возвращать networkError при исключениях
+    try {
+      if (FormValidator.validateEmail(email) != null || FormValidator.validatePassword(password) != null) {
+        return AuthResult.validationError;
+      }
+      // TODO: Санитизировать email через FormValidator.sanitizeText
+      email = FormValidator.sanitizeText(email);
+
+      final user = await _userRepository.findByEmail(email);
+      if (user == null) {
+        return AuthResult.invalidCredentials;
+      }
+
+      final passwordOk = await _userRepository.verifyPassword(email, password);
+      if (!passwordOk) {
+        return AuthResult.invalidCredentials;
+      }
+
+      final token = _jwtService.generateToken(user.id.toString(), user.email);
+
+      _currentState = _currentState.copyWith(
+        isAuthenticated: true,
+        currentUser: user,
+        token: token,
+        loginTime: DateTime.now(),
+      );
+
+      return AuthResult.success;
+    } catch (e) {
+      return AuthResult.networkError;
+    }
   }
 
   // TODO: Implement logout method
@@ -105,8 +134,7 @@ class AuthService {
   // - This should clear isAuthenticated, currentUser, token, and loginTime
   // - Method should complete without throwing exceptions
   Future<void> logout() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService logout not implemented');
+    _currentState = const AuthState();
   }
 
   // TODO: Implement isSessionValid method
@@ -118,8 +146,11 @@ class AuthService {
   // - Return true if session duration is less than 24 hours
   // - Return false if session has expired (24+ hours)
   bool isSessionValid() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService isSessionValid not implemented');
+    if (!_currentState.isAuthenticated) return false;
+    if (_currentState.loginTime == null) return false;
+    final now = DateTime.now();
+    final diff = now.difference(_currentState.loginTime!);
+    return diff.inHours < 24;
   }
 
   // TODO: Implement refreshAuth method
@@ -132,8 +163,16 @@ class AuthService {
   // - Return true if session and token are valid
   // - Handle any exceptions and return false if errors occur
   Future<bool> refreshAuth() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService refreshAuth not implemented');
+    if (!isSessionValid()) {
+      await logout();
+      return false;
+    }
+    final token = _currentState.token;
+    if (token == null || !_jwtService.validateToken(token)) {
+      await logout();
+      return false;
+    }
+    return true;
   }
 
   // TODO: Implement getUserInfo method
@@ -147,8 +186,14 @@ class AuthService {
   //   - 'loginTime': _currentState.loginTime?.toIso8601String() (convert to string or null)
   //   - 'sessionValid': result of calling isSessionValid()
   Map<String, dynamic>? getUserInfo() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService getUserInfo not implemented');
+    if (!_currentState.isAuthenticated || _currentState.currentUser == null) return null;
+    return {
+      'id': _currentState.currentUser!.id,
+      'name': _currentState.currentUser!.name,
+      'email': _currentState.currentUser!.email,
+      'loginTime': _currentState.loginTime?.toIso8601String(),
+      'sessionValid': isSessionValid(),
+    };
   }
 }
 

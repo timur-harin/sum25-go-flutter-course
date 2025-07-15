@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"regexp"
 	"time"
 )
 
@@ -32,6 +34,13 @@ func (u *User) Validate() error {
 	// - Name should not be empty and should be at least 2 characters
 	// - Email should be valid format
 	// Return appropriate errors if validation fails
+	if u.Name == "" || len(u.Name) < 2 {
+		return errors.New("name is too short or empty")
+	}
+	emailRegexp := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$`)
+	if !emailRegexp.MatchString(u.Email) || u.Email == "" {
+		return errors.New("email is invalid")
+	}
 	return nil
 }
 
@@ -41,6 +50,13 @@ func (req *CreateUserRequest) Validate() error {
 	// - Name should not be empty and should be at least 2 characters
 	// - Email should be valid format and not empty
 	// Return appropriate errors if validation fails
+	if req.Name == "" || len(req.Name) < 2 {
+		return errors.New("name is too short or empty")
+	}
+	emailRegexp := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$`)
+	if !emailRegexp.MatchString(req.Email) || req.Email == "" {
+		return errors.New("email is invalid")
+	}
 	return nil
 }
 
@@ -48,13 +64,23 @@ func (req *CreateUserRequest) Validate() error {
 func (req *CreateUserRequest) ToUser() *User {
 	// TODO: Convert CreateUserRequest to User
 	// Set timestamps to current time
-	return nil
+	user := &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	return user
 }
 
 // TODO: Implement ScanRow method for User
 func (u *User) ScanRow(row *sql.Row) error {
 	// TODO: Scan database row into User struct
 	// Handle the case where row might be nil
+	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -62,5 +88,10 @@ func (u *User) ScanRow(row *sql.Row) error {
 func ScanUsers(rows *sql.Rows) ([]User, error) {
 	// TODO: Scan multiple database rows into User slice
 	// Make sure to close rows and handle errors properly
-	return nil, nil
+	var users []User
+	err := rows.Scan(&users[0].ID, &users[0].Name, &users[0].CreatedAt, &users[0].UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
