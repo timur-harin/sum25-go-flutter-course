@@ -4,6 +4,7 @@
 # Final image
 # TODO: Add final image instructions
 
+
 # ----------- Build stage -----------
 FROM golang:1.22 AS builder
 
