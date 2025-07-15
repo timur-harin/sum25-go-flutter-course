@@ -3,10 +3,9 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches:
-      - main
       - lab07-laptev-arseniy
-  workflow_dispatch:
 
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -18,17 +17,20 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.5'
+          channel: stable
+          flutter-version: 3.32.5
 
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
 
+      - name: Create missing project files
+        run: flutter create . --platforms web
+        working-directory: labs/lab07/frontend
+
       - name: Build web
-        run: |
-          flutter create . --platforms web
-          flutter build web --release --base-href "/sum25-go-flutter-course/"
-        working-directory: labs/lab07/frontend/build/web
+        run: flutter build web --release --base-href /sum25-go-flutter-course/
+        working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
