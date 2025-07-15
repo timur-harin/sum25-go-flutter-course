@@ -20,6 +20,10 @@ jobs:
           channel: stable
           flutter-version: 3.32.4
 
+      - name: Create missing project files
+        run: flutter create .
+        working-directory: labs/lab07/frontend
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
