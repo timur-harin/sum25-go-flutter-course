@@ -3,7 +3,7 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches:
-      - main  # Запуск при пуше в main
+      - lab07-khusnutdinov-kamil
   workflow_dispatch:  # Возможность ручного запуска
 
 jobs:
