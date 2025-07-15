@@ -31,3 +31,4 @@ jobs:
         with:
           personal_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: labs/lab07/frontend/build/web
+          publish_branch: gh-pages
