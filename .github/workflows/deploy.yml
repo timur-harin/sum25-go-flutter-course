@@ -25,8 +25,8 @@ jobs:
 
       - name: Build web
         run: |
-          flutter create . --platforms web
-          flutter build web --release --base-href /sum25-go-flutter-course/
+          flutter create .
+          flutter build web --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
