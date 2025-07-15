@@ -26,6 +26,12 @@ jobs:
           ls -la labs/lab07/frontend/lib
           cat labs/lab07/frontend/pubspec.yaml
 
+      - name: Flutter doctor & version (debug)
+        run: |
+          flutter --version
+          flutter doctor -v
+          cat labs/lab07/frontend/pubspec.lock || echo "No pubspec.lock"
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
