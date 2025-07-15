@@ -3,9 +3,8 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   # TODO: Add condition
   push:
-    branches: [ lab07-mayorov-daniil ]
-  pull_request:
-    branches: [ main ]  
+    branches: 
+      - lab07-mayorov-daniil
   workflow_dispatch:
 
 jobs:
@@ -16,9 +15,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Flutter
-        run: git clone https://github.com/flutter/flutter.git -b stable --depth 1
-              echo "$GITHUB_WORKSPACE/flutter/bin" >> $GITHUB_PATH
-
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.32.4
 
       - name: Install dependencies
         run: flutter pub get
