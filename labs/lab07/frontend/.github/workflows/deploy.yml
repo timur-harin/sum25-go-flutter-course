@@ -4,7 +4,7 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - lab07-mashchenko-pavel
 
   workflow_dispatch:
 
