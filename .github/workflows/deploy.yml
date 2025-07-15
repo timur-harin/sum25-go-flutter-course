@@ -3,7 +3,7 @@ name: Deploy Flutter to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - lab07-blinov-aleksandr
 
 jobs:
   build-and-deploy:
