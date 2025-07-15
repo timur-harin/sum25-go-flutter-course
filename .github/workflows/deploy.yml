@@ -1,4 +1,4 @@
-name: Deploy Flutter Web to GitHub Pages
+name: Lab 07 - Deploy Flutter Web to GitHub Pages
 
 on:
   push:
@@ -25,11 +25,7 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web
-        working-directory: labs/lab07/frontend
-
-      - name: List build output
-        run: ls -la build/web/
+        run: flutter build web --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
