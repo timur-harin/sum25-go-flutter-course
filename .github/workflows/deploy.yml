@@ -15,20 +15,19 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'  # or 'beta', 'dev' depending on your needs
+          channel: 'stable'
+          flutter-version: '3.22.1'
 
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter create . --platforms web
-          flutter build web --base-href /sum25-go-flutter-course/
+        run: flutter build web --release --base-href /${{ github.event.repository.name }}/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: labs/lab07/frontend/build/web
-          keep_files: false  # Set to true if you want to keep previous files
+          publish_dir: ./labs/lab07/frontend/build/web
