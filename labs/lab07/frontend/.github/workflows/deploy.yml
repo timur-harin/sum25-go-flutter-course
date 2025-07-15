@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main 
-      - lab07-ramazanov-ilnur
+      
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch: 
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build web
         # Build the Flutter web application for GitHub Pages
-        run: flutter build web --base-href /sum25-go-flutter-course/labs/lab07/frontend/
+        run: flutter build web --base-href /sum25-go-flutter-course/ --release
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
