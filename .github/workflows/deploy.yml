@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lab07-mukhin-ilya
 
 jobs:
   build-and-deploy:
