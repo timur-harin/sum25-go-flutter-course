@@ -1,9 +1,9 @@
 name: Deploy Flutter Web to GitHub Pages
 
 on:
-  # TODO: Add condition
-    
-  workflow_dispatch:
+  push:
+    branches: [main]  # Trigger on pushes to main branch
+  workflow_dispatch:   # Allow manual triggers from GitHub UI
 
 jobs:
   build-and-deploy:
@@ -13,16 +13,27 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Flutter
-        run: #TODO: Add command
+        run: |
+          # Install Flutter SDK
+          git clone https://github.com/flutter/flutter.git -b stable --depth 1
+          echo "$GITHUB_WORKSPACE/flutter/bin" >> $GITHUB_PATH
+          flutter config --enable-web
+          flutter doctor -v
 
       - name: Install dependencies
-        run: #TODO: Add command
+        run: flutter pub get
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: #TODO: Add command
+        run: flutter build web --release --base-href "/${{ github.event.sum25-go-flutter-course }}/"
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
-        # TODO: add other and setup repository 
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Automatic authentication
+          publish_dir: labs/lab07/frontend/build/web  # Built artifacts location
+          keep_files: false  # Clean existing files before deploy
+          # Repository settings (optional but recommended)
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
