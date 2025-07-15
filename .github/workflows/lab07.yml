@@ -9,10 +9,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v3  # Checkout code
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2  # Install Flutter
         with:
-          flutter-version: 'stable'
-      - uses: bluefireteam/flutter-gh-pages@v9
+          flutter-version: '3.x'  # Use a stable version
+          channel: 'stable'
+
+      - name: Enable web
+        run: flutter config --enable-web
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --base-href /<repository-name>/ --release  # Replace with your repo name
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3  # Deploy to gh-pages branch
         with:
-          baseHref: /sum25-go-flutter-course/
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web
