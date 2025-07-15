@@ -20,6 +20,12 @@ jobs:
         with:
           flutter-version: '3.22.1'
 
+      - name: Show frontend directory contents (debug)
+        run: |
+          ls -la labs/lab07/frontend
+          ls -la labs/lab07/frontend/lib
+          cat labs/lab07/frontend/pubspec.yaml
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
