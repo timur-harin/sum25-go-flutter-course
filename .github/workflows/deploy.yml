@@ -52,7 +52,7 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --web-render html
         working-directory: labs/lab07/frontend
         
       - name: Check build output (debug)
