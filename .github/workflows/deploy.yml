@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lab07-shchipanov-danila
   workflow_dispatch:
 
 jobs:
