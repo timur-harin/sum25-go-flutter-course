@@ -23,7 +23,7 @@ jobs:
 
       - name: Build web
         run: flutter build web --release --web-renderer html
-        working-directory: labs/lab07/frontend
+        working-directory: labs/lab07/frontend/lib/main.dart
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
