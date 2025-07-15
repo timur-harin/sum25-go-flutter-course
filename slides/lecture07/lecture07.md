@@ -302,38 +302,30 @@ go tool dist list
 <div class="code-columns">
 <div>
 
-#### Build script example
+#### Build script example (build.sh)
 ```bash
 #!/bin/bash
-# scripts/build.sh
-
 VERSION=$(git describe --tags --always)
 BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
 COMMIT_HASH=$(git rev-parse HEAD)
-
 LDFLAGS="-s -w \
   -X main.version=${VERSION} \
   -X main.buildTime=${BUILD_TIME} \
   -X main.commitHash=${COMMIT_HASH}"
-
 echo "Building version: ${VERSION}"
 
 # Build for multiple platforms
-platforms=("linux/amd64" "darwin/amd64" "windows/amd64")
-
+platforms=("linux/amd64" "darwin/amd64" "windows/amd64") # can have more
 for platform in "${platforms[@]}"; do
   GOOS=${platform%/*}
   GOARCH=${platform#*/}
   output="dist/myapp-${GOOS}-${GOARCH}"
-  
   if [ "$GOOS" = "windows" ]; then
     output+=".exe"
   fi
-  
   GOOS=$GOOS GOARCH=$GOARCH go build \
     -ldflags "${LDFLAGS}" \
     -o "$output" ./cmd/server
-    
   echo "Built: $output"
 done
 ```
@@ -346,26 +338,22 @@ done
 ```go
 // cmd/server/main.go
 package main
-
 import (
     "fmt"
     "log"
     "runtime"
 )
-
 var (
     version    string = "dev"
     buildTime  string = "unknown"
     commitHash string = "unknown"
 )
-
 func main() {
     fmt.Printf("App Version: %s\n", version)
     fmt.Printf("Build Time: %s\n", buildTime)
     fmt.Printf("Commit: %s\n", commitHash)
     fmt.Printf("Go Version: %s\n", runtime.Version())
-    fmt.Printf("Platform: %s/%s\n", runtime.GOOS, runtime.GOARCH)
-    
+    fmt.Printf("Platform: %s/%s\n", runtime.GOOS, runtime.GOARCH)  
     // Start your application
     startServer()
 }
@@ -403,6 +391,11 @@ flutter build ios --release
 flutter build web --release
 ```
 
+</div>
+
+<div>
+
+
 #### Platform-specific builds
 ```bash
 # Android
@@ -420,6 +413,18 @@ flutter build web --web-renderer canvaskit  # CanvasKit
 
 </div>
 
+</div>
+
+</div>
+
+---
+
+# Flutter build flavors
+
+<div class="slide-content">
+
+<div class="code-columns">
+
 <div>
 
 #### Build configuration
@@ -430,7 +435,6 @@ flutter:
   assets:
     - assets/images/
     - assets/configs/
-
 # Build flavors
 flutter:
   flavors:
@@ -446,6 +450,11 @@ flutter:
         bundleId: "com.example.app"
 ```
 
+</div>
+
+<div>
+
+#### Build flavors
 ```bash
 # Build with flavor
 flutter build apk --flavor development
@@ -460,7 +469,7 @@ flutter build apk --flavor production --release
 
 ---
 
-# Build artifacts and versioning
+# Go build artifacts and versioning
 
 <div class="slide-content">
 
@@ -478,26 +487,29 @@ dist/
 └── release-notes.md            # Version information
 ```
 
+</div>
+
+<div>
+
 #### Makefile for consistent builds
 ```makefile
-# Makefile
 VERSION := $(shell git describe --tags --always)
 LDFLAGS := -s -w -X main.version=$(VERSION)
 
 .PHONY: build
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/myapp ./cmd/server
-
 .PHONY: build-all
 build-all:
-	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/myapp-linux ./cmd/server
-	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/myapp-darwin ./cmd/server
-	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/myapp.exe ./cmd/server
-
+	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" 
+    -o dist/myapp-linux ./cmd/server
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" 
+    -o dist/myapp-darwin ./cmd/server
+	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" 
+    -o dist/myapp.exe ./cmd/server
 .PHONY: test
 test:
 	go test -v ./...
-
 .PHONY: clean
 clean:
 	rm -rf dist/ bin/
@@ -505,9 +517,21 @@ clean:
 
 </div>
 
+</div>
+
+</div>
+
+
+---
+
+# Flutter version management
+
+<div class="slide-content">
+
+<div class="code-columns">
 <div>
 
-#### Flutter version management
+
 ```yaml
 # pubspec.yaml
 name: myapp
@@ -518,6 +542,10 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
   flutter: ">=3.10.0"
 ```
+
+</div>
+
+<div>
 
 ```dart
 // lib/config/app_config.dart
@@ -563,270 +591,44 @@ class AppConfig {
 - **GitHub Actions**: Integrated with GitHub repositories
 - **GitLab CI/CD**: Built into GitLab platform
 - **Jenkins**: Self-hosted, highly customizable
-- **CircleCI**: Cloud-based with Docker support
 - **Azure DevOps**: Microsoft's complete DevOps platform
 
 </div>
 
 ---
 
-# GitHub Actions for Go
-
 <div class="slide-content">
 
 <div class="code-columns">
 <div>
 
-#### Basic Go workflow
-```yaml
-# .github/workflows/go.yml
-name: Go CI/CD
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-  release:
-    types: [ created ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-        
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        
-    - name: Download dependencies
-      run: go mod download
-      
-    - name: Run tests
-      run: go test -v -race -coverprofile=coverage.out ./...
-      
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-```
+#### Typical steps for Go
+1.**Checkout code**: Retrieve source from version control
+2.**Set up Go environment**: Install Go toolchain and dependencies
+3.**Dependency caching**: Speed up builds by caching modules
+4.**Static analysis**: Run `go vet`, `golint`, or similar tools
+5.**Run tests**: Execute unit/integration tests with coverage
+6.**Build binaries**: Compile for target platforms (cross-compile if needed)
+7.**Security checks**: Scan for vulnerabilities (e.g., `gosec`)
+8.**Build Docker image**: Package app for deployment
+9.**Publish artifacts**: Upload binaries/images to registry or storage
+10.**Deploy**: Roll out to staging/production environments
 
 </div>
 
 <div>
 
-#### Multi-platform build job
-```yaml
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-        
-    - name: Build binary
-      env:
-        GOOS: ${{ matrix.goos }}
-        GOARCH: ${{ matrix.goarch }}
-      run: |
-        BINARY_NAME=myapp-${{ matrix.goos }}-${{ matrix.goarch }}
-        if [ "${{ matrix.goos }}" = "windows" ]; then
-          BINARY_NAME+=.exe
-        fi
-        go build -ldflags "-s -w" -o $BINARY_NAME ./cmd/server
-        
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: binaries
-        path: myapp-*
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# GitHub Actions for Flutter
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Flutter CI workflow
-```yaml
-# .github/workflows/flutter.yml
-name: Flutter CI/CD
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.13.0'
-        channel: 'stable'
-        
-    - name: Install dependencies
-      run: flutter pub get
-      
-    - name: Run analyzer
-      run: flutter analyze
-      
-    - name: Run tests
-      run: flutter test --coverage
-      
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-      with:
-        file: coverage/lcov.info
-```
-
-</div>
-
-<div>
-
-#### Android build and deployment
-```yaml
-  build-android:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.13.0'
-        
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
-        
-    - name: Decode signing key
-      run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
-        
-    - name: Create key.properties
-      run: |
-        echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
-        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-        echo "storeFile=keystore.jks" >> android/key.properties
-        
-    - name: Build APK
-      run: flutter build apk --release
-      
-    - name: Build App Bundle
-      run: flutter build appbundle --release
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Advanced CI/CD patterns
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Matrix testing strategy
-```yaml
-# .github/workflows/matrix.yml
-jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        go-version: ['1.20', '1.21']
-        include:
-          - os: ubuntu-latest
-            go-version: '1.21'
-            coverage: true
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
-        
-    - name: Run tests
-      run: go test -v ./...
-      
-    - name: Run tests with coverage
-      if: matrix.coverage
-      run: go test -v -coverprofile=coverage.out ./...
-```
-
-</div>
-
-<div>
-
-#### Conditional deployment
-```yaml
-  deploy:
-    needs: [test, build]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: https://myapp.example.com
-    steps:
-    - name: Deploy to staging
-      if: contains(github.ref, 'develop')
-      run: echo "Deploying to staging"
-      
-    - name: Deploy to production
-      if: github.ref == 'refs/heads/main'
-      run: echo "Deploying to production"
-      
-    - name: Notify deployment
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-```
+#### Typical steps for Flutter
+1.**Checkout code**: Retrieve source from version control
+2.**Set up Flutter environment**: Install Flutter SDK and dependencies
+3.**Dependency caching**: Cache `pub` packages
+4.**Static analysis**: Run `flutter analyze` for code quality
+5.**Run tests**: Execute widget/unit/integration tests with coverage
+6.**Build artifacts**: Generate APK, AAB, IPA, or web assets
+7.**Code signing**: Apply signing keys/certificates for release builds
+8.**Build Docker image** (for web): Package static assets with Nginx
+9.**Publish artifacts**: Upload to Play Store, App Store, or web/CDN
+10.**Deploy**: Release to users or hosting platforms
 
 </div>
 
@@ -870,11 +672,9 @@ jobs:
 ```dockerfile
 # Dockerfile
 FROM golang:1.21-alpine AS builder
-
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
-
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags "-s -w" \
@@ -883,9 +683,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /root/
-
 COPY --from=builder /app/main .
-
 EXPOSE 8080
 CMD ["./main"]
 ```
@@ -898,37 +696,26 @@ CMD ["./main"]
 ```dockerfile
 # Dockerfile.optimized
 FROM golang:1.21-alpine AS builder
-
 # Install git for private modules
 RUN apk add --no-cache git
-
 WORKDIR /app
-
 # Copy dependency files first for better caching
 COPY go.mod go.sum ./
 RUN go mod download
-
 # Copy source code
 COPY . .
-
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags="-w -s -X main.version=${VERSION}" \
-    -a -installsuffix cgo \
-    -o main ./cmd/server
-
+    -ldflags="-w -s -X main.version=${VERSION}" -a -installsuffix cgo -o \
+    main ./cmd/server
 # Final stage
 FROM scratch
-
 # Add CA certificates for HTTPS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
 # Add timezone data
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-
 # Add binary
 COPY --from=builder /app/main /main
-
 EXPOSE 8080
 ENTRYPOINT ["/main"]
 ```
@@ -988,7 +775,8 @@ http {
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml 
+      application/xml+rss text/javascript;
 
     server {
         listen 80;
@@ -1025,12 +813,32 @@ http {
 <div class="code-columns">
 <div>
 
-#### Development setup
+#### Frontend service
 ```yaml
 # docker-compose.yml
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - node_modules:/app/node_modules
+    environment:
+      - API_URL=http://backend:8080
+    restart: unless-stopped
+```
+
+</div>
+
+<div>
+
+#### Backend service
+```yaml
   backend:
     build:
       context: ./backend
@@ -1050,26 +858,24 @@ services:
       - postgres
       - redis
     restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - node_modules:/app/node_modules
-    environment:
-      - API_URL=http://backend:8080
-    restart: unless-stopped
 ```
 
 </div>
 
+</div>
+
+</div>
+
+---
+
+# Docker Compose for development
+
+<div class="slide-content">
+
+<div class="code-columns">
 <div>
 
-#### Database and services
+#### Database and cache
 ```yaml
   postgres:
     image: postgres:15-alpine
@@ -1091,7 +897,14 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+```
 
+</div>
+
+<div>
+
+#### Nginx and volumes
+```yaml
   nginx:
     image: nginx:alpine
     ports:
@@ -1145,7 +958,8 @@ COPY --chown=appuser:appgroup --from=builder /app/main /main
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+  CMD wget --no-verbose --tries=1 \
+    --spider http://localhost:8080/health || exit 1
 ```
 
 </div>
@@ -1161,10 +975,8 @@ RUN apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 # Use .dockerignore
-# .dockerignore
 .git
 .gitignore
-README.md
 Dockerfile*
 docker-compose*
 .dockerignore
@@ -1173,17 +985,6 @@ coverage.txt
 *.md
 tests/
 .github/
-```
-
-```bash
-# Build with build context optimization
-docker build --no-cache -t myapp:latest .
-
-# Multi-platform builds
-docker buildx build --platform linux/amd64,linux/arm64 -t myapp:latest .
-
-# Scan for vulnerabilities
-docker scan myapp:latest
 ```
 
 </div>
@@ -1218,391 +1019,33 @@ docker scan myapp:latest
 
 ---
 
-# Basic Kubernetes manifests
 
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Deployment configuration
-```yaml
-# k8s/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myapp-backend
-  labels:
-    app: myapp-backend
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: myapp-backend
-  template:
-    metadata:
-      labels:
-        app: myapp-backend
-    spec:
-      containers:
-      - name: backend
-        image: myapp/backend:v1.0.0
-        ports:
-        - containerPort: 8080
-        env:
-        - name: DB_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: db-host
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: db-password
-        resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
-          requests:
-            cpu: 250m
-            memory: 256Mi
-```
-
-</div>
-
-<div>
-
-#### Service configuration
-```yaml
-# k8s/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: myapp-backend-service
-spec:
-  selector:
-    app: myapp-backend
-  ports:
-  - port: 80
-    targetPort: 8080
-    protocol: TCP
-  type: ClusterIP
-
----
-# k8s/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-data:
-  db-host: "postgres-service"
-  db-name: "myapp"
-  redis-url: "redis-service:6379"
-
----
-# k8s/secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: app-secrets
-type: Opaque
-data:
-  db-password: cGFzc3dvcmQxMjM=  # base64 encoded
-  jwt-secret: bXlzZWNyZXRrZXk=
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Ingress and external access
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Ingress configuration
-```yaml
-# k8s/ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: myapp-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/rate-limit: "100"
-spec:
-  tls:
-  - hosts:
-    - api.myapp.com
-    - myapp.com
-    secretName: myapp-tls
-  rules:
-  - host: api.myapp.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: myapp-backend-service
-            port:
-              number: 80
-  - host: myapp.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: myapp-frontend-service
-            port:
-              number: 80
-```
-
-</div>
-
-<div>
-
-#### Horizontal Pod Autoscaler
-```yaml
-# k8s/hpa.yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: myapp-backend-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: myapp-backend
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
-  behavior:
-    scaleUp:
-      stabilizationWindowSeconds: 60
-      policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15
-    scaleDown:
-      stabilizationWindowSeconds: 300
-      policies:
-      - type: Percent
-        value: 10
-        periodSeconds: 60
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Health checks and monitoring
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Pod health checks
-```yaml
-# Enhanced deployment with health checks
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myapp-backend
-spec:
-  template:
-    spec:
-      containers:
-      - name: backend
-        image: myapp/backend:v1.0.0
-        ports:
-        - containerPort: 8080
-        livenessProbe:
-          httpGet:
-            path: /health/live
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /health/ready
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 2
-        startupProbe:
-          httpGet:
-            path: /health/startup
-            port: 8080
-          failureThreshold: 30
-          periodSeconds: 10
-```
-
-</div>
-
-<div>
-
-#### Go health check endpoints
-```go
-// internal/handlers/health.go
-func HealthHandler(db *sql.DB, redis *redis.Client) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
-        health := map[string]interface{}{
-            "status":    "healthy",
-            "timestamp": time.Now().UTC(),
-            "version":   version,
-        }
-        
-        // Check database
-        if err := db.Ping(); err != nil {
-            health["status"] = "unhealthy"
-            health["database"] = "down"
-            w.WriteHeader(http.StatusServiceUnavailable)
-        } else {
-            health["database"] = "up"
-        }
-        
-        // Check Redis
-        if err := redis.Ping().Err(); err != nil {
-            health["status"] = "unhealthy"
-            health["redis"] = "down"
-            w.WriteHeader(http.StatusServiceUnavailable)
-        } else {
-            health["redis"] = "up"
-        }
-        
-        json.NewEncoder(w).Encode(health)
-    }
+<style scoped>
+img {
+  max-height: 600px !important;
+  max-width: 90% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
 }
-```
+</style>
 
-</div>
-
-</div>
-
-</div>
+![kubernetes](./assets/kuber.png)
 
 ---
 
-# Deployment strategies
+<style scoped>
+img {
+  max-height: 600px !important;
+  max-width: 90% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+</style>
 
-<div class="slide-content">
+![replicas](./assets/replicas.png)
 
-<div class="code-columns">
-<div>
-
-#### Rolling update strategy
-```yaml
-# k8s/deployment-rolling.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myapp-backend
-spec:
-  replicas: 5
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
-  template:
-    metadata:
-      annotations:
-        # Force pods to restart on config changes
-        configmap.reloader.stakater.com/reload: "app-config"
-    spec:
-      containers:
-      - name: backend
-        image: myapp/backend:v1.1.0
-        # Graceful shutdown
-        lifecycle:
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "sleep 15"]
-        terminationGracePeriodSeconds: 30
-```
-
-</div>
-
-<div>
-
-#### Blue-green deployment
-```yaml
-# Blue deployment (current)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myapp-backend-blue
-  labels:
-    version: blue
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: myapp-backend
-      version: blue
-
----
-# Green deployment (new)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myapp-backend-green
-  labels:
-    version: green
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: myapp-backend
-      version: green
-
----
-# Switch traffic by updating service selector
-apiVersion: v1
-kind: Service
-metadata:
-  name: myapp-backend-service
-spec:
-  selector:
-    app: myapp-backend
-    version: green  # Switch from blue to green
-```
-
-</div>
-
-</div>
-
-</div>
 
 ---
 
@@ -1621,7 +1064,6 @@ spec:
 | **Web Hosting** | Static files | Domain, SSL certificate |
 | **Microsoft Store** | MSIX | Microsoft Partner Center account |
 
-#### Key considerations
 - **Code signing**: Cryptographic verification of app authenticity
 - **App review**: Platform-specific guidelines and approval process
 - **Release management**: Staged rollouts and version control
@@ -1629,405 +1071,6 @@ spec:
 
 </div>
 
----
-
-# Android deployment setup
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Generate signing key
-```bash
-# Create keystore for app signing
-keytool -genkey -v -keystore ~/upload-keystore.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 \
-  -alias upload
-
-# Create key.properties file
-echo "storePassword=myStorePassword" > android/key.properties
-echo "keyPassword=myKeyPassword" >> android/key.properties
-echo "keyAlias=upload" >> android/key.properties
-echo "storeFile=/Users/username/upload-keystore.jks" >> android/key.properties
-```
-
-#### Configure build.gradle
-```gradle
-// android/app/build.gradle
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
-
-android {
-    signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword keystoreProperties['storePassword']
-        }
-    }
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-        }
-    }
-}
-```
-
-</div>
-
-<div>
-
-#### CI/CD for Play Store
-```yaml
-# .github/workflows/android-deploy.yml
-name: Deploy to Play Store
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.13.0'
-        
-    - name: Create key.properties
-      run: |
-        echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
-        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-        echo "storeFile=keystore.jks" >> android/key.properties
-        
-    - name: Decode keystore
-      run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
-      
-    - name: Build App Bundle
-      run: flutter build appbundle --release
-      
-    - name: Deploy to Play Store
-      uses: r0adkll/upload-google-play@v1
-      with:
-        serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-        packageName: com.example.myapp
-        releaseFiles: build/app/outputs/bundle/release/app-release.aab
-        track: production
-        status: completed
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# iOS deployment setup
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Certificate management
-```bash
-# Install certificates (manual)
-# 1. Download certificates from Apple Developer Portal
-# 2. Install in Keychain Access
-# 3. Create provisioning profiles
-
-# Or use Fastlane for automation
-gem install fastlane
-
-# Initialize Fastlane
-cd ios && fastlane init
-
-# Create Appfile
-echo "app_identifier 'com.example.myapp'" > fastlane/Appfile
-echo "apple_id 'your-apple-id@example.com'" >> fastlane/Appfile
-echo "team_id 'YOUR_TEAM_ID'" >> fastlane/Appfile
-```
-
-#### Fastlane configuration
-```ruby
-# ios/fastlane/Fastfile
-default_platform(:ios)
-
-platform :ios do
-  desc "Build and upload to App Store"
-  lane :release do
-    # Sync certificates and profiles
-    sync_code_signing(type: "appstore")
-    
-    # Build archive
-    build_app(
-      scheme: "Runner",
-      export_method: "app-store"
-    )
-    
-    # Upload to App Store Connect
-    upload_to_app_store(
-      skip_metadata: true,
-      skip_screenshots: true
-    )
-  end
-end
-```
-
-</div>
-
-<div>
-
-#### GitHub Actions for iOS
-```yaml
-# .github/workflows/ios-deploy.yml
-name: Deploy iOS to App Store
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  deploy:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.13.0'
-        
-    - name: Install Apple certificates
-      uses: apple-actions/import-codesign-certs@v2
-      with:
-        p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
-        p12-password: ${{ secrets.CERTIFICATES_PASSWORD }}
-        
-    - name: Install provisioning profile
-      uses: apple-actions/download-provisioning-profiles@v1
-      with:
-        bundle-id: com.example.myapp
-        issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-        api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-        api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
-        
-    - name: Build and deploy
-      run: |
-        flutter build ios --release --no-codesign
-        cd ios && fastlane release
-      env:
-        FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Web deployment strategies
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Static hosting (Netlify/Vercel)
-```yaml
-# netlify.toml
-[build]
-  publish = "build/web"
-  command = "flutter build web --release"
-
-[build.environment]
-  FLUTTER_VERSION = "3.13.0"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[headers]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-```
-
-#### CDN deployment
-```bash
-# Build for production
-flutter build web --release
-
-# Upload to AWS S3
-aws s3 sync build/web/ s3://my-flutter-app --delete
-
-# Invalidate CloudFront cache
-aws cloudfront create-invalidation \
-  --distribution-id E1234567890123 \
-  --paths "/*"
-```
-
-</div>
-
-<div>
-
-#### Docker deployment
-```dockerfile
-# Multi-stage Flutter web build
-FROM cirrusci/flutter:stable AS builder
-
-WORKDIR /app
-COPY pubspec.* ./
-RUN flutter pub get
-
-COPY . .
-RUN flutter build web --release
-
-FROM nginx:alpine
-COPY --from=builder /app/build/web /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-#### Kubernetes deployment
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: flutter-web
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: flutter-web
-  template:
-    metadata:
-      labels:
-        app: flutter-web
-    spec:
-      containers:
-      - name: flutter-web
-        image: myapp/flutter-web:latest
-        ports:
-        - containerPort: 80
-```
-
-</div>
-
-</div>
-
-</div>
-
----
-
-# Monitoring and observability
-
-<div class="slide-content">
-
-<div class="code-columns">
-<div>
-
-#### Application metrics
-```go
-// internal/monitoring/metrics.go
-import (
-    "github.com/prometheus/client_golang/prometheus"
-    "github.com/prometheus/client_golang/prometheus/promhttp"
-)
-
-var (
-    httpRequestsTotal = prometheus.NewCounterVec(
-        prometheus.CounterOpts{
-            Name: "http_requests_total",
-            Help: "Total number of HTTP requests",
-        },
-        []string{"method", "endpoint", "status"},
-    )
-    
-    httpRequestDuration = prometheus.NewHistogramVec(
-        prometheus.HistogramOpts{
-            Name: "http_request_duration_seconds",
-            Help: "HTTP request duration in seconds",
-        },
-        []string{"method", "endpoint"},
-    )
-)
-
-func init() {
-    prometheus.MustRegister(httpRequestsTotal)
-    prometheus.MustRegister(httpRequestDuration)
-}
-
-func MetricsHandler() http.Handler {
-    return promhttp.Handler()
-}
-```
-
-</div>
-
-<div>
-
-#### Logging setup
-```go
-// internal/logging/logger.go
-import (
-    "go.uber.org/zap"
-    "go.uber.org/zap/zapcore"
-)
-
-func NewLogger(level string, environment string) (*zap.Logger, error) {
-    var config zap.Config
-    
-    if environment == "production" {
-        config = zap.NewProductionConfig()
-        config.DisableStacktrace = true
-    } else {
-        config = zap.NewDevelopmentConfig()
-    }
-    
-    config.Level = zap.NewAtomicLevelAt(parseLevel(level))
-    config.EncoderConfig.TimeKey = "timestamp"
-    config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-    
-    return config.Build()
-}
-
-func parseLevel(level string) zapcore.Level {
-    switch level {
-    case "debug": return zapcore.DebugLevel
-    case "info": return zapcore.InfoLevel
-    case "warn": return zapcore.WarnLevel
-    case "error": return zapcore.ErrorLevel
-    default: return zapcore.InfoLevel
-    }
-}
-```
-
-</div>
-
-</div>
-
-</div>
 
 ---
 
@@ -2042,10 +1085,9 @@ func parseLevel(level string) zapcore.Level {
 - **Build automation**: Makefiles and scripts for consistent builds
 
 ## CI/CD Pipelines
-- **GitHub Actions**: Automated testing and deployment workflows
-- **Matrix strategies**: Testing across multiple platforms and versions
+- **Plan**: What are popular steps?
+- **Platforms**: GitHub Actions, GitLab CI/CD, Jenkins, CircleCI, Azure DevOps
 - **Conditional deployment**: Environment-specific release strategies
-- **Security**: Secrets management and secure artifact handling
 
 </div>
 
@@ -2064,13 +1106,9 @@ func parseLevel(level string) zapcore.Level {
 ## Kubernetes Orchestration
 - **Core concepts**: Pods, Deployments, Services, and Ingress
 - **Scaling**: Horizontal Pod Autoscaler and resource management
-- **Health monitoring**: Liveness, readiness, and startup probes
-- **Deployment strategies**: Rolling updates and blue-green deployments
 
 ## App Store Deployment
-- **Android**: Google Play Store publishing with AAB format
-- **iOS**: App Store Connect deployment with code signing
-- **Web deployment**: Static hosting, CDN, and containerized strategies
+- **Main steps**:What is the flow?
 
 </div>
 
