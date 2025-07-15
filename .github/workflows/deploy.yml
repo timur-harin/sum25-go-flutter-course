@@ -38,6 +38,11 @@ jobs:
       - name: Show Flutter devices (debug)
         run: flutter devices
 
+      - name: Create web directory if missing
+        run: |
+          cd labs/lab07/frontend
+          flutter create --platforms web .
+        
       - name: Install dependencies
         run: flutter pub get
         working-directory: labs/lab07/frontend
@@ -45,6 +50,11 @@ jobs:
       - name: Build web
         run: flutter build web --release
         working-directory: labs/lab07/frontend
+        
+      - name: Check build output (debug)
+        run: |
+          ls -la labs/lab07/frontend/build/web || echo "No build/web directory"
+          ls -la labs/lab07/frontend/build/web/index.html || echo "No index.html"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
