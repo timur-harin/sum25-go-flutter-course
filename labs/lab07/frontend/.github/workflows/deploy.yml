@@ -1,0 +1,28 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  # TODO: Add condition
+    
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        run: #TODO: Add command
+
+      - name: Install dependencies
+        run: #TODO: Add command
+        working-directory: labs/lab07/frontend
+
+      - name: Build web
+        run: #TODO: Add command
+        working-directory: labs/lab07/frontend
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        # TODO: add other and setup repository 
