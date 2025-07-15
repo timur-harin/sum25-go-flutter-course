@@ -22,11 +22,11 @@ jobs:
           flutter-version: '3.22.1'
 
       - name: Install dependencies
-        run: flutter pub get
+        run: cd labs/lab07/frontend && flutter pub get
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --base-href /sum25-go-flutter-course/
+        run: cd labs/lab07/frontend && flutter build web --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
