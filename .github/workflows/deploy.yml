@@ -2,8 +2,8 @@ name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
-    branches:
-      - lab07-nikita-selzenev
+    branches: [lab07-*]
+    
   workflow_dispatch:
 
 jobs:
@@ -16,18 +16,16 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          flutter-version: '3.16.9'
+          flutter-version: '3.32.5'
 
       - name: Install dependencies
         run: flutter pub get
-
         working-directory: labs/lab07/frontend
 
       - name: Build web
         run: |
           flutter create . --platforms web
-          flutter build web --base-href /sum25-go-flutter-course/
+          flutter build web --release --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
