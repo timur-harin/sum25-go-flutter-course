@@ -2,7 +2,8 @@ name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
-    branches: [ lab07-permiakov-lev ]  # Trigger on pushes to lab07-permiakov-lev branch
+    branches: 
+    - lab07-permiakov-lev
 
 jobs:
   deploy:
