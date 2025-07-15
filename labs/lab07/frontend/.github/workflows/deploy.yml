@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+      - lab07-maksimov-ilya
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
