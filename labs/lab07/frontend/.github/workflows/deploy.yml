@@ -29,7 +29,7 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --release --base-href="/sum25-go-flutter-course/"
+        run: flutter build chrome --release --base-href="/sum25-go-flutter-course/"
         working-directory: labs/lab07/frontend
 
       - name: Check build output (debug)
