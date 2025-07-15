@@ -1,18 +1,13 @@
-# Build stage
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod ./
+COPY . .
 
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-RUN go mod download
+FROM scratch
 
-COPY main.go .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/hello .
+COPY --from=builder /app/main .
 
-# Final image
-FROM alpine:latest
-WORKDIR /app
-COPY --from=builder /app/hello .
-CMD ["sh", "-c", "./hello; while true; do sleep 1; done"]
+CMD ["/main"]
