@@ -23,7 +23,7 @@ void main() {
     });
 
     // Helper function to create mock client
-    MockClient _createMockClient() {
+    MockClient createMockClient() {
       return MockClient((request) async {
         if (request.url.toString() == 'http://localhost:8080/api/messages' &&
             request.method == 'GET') {
@@ -87,7 +87,7 @@ void main() {
           MultiProvider(
             providers: [
               Provider<ApiService>(
-                create: (_) => ApiService(client: _createMockClient()),
+                create: (_) => ApiService(client: createMockClient()),
                 dispose: (_, apiService) => apiService.dispose(),
               ),
               ChangeNotifierProxyProvider<ApiService, ChatProvider>(
@@ -137,7 +137,7 @@ void main() {
           MultiProvider(
             providers: [
               Provider<ApiService>(
-                create: (_) => ApiService(client: _createMockClient()),
+                create: (_) => ApiService(client: createMockClient()),
                 dispose: (_, apiService) => apiService.dispose(),
               ),
               ChangeNotifierProxyProvider<ApiService, ChatProvider>(
@@ -182,7 +182,7 @@ void main() {
           MultiProvider(
             providers: [
               Provider<ApiService>(
-                create: (_) => ApiService(client: _createMockClient()),
+                create: (_) => ApiService(client: createMockClient()),
                 dispose: (_, apiService) => apiService.dispose(),
               ),
               ChangeNotifierProxyProvider<ApiService, ChatProvider>(

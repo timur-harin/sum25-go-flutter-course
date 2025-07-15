@@ -165,13 +165,13 @@ class ApiException implements Exception {
 }
 
 class NetworkException extends ApiException {
-  NetworkException(String message) : super(message);
+  NetworkException(super.message);
 }
 
 class ServerException extends ApiException {
-  ServerException(String message) : super(message);
+  ServerException(super.message);
 }
 
 class ValidationException extends ApiException {
-  ValidationException(String message) : super(message);
+  ValidationException(super.message);
 }

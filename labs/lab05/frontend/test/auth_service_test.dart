@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lab05_frontend/core/auth/auth_service.dart';
-import 'package:lab05_frontend/core/validation/form_validator.dart';
 import 'package:lab05_frontend/domain/entities/user.dart';
 
 // Mock implementations for testing
