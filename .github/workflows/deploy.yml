@@ -30,8 +30,11 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --base-href /sum25-go-flutter-course/ --release
+        run: |
+          flutter create . --platforms web
+          flutter build web --release --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
+
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3 
