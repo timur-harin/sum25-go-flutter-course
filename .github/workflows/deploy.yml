@@ -26,7 +26,6 @@ jobs:
       - name: Build web
         run: flutter build web --base-href "/sum25-go-flutter-course/"
         working-directory: labs/lab07/frontend
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
