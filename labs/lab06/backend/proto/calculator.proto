@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package calculator;
+
+option go_package = "./proto";
+
+// Calculator service definition
+service Calculator {
+  rpc Add(OperationRequest) returns (OperationResponse);
+  rpc Subtract(OperationRequest) returns (OperationResponse);
+  rpc Multiply(OperationRequest) returns (OperationResponse);
+  rpc Divide(OperationRequest) returns (OperationResponse);
+  rpc GetHistory(HistoryRequest) returns (HistoryResponse);
+}
+
+// Request message for basic operations
+message OperationRequest {
+  double a = 1;
+  double b = 2;
+}
+
+// Response message for operations
+message OperationResponse {
+  double result = 1;
+  string operation = 2;
+  bool success = 3;
+  string error = 4;
+}
+
+// Request for operation history
+message HistoryRequest {
+  int32 limit = 1;
+}
+
+// Response with operation history
+message HistoryResponse {
+  repeated HistoryEntry entries = 1;
+}
+
+// Individual history entry
+message HistoryEntry {
+  string operation = 1;
+  double a = 2;
+  double b = 3;
+  double result = 4;
+  int64 timestamp = 5;
+} 
