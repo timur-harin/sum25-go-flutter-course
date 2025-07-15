@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lab07-laptev-arseniy
   workflow_dispatch:
 
 jobs:
