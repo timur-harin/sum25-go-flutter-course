@@ -3,7 +3,7 @@ name: Deploy Flutter Web to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - lab07-basanov-maxim
   workflow_dispatch:
 
 jobs:
@@ -31,4 +31,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: labs/lab07/frontend/lib/
+          publish_dir: labs/lab07/frontend/build/web
+
+          

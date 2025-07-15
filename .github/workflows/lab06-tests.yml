@@ -1,0 +1,294 @@
+name: Lab 06 Tests
+
+on:
+  push:
+    branches: [lab06-*]
+  pull_request:
+    paths:
+      - 'labs/lab06/**'
+      - '.github/workflows/lab06-tests.yml'
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  test:
+    name: Run Lab 06 Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.1'
+
+      - name: Install Protocol Buffers Compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Install Go dependencies
+        run: |
+          cd labs/lab06/backend
+          if [ ! -f go.mod ]; then
+            go mod init lab06-backend
+          fi
+          go mod tidy
+
+      - name: Generate Protocol Buffer files
+        run: |
+          cd labs/lab06/backend
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          protoc --go_out=. --go-grpc_out=. proto/calculator.proto
+
+      - name: Install Flutter dependencies
+        run: |
+          cd labs/lab06/frontend
+          flutter pub get
+
+      - name: Run Go tests
+        id: go-tests
+        continue-on-error: true
+        run: |
+          cd labs/lab06/backend
+          echo "calculator_passed=false" >> $GITHUB_OUTPUT
+          echo "gateway_passed=false" >> $GITHUB_OUTPUT
+          echo "websocket_passed=false" >> $GITHUB_OUTPUT
+
+          # Test calculator service
+          if go test ./calculator/... -timeout 30s; then
+            echo "calculator_passed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Test gateway service  
+          if go test ./gateway/... -timeout 30s; then
+            echo "gateway_passed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Test websocket service
+          if go test ./websocket/... -timeout 30s; then
+            echo "websocket_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Go application
+        id: go-build
+        continue-on-error: true
+        run: |
+          cd labs/lab06/backend
+          echo "build_passed=false" >> $GITHUB_OUTPUT
+          
+          if go build -o lab06-backend main.go; then
+            echo "build_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Flutter tests
+        id: flutter-tests
+        continue-on-error: true
+        run: |
+          cd labs/lab06/frontend
+          echo "websocket_screen_passed=false" >> $GITHUB_OUTPUT
+          echo "calculator_screen_passed=false" >> $GITHUB_OUTPUT
+          echo "status_screen_passed=false" >> $GITHUB_OUTPUT
+
+          if flutter test test/websocket_screen_test.dart; then
+            echo "websocket_screen_passed=true" >> $GITHUB_OUTPUT
+          fi
+          if flutter test test/calculator_screen_test.dart; then
+            echo "calculator_screen_passed=true" >> $GITHUB_OUTPUT
+          fi
+          if flutter test test/status_screen_test.dart; then
+            echo "status_screen_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Flutter web app
+        id: flutter-build
+        continue-on-error: true
+        run: |
+          cd labs/lab06/frontend
+          echo "flutter_build_passed=false" >> $GITHUB_OUTPUT
+          
+          if flutter build web --no-sound-null-safety; then
+            echo "flutter_build_passed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate score
+        id: score
+        run: |
+          TOTAL=0
+          # Backend tests (3 points)
+          if [[ "${{ steps.go-tests.outputs.calculator_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.go-tests.outputs.gateway_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.go-tests.outputs.websocket_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          
+          # Frontend tests (3 points)
+          if [[ "${{ steps.flutter-tests.outputs.websocket_screen_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.flutter-tests.outputs.calculator_screen_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          if [[ "${{ steps.flutter-tests.outputs.status_screen_passed }}" == "true" ]]; then TOTAL=$((TOTAL + 1)); fi
+          
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with score
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = ${{ steps.score.outputs.total }};
+            const maxScore = 6;
+            const percentage = (score / maxScore) * 100;
+
+            const results = {
+              'Go Backend Services': {
+                'Calculator gRPC Service': ${{ steps.go-tests.outputs.calculator_passed }},
+                'Gateway HTTP Service': ${{ steps.go-tests.outputs.gateway_passed }},
+                'WebSocket Service': ${{ steps.go-tests.outputs.websocket_passed }}
+              },
+              'Flutter Frontend Screens': {
+                'WebSocket Chat Screen': ${{ steps.flutter-tests.outputs.websocket_screen_passed }},
+                'Calculator Screen': ${{ steps.flutter-tests.outputs.calculator_screen_passed }},
+                'Service Status Monitor': ${{ steps.flutter-tests.outputs.status_screen_passed }}
+              },
+              'Build Status': {
+                'Go Build': ${{ steps.go-build.outputs.build_passed }},
+                'Flutter Build': ${{ steps.flutter-build.outputs.flutter_build_passed }}
+              }
+            };
+
+            let comment = `## Lab 06 Test Results - gRPC Microservices & WebSocket\n\n`;
+            comment += `### 🎯 Score: ${score}/${maxScore} (${percentage}%)\n\n`;
+            
+            if (percentage >= 100) {
+              comment += `🎉 **Outstanding!** Complete microservices architecture implemented!\n\n`;
+            } else if (percentage >= 80) {
+              comment += `🚀 **Excellent progress!** Most components working correctly!\n\n`;
+            } else if (percentage >= 60) {
+              comment += `💪 **Good foundation!** Continue implementing the remaining services.\n\n`;
+            } else {
+              comment += `📚 **Getting started!** Focus on the Protocol Buffers and basic service structure.\n\n`;
+            }
+
+            comment += `### 📋 Task Completion:\n\n`;
+
+            for (const [category, tasks] of Object.entries(results)) {
+              comment += `#### ${category}\n`;
+              for (const [task, passed] of Object.entries(tasks)) {
+                const status = passed ? '✅' : '❌';
+                comment += `- ${status} ${task}\n`;
+              }
+              comment += '\n';
+            }
+
+            comment += `### 🏗️ Architecture Overview:\n\n`;
+            comment += `**Backend Microservices:**\n`;
+            comment += `- **Calculator gRPC**: Protocol Buffers + gRPC server with math operations\n`;
+            comment += `- **Gateway HTTP**: HTTP-to-gRPC bridge for frontend communication\n`;
+            comment += `- **WebSocket Service**: Real-time messaging with connection management\n\n`;
+            
+            comment += `**Frontend Components:**\n`;
+            comment += `- **WebSocket Chat**: Real-time messaging with time delays and connection status\n`;
+            comment += `- **Calculator UI**: HTTP requests to gateway → gRPC calculator service\n`;
+            comment += `- **Status Monitor**: Health checks and performance monitoring for all services\n\n`;
+
+            comment += `### 🔧 Technical Implementation:\n\n`;
+            comment += `**Protocol Buffers & gRPC:**\n`;
+            comment += `- *.proto file definition with calculator operations\n`;
+            comment += `- Generated Go client/server code\n`;
+            comment += `- gRPC service implementation with error handling\n`;
+            comment += `- HTTP-to-gRPC gateway for web client compatibility\n\n`;
+            
+            comment += `**WebSocket Communication:**\n`;
+            comment += `- Bidirectional real-time messaging\n`;
+            comment += `- Connection management with automatic reconnection\n`;
+            comment += `- Message broadcasting and user presence\n`;
+            comment += `- Ping/pong keepalive mechanisms\n\n`;
+
+            if (score < maxScore) {
+              comment += `### 💡 Next Steps:\n`;
+              if (!${{ steps.go-tests.outputs.calculator_passed }}) {
+                comment += `- Complete Calculator gRPC service with all math operations\n`;
+              }
+              if (!${{ steps.go-tests.outputs.gateway_passed }}) {
+                comment += `- Implement HTTP gateway with gRPC client integration\n`;
+              }
+              if (!${{ steps.go-tests.outputs.websocket_passed }}) {
+                comment += `- Complete WebSocket service with connection management\n`;
+              }
+              if (!${{ steps.flutter-tests.outputs.websocket_screen_passed }}) {
+                comment += `- Build WebSocket chat UI with real-time messaging\n`;
+              }
+              if (!${{ steps.flutter-tests.outputs.calculator_screen_passed }}) {
+                comment += `- Create calculator interface calling HTTP gateway\n`;
+              }
+              if (!${{ steps.flutter-tests.outputs.status_screen_passed }}) {
+                comment += `- Implement service monitoring and health check dashboard\n`;
+              }
+            }
+
+            comment += `\n### 🌐 Communication Flow\n`;
+            comment += `\`\`\`\n`;
+            comment += `Flutter App ←─ HTTP ─→ Gateway Service ←─ gRPC ─→ Calculator Service\n`;
+            comment += `Flutter App ←─ WebSocket ─→ WebSocket Service\n`;
+            comment += `Flutter App ←─ HTTP ─→ All Services (Health Checks)\n`;
+            comment += `\`\`\`\n`;
+            comment += `\nThis lab demonstrates production-ready microservices patterns! 🎯`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+            
+      - name: Create commit comment with score
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score = ${{ steps.score.outputs.total }};
+            const maxScore = 6;
+            const percentage = (score / maxScore) * 100;
+
+            const results = {
+              'Go Backend Services': {
+                'Calculator gRPC Service': ${{ steps.go-tests.outputs.calculator_passed }},
+                'Gateway HTTP Service': ${{ steps.go-tests.outputs.gateway_passed }},
+                'WebSocket Service': ${{ steps.go-tests.outputs.websocket_passed }}
+              },
+              'Flutter Frontend Screens': {
+                'WebSocket Chat Screen': ${{ steps.flutter-tests.outputs.websocket_screen_passed }},
+                'Calculator Screen': ${{ steps.flutter-tests.outputs.calculator_screen_passed }},
+                'Service Status Monitor': ${{ steps.flutter-tests.outputs.status_screen_passed }}
+              }
+            };
+
+            let comment = `## Lab 06 Test Results - gRPC Microservices & WebSocket\n\n`;
+            comment += `### 🎯 Score: ${score}/${maxScore} (${percentage}%)\n\n`;
+
+            comment += `### 📋 Task Completion:\n\n`;
+
+            for (const [category, tasks] of Object.entries(results)) {
+              comment += `#### ${category}\n`;
+              for (const [task, passed] of Object.entries(tasks)) {
+                const status = passed ? '✅' : '❌';
+                comment += `- ${status} ${task}\n`;
+              }
+              comment += '\n';
+            }
+
+            comment += `\n🏗️ **Microservices Architecture**: Protocol Buffers + gRPC + WebSocket communication!\n`;
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            }); 
