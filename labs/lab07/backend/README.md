@@ -4,7 +4,6 @@ This is a minimal Go Hello World app for Lab 07.
 
 - The app can be built and published as a Docker image using the provided `Dockerfile`.
 - After publishing, your image will be available at:
-
 ```
 https://hub.docker.com/r/shipanovdanila/go-hello-world
 ```
