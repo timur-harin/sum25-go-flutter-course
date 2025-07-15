@@ -21,10 +21,12 @@ jobs:
           cache: true
 
       - name: Install dependencies
+        working-directory: ./labs/lab07/frontend
         run: flutter pub get
 
       - name: Build Flutter web app
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/labs/lab07/frontend"
+        working-directory: ./labs/lab07/frontend
+        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
