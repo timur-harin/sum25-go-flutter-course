@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lab07-solution
   workflow_dispatch:
 
 jobs:

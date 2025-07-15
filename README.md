@@ -185,4 +185,5 @@ This course encourages collaborative learning:
 
 ## 📄 License
 
-This course material is licensed under MIT License - see [LICENSE](LICENSE) for details. 
+This course material is licensed under MIT License - see [LICENSE](LICENSE) for details. \ n  
+ 
