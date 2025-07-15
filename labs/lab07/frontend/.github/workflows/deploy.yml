@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - lab07-zaynulin-salavat
+      - main
   workflow_dispatch:
 
 jobs:
