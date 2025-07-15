@@ -1,0 +1,1 @@
+:  /Users/danila/Documents/Projects/Flutter_Projects/sum25-go-flutter-course/labs/lab07/frontend/web/index.html
