@@ -1,5 +1,8 @@
-# Build stage
-# TODO: Add build stage
+FROM golang:1.21 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o main .
 
-# Final image
-# TODO: Add final image instructions
+FROM gcr.io/distroless/static
+COPY --from=builder /app/main /
+CMD ["/main"]
