@@ -8,5 +8,4 @@ This is a minimal Flutter Hello World app for Lab 07.
 ```
 https://Thunder22020.github.io/sum25-go-flutter-course/
 ```
-
 Replace `<your-github-username>` and `<your-repo-name>` with your actual GitHub username and repository name. 
