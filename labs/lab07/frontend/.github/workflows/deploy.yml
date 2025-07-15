@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lab07-laptev-arseniy
   workflow_dispatch:
 
 
@@ -24,11 +25,11 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+        run: flutter build web --release --base-href "/sum25-go-flutter-course/"
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: labs/lab07/frontend/build/web 
+          publish_dir: labs/lab07/frontend/build/web
