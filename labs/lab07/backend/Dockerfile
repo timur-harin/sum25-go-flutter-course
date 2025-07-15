@@ -1,5 +1,14 @@
-# Build stage
-# TODO: Add build stage
+# Start from the official Go image
+FROM golang:1.22-alpine
 
-# Final image
-# TODO: Add final image instructions
+# Set working directory
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Build Go app
+RUN go build -o main .
+
+# Run the app
+CMD ["./main"]
