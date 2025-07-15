@@ -11,6 +11,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,8 +29,13 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --release --base-href="/sum25-go-flutter-course/"
         working-directory: labs/lab07/frontend
+
+      - name: Check build output (debug)
+        run: |
+          ls -la labs/lab07/frontend/build/web
+          head -20 labs/lab07/frontend/build/web/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
