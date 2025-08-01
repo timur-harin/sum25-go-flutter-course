@@ -1,8 +1,11 @@
+// import 'package:lab02_chat/user_profile.dart';
+
 class UserService {
   Future<Map<String, String>> fetchUser() async {
-    // TODO: Simulate fetching user data for tests
-    // await Future.delayed(...)
-    // return {'name': ..., 'email': ...}
-    throw UnimplementedError();
+    await Future.delayed(Duration(milliseconds: 100));
+    return {
+      'name': 'Vladimir',
+      'email': 'vladimir.putin@kremlin.ru',
+    };
   }
 }
