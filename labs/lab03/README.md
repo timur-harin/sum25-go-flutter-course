@@ -1,5 +1,3 @@
-# Lab 03: REST API Chat System with HTTP Status Codes
-
 ## Overview
 
 Build a complete REST API chat system using Go backend and Flutter frontend, with integrated HTTP status code visualization using the HTTP Cat API.
