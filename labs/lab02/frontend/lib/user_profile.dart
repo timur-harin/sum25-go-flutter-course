@@ -22,11 +22,32 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
-    );
-  }
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('User Profile')),
+    body: FutureBuilder<Map<String, String>>(
+      future: widget.userService.fetchUser(), // async call
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(child: Text('An error occurred'));
+        }
+
+        final user = snapshot.data!;
+       return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(user['name'] ?? ''),
+            Text(user['email'] ?? ''),
+          ],
+        ),
+      );
+      },
+    ),
+  );
+}
 }
