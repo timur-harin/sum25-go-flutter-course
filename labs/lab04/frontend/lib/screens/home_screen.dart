@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Text(
                       'Status',
                       style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(_statusMessage),
@@ -132,9 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
       final value = PreferencesService.getString('test_key');
@@ -160,14 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
       final userCount = await DatabaseService.getUserCount();
 
       setState(() {
         _statusMessage =
-            'SQLite test result: Found $userCount users in database';
+        'SQLite test result: Found $userCount users in database';
       });
     } catch (e) {
       setState(() {
@@ -187,9 +181,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
       final value = await SecureStorageService.getSecureData('test_secure');
 
