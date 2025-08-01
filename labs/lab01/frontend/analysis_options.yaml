@@ -39,7 +39,6 @@ linter:
     - library_names
     - library_prefixes
     - non_constant_identifier_names
-    - package_api_docs
     - package_names
     - package_prefixed_library_names
     - prefer_const_constructors
