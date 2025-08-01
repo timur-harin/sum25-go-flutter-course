@@ -11,15 +11,15 @@ class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
   void _incrementCounter() {
-    // TODO: Implement this function
+    return setState(() => _counter++);
   }
 
   void _decrementCounter() {
-    // TODO: Implement this function
+    return setState(() => _counter--);
   }
 
   void _resetCounter() {
-    // TODO: Implement this function
+    return setState(() => _counter = 0);
   }
 
   @override
@@ -28,7 +28,10 @@ class _CounterAppState extends State<CounterApp> {
       appBar: AppBar(
         title: const Text('Counter App'),
         actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _resetCounter,
+          ),
         ],
       ),
       body: Center(
@@ -44,10 +47,10 @@ class _CounterAppState extends State<CounterApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
+                FloatingActionButton(onPressed: _decrementCounter, child: const Icon(Icons.remove)),
                 const SizedBox(width: 32),
                 // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
+                FloatingActionButton(onPressed: _incrementCounter, child: const Icon(Icons.add)),
               ],
             ),
           ],
