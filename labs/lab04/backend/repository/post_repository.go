@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
+	"github.com/georgysavva/scany/v2/sqlscan"
 	"lab04-backend/models"
 )
 
@@ -20,82 +22,158 @@ func NewPostRepository(db *sql.DB) *PostRepository {
 
 // TODO: Implement Create method using scany for result mapping
 func (r *PostRepository) Create(req *models.CreatePostRequest) (*models.Post, error) {
-	// TODO: Create a new post in the database using scany for result mapping
-	// - Validate the request using req.Validate()
-	// - Insert into posts table with RETURNING clause
-	// - Use sqlscan.Get() to scan the RETURNING result into a Post struct
-	// Example: sqlscan.Get(context.Background(), r.db, &post, query, args...)
-	// This eliminates manual row scanning compared to user repository
-	return nil, fmt.Errorf("TODO: implement Create method with scany mapping")
+	if req == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+	query := `
+		INSERT INTO posts (user_id, title, content, published, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		RETURNING id, user_id, title, content, published, created_at, updated_at
+	`
+	var post models.Post
+	err := sqlscan.Get(context.Background(), r.db, &post, query, req.UserID, req.Title, req.Content, req.Published)
+	if err != nil {
+		return nil, err
+	}
+	return &post, nil
 }
 
 // TODO: Implement GetByID method using scany
 func (r *PostRepository) GetByID(id int) (*models.Post, error) {
-	// TODO: Get post by ID from database using scany
-	// - Use sqlscan.Get() instead of manual row.Scan()
-	// Example: sqlscan.Get(context.Background(), r.db, &post, "SELECT * FROM posts WHERE id = $1", id)
-	// Notice how this eliminates the need for manual field scanning
-	return nil, fmt.Errorf("TODO: implement GetByID method with scany")
+	var post models.Post
+	err := sqlscan.Get(context.Background(), r.db, &post, `SELECT id, user_id, title, content, published, created_at, updated_at FROM posts WHERE id = $1`, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+	return &post, nil
 }
 
 // TODO: Implement GetByUserID method using scany
 func (r *PostRepository) GetByUserID(userID int) ([]models.Post, error) {
-	// TODO: Get all posts by user ID using scany
-	// - Use sqlscan.Select() for multiple rows instead of manual rows.Next() loop
-	// Example: sqlscan.Select(context.Background(), r.db, &posts, query, userID)
-	// This eliminates manual iteration and scanning
-	return nil, fmt.Errorf("TODO: implement GetByUserID method with scany")
+	var posts []models.Post
+	err := sqlscan.Select(context.Background(), r.db, &posts, `SELECT id, user_id, title, content, published, created_at, updated_at FROM posts WHERE user_id = $1 ORDER BY created_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 // TODO: Implement GetPublished method using scany
 func (r *PostRepository) GetPublished() ([]models.Post, error) {
-	// TODO: Get all published posts using scany
-	// - Use sqlscan.Select() for multiple rows
-	// - Query posts where published = true
-	// - Order by created_at DESC
-	return nil, fmt.Errorf("TODO: implement GetPublished method with scany")
+	var posts []models.Post
+	err := sqlscan.Select(context.Background(), r.db, &posts, `SELECT id, user_id, title, content, published, created_at, updated_at FROM posts WHERE published = true ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 // TODO: Implement GetAll method using scany
 func (r *PostRepository) GetAll() ([]models.Post, error) {
-	// TODO: Get all posts from database using scany
-	// - Use sqlscan.Select() instead of manual rows iteration
-	// Example: sqlscan.Select(context.Background(), r.db, &posts, "SELECT * FROM posts ORDER BY created_at DESC")
-	// Compare this simplicity with manual scanning in user repository
-	return nil, fmt.Errorf("TODO: implement GetAll method with scany")
+	var posts []models.Post
+	err := sqlscan.Select(context.Background(), r.db, &posts, `SELECT id, user_id, title, content, published, created_at, updated_at FROM posts ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 // TODO: Implement Update method using scany
 func (r *PostRepository) Update(id int, req *models.UpdatePostRequest) (*models.Post, error) {
-	// TODO: Update post in database using scany
-	// - Build dynamic UPDATE query based on non-nil fields in req
-	// - Update updated_at timestamp
-	// - Use sqlscan.Get() with RETURNING clause to get updated post
-	// This avoids a separate SELECT query after UPDATE
-	return nil, fmt.Errorf("TODO: implement Update method with scany")
+	if req == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+	setClauses := []string{}
+	args := []interface{}{}
+	argIdx := 1
+
+	if req.Title != nil {
+		setClauses = append(setClauses, fmt.Sprintf("title = $%d", argIdx))
+		args = append(args, *req.Title)
+		argIdx++
+	}
+	if req.Content != nil {
+		setClauses = append(setClauses, fmt.Sprintf("content = $%d", argIdx))
+		args = append(args, *req.Content)
+		argIdx++
+	}
+	if req.Published != nil {
+		setClauses = append(setClauses, fmt.Sprintf("published = $%d", argIdx))
+		args = append(args, *req.Published)
+		argIdx++
+	}
+	if len(setClauses) == 0 {
+		return r.GetByID(id)
+	}
+	setClauses = append(setClauses, "updated_at = CURRENT_TIMESTAMP")
+
+	query := fmt.Sprintf(`
+		UPDATE posts SET %s WHERE id = $%d
+		RETURNING id, user_id, title, content, published, created_at, updated_at
+	`, joinClauses(setClauses, ", "), argIdx)
+	args = append(args, id)
+
+	var post models.Post
+	err := sqlscan.Get(context.Background(), r.db, &post, query, args...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+	return &post, nil
 }
 
 // TODO: Implement Delete method (standard SQL)
 func (r *PostRepository) Delete(id int) error {
-	// TODO: Delete post from database
-	// - Delete from posts table by ID
-	// - Return error if post doesn't exist
-	// Note: Delete operations typically don't need scany since no data is returned
-	return fmt.Errorf("TODO: implement Delete method")
+	result, err := r.db.Exec("DELETE FROM posts WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 // TODO: Implement Count method (standard SQL)
 func (r *PostRepository) Count() (int, error) {
-	// TODO: Count total number of posts
-	// - Return count of posts in database
-	// - Can use standard QueryRow.Scan() for single values like count
-	return 0, fmt.Errorf("TODO: implement Count method")
+	var count int
+	err := r.db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // TODO: Implement CountByUserID method (standard SQL)
 func (r *PostRepository) CountByUserID(userID int) (int, error) {
-	// TODO: Count posts by user ID
-	// - Return count of posts for specific user
-	// - Use standard QueryRow.Scan() for single integer result
-	return 0, fmt.Errorf("TODO: implement CountByUserID method")
+	var count int
+	err := r.db.QueryRow("SELECT COUNT(*) FROM posts WHERE user_id = $1", userID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// joinClauses is a helper for joining SQL SET clauses (for Update)
+func joinClauses(clauses []string, sep string) string {
+	if len(clauses) == 0 {
+		return ""
+	}
+	result := clauses[0]
+	for i := 1; i < len(clauses); i++ {
+		result += sep + clauses[i]
+	}
+	return result
 }

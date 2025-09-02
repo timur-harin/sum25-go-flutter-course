@@ -2,8 +2,33 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
+
+// functions to validate title
+func _isValidTitle(title string) bool {
+	if len(title) < 5 || title == "" {
+		return false
+	}
+	return true
+}
+
+// functions to validate content
+func _isValidContent(content string, published bool) bool {
+	if published && len(content) == 0 {
+		return false
+	}
+	return true
+}
+
+// functions to validate user ID
+func _isValidUserID(userID int) bool {
+	if userID <= 0 {
+		return false
+	}
+	return true
+}
 
 // Post represents a blog post in the system
 type Post struct {
@@ -31,43 +56,85 @@ type UpdatePostRequest struct {
 	Published *bool   `json:"published,omitempty"`
 }
 
-// TODO: Implement Validate method for Post
+// Validate method for Post
 func (p *Post) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - Content should not be empty if published is true
-	// - UserID should be greater than 0
-	// Return appropriate errors if validation fails
+	if !_isValidTitle(p.Title) {
+		return errors.New("Title should not be empty and should be at least 5 characters")
+	}
+	if !_isValidContent(p.Content, p.Published) {
+		return errors.New("Content should not be empty if published is true")
+	}
+	if !_isValidUserID(p.UserID) {
+		return errors.New("UserID should be greater than 0")
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreatePostRequest
+// Validate method for CreatePostRequest
 func (req *CreatePostRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - UserID should be greater than 0
-	// - Content should not be empty if published is true
-	// Return appropriate errors if validation fails
+	if !_isValidTitle(req.Title) {
+		return errors.New("Title should not be empty and should be at least 5 characters")
+	}
+	if !_isValidUserID(req.UserID) {
+		return errors.New("UserID should be greater than 0")
+	}
+	if !_isValidContent(req.Content, req.Published) {
+		return errors.New("Content should not be empty if published is true")
+	}
 	return nil
 }
 
 // TODO: Implement ToPost method for CreatePostRequest
 func (req *CreatePostRequest) ToPost() *Post {
-	// TODO: Convert CreatePostRequest to Post
-	// Set timestamps to current time
-	return nil
+	now := time.Now()
+	return &Post{
+		UserID:    req.UserID,
+		Title:     req.Title,
+		Content:   req.Content,
+		Published: req.Published,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
 
-// TODO: Implement ScanRow method for Post
+// ScanRow scans a single sql.Row into the Post struct
 func (p *Post) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into Post struct
-	// Handle the case where row might be nil
-	return nil
+	if row == nil {
+		return errors.New("row is nil")
+	}
+	return row.Scan(
+		&p.ID,
+		&p.UserID,
+		&p.Title,
+		&p.Content,
+		&p.Published,
+		&p.CreatedAt,
+		&p.UpdatedAt,
+	)
 }
 
-// TODO: Implement ScanRows method for Post slice
+// ScanPosts scans multiple sql.Rows into a slice of Post structs
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
-	// TODO: Scan multiple database rows into Post slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	defer rows.Close()
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(
+			&post.ID,
+			&post.UserID,
+			&post.Title,
+			&post.Content,
+			&post.Published,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return posts, nil
 }

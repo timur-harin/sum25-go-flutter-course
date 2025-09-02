@@ -29,20 +29,55 @@ func RunMigrations(db *sql.DB) error {
 	return nil
 }
 
-// TODO: Implement this function
 // RollbackMigration rolls back the last migration using goose
 func RollbackMigration(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+
+	migrationsDir := "../migrations"
+
+	if err := goose.Down(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to rollback migration: %v", err)
+	}
+
 	return nil
 }
 
-// TODO: Implement this function
 // GetMigrationStatus checks migration status using goose
 func GetMigrationStatus(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+
+	migrationsDir := "../migrations"
+
+	if err := goose.Status(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to get migration status: %v", err)
+	}
+
 	return nil
 }
 
-// TODO: Implement this function
 // CreateMigration creates a new migration file
 func CreateMigration(name string) error {
+	migrationsDir := "../migrations"
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+
+	if err := goose.Create(nil, migrationsDir, name, "sql"); err != nil {
+		return fmt.Errorf("failed to create migration: %v", err)
+	}
+
 	return nil
 }

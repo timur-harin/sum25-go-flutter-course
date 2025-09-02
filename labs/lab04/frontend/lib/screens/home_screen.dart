@@ -132,13 +132,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
-      final value = PreferencesService.getString('test_key');
-
+      final value = await PreferencesService.getString('test_key');
       setState(() {
         _statusMessage = 'SharedPreferences test result: $value';
       });
@@ -160,11 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
       final userCount = await DatabaseService.getUserCount();
-
       setState(() {
         _statusMessage =
             'SQLite test result: Found $userCount users in database';
@@ -187,12 +179,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
       final value = await SecureStorageService.getSecureData('test_secure');
-
       setState(() {
         _statusMessage = 'Secure Storage test result: $value';
       });
