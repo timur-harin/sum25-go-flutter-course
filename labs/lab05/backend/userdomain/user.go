@@ -2,7 +2,7 @@ package userdomain
 
 import (
 	"errors"
-	_ "regexp"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -25,46 +25,113 @@ type User struct {
 // - Password must be at least 8 characters
 // - CreatedAt and UpdatedAt should be set to current time
 func NewUser(email, name, password string) (*User, error) {
-	// TODO: Implement this function
-	// Hint: Use ValidateEmail, ValidateName, ValidatePassword helper functions
-	return nil, errors.New("not implemented")
+	// Validate input
+	if err := ValidateEmail(email); err != nil {
+		return nil, err
+	}
+	if err := ValidateName(name); err != nil {
+		return nil, err
+	}
+	if err := ValidatePassword(password); err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	user := &User{
+		Email:     strings.ToLower(strings.TrimSpace(email)),
+		Name:      strings.TrimSpace(name),
+		Password:  password,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	return user, nil
 }
 
 // TODO: Implement Validate method
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement validation logic
-	// Check email, name, and password validity
-	return errors.New("not implemented")
+	if err := ValidateEmail(u.Email); err != nil {
+		return err
+	}
+	if err := ValidateName(u.Name); err != nil {
+		return err
+	}
+	if err := ValidatePassword(u.Password); err != nil {
+		return err
+	}
+	return nil
 }
 
 // TODO: Implement ValidateEmail function
 // ValidateEmail checks if email format is valid
 func ValidateEmail(email string) error {
-	// TODO: Implement email validation
-	// Use regex pattern to validate email format
-	// Email should not be empty and should match standard email pattern
-	return errors.New("not implemented")
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return errors.New("email cannot be empty")
+	}
+	// Simple email regex pattern
+	// Note: For production, use a more robust pattern or a library
+	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	matched := false
+	if re, err := regexpCompile(emailRegex); err == nil {
+		matched = re.MatchString(email)
+	}
+	if !matched {
+		return errors.New("invalid email format")
+	}
+	return nil
 }
 
 // TODO: Implement ValidateName function
 // ValidateName checks if name is valid
 func ValidateName(name string) error {
-	// TODO: Implement name validation
-	// Name should be 2-50 characters, trimmed of whitespace
-	// Should not be empty after trimming
-	return errors.New("not implemented")
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return errors.New("name cannot be empty")
+	}
+	if len([]rune(trimmed)) < 2 || len([]rune(trimmed)) > 50 {
+		return errors.New("name must be 2-50 characters")
+	}
+	return nil
 }
 
 // TODO: Implement ValidatePassword function
 // ValidatePassword checks if password meets security requirements
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Password should be at least 8 characters
-	// Should contain at least one uppercase, lowercase, and number
-	return errors.New("not implemented")
+	if len(password) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+	hasUpper := false
+	hasLower := false
+	hasNumber := false
+	for _, c := range password {
+		switch {
+		case c >= 'A' && c <= 'Z':
+			hasUpper = true
+		case c >= 'a' && c <= 'z':
+			hasLower = true
+		case c >= '0' && c <= '9':
+			hasNumber = true
+		}
+	}
+	if !hasUpper {
+		return errors.New("password must contain at least one uppercase letter")
+	}
+	if !hasLower {
+		return errors.New("password must contain at least one lowercase letter")
+	}
+	if !hasNumber {
+		return errors.New("password must contain at least one number")
+	}
+	return nil
 }
 
+// regexpCompile is a helper to compile regex, separated for testability
+func regexpCompile(pattern string) (*regexp.Regexp, error) {
+	return regexp.Compile(pattern)
+}
+
+// UpdateName updates the user's name with validation
 // UpdateName updates the user's name with validation
 func (u *User) UpdateName(name string) error {
 	if err := ValidateName(name); err != nil {
