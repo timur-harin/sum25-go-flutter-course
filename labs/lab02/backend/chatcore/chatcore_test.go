@@ -130,6 +130,7 @@ func TestBrokerContextCancellation(t *testing.T) {
 	a := newTestUser("A")
 	broker.RegisterUser(a.ID, a.Recv)
 	cancel()
+	<-ctx.Done()
 	err := broker.SendMessage(Message{Sender: a.ID, Content: "should fail", Broadcast: true})
 	if err == nil {
 		t.Error("Expected error after context cancel, got nil")

@@ -5,9 +5,7 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
   try {
-    // TODO: Initialize PreferencesService
     await PreferencesService.init();
 
     // TODO: Add any other service initialization here
