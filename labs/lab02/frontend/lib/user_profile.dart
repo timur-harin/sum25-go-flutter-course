@@ -12,21 +12,71 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  // State for user data, loading, and error
+  Map<String, String>? _userData;
+  bool _isLoading = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    // Fetch user info and update state
+    _fetchUserInfo();
+  }
+
+  void _fetchUserInfo() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      // Simulate fetching user info from userService
+      final user = await widget.userService.getUser();
+      setState(() {
+        _userData = user;
+      });
+    } catch (e) {
+      setState(() {
+        // Show error message containing 'error:' for test compatibility
+        _error = e.toString().contains('error:') ? e.toString() : 'error: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
+    // Build user profile UI with loading, error, and user info
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child:
+                      Text(_error!, style: const TextStyle(color: Colors.red)))
+              : _userData == null
+                  ? const Center(child: Text('No user data'))
+                  : Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Show name as a plain Text widget for test compatibility
+                          Text(_userData!['name'] ?? '',
+                              style: const TextStyle(fontSize: 18)),
+                          const SizedBox(height: 8),
+                          Text(_userData!['email'] ?? '',
+                              style: const TextStyle(fontSize: 18)),
+                          const SizedBox(height: 8),
+                          Text(_userData!['id'] ?? '',
+                              style: const TextStyle(fontSize: 18)),
+                        ],
+                      ),
+                    ),
     );
   }
 }
