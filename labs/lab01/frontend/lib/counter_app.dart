@@ -10,16 +10,25 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
+  // Method to increment counter by one and to update the user interface
   void _incrementCounter() {
-    // TODO: Implement this function
+    setState(() {
+      _counter++;
+    });
   }
 
+  // Method to decrement counter and to update the user interface
   void _decrementCounter() {
-    // TODO: Implement this function
+    setState(() {
+        _counter--;
+    });
   }
 
+  // Method to reset counter to 0 and to update the user interface
   void _resetCounter() {
-    // TODO: Implement this function
+    setState(() {
+      _counter = 0;
+    });
   }
 
   @override
@@ -28,13 +37,18 @@ class _CounterAppState extends State<CounterApp> {
       appBar: AppBar(
         title: const Text('Counter App'),
         actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
+          // Refresh button with appropriate icon, this button calls _resetCounter to reset counter to zero
+          IconButton(
+            onPressed: _resetCounter,
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Displaying the current counter value
             Text(
               '$_counter',
               style: const TextStyle(fontSize: 48),
@@ -43,11 +57,18 @@ class _CounterAppState extends State<CounterApp> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
+                // Decrement button with icon "-", this button calls _decrementCounter to decrement counter by one
+                FloatingActionButton(
+                  onPressed: _decrementCounter,
+                  child: const Icon(Icons.remove),
+                ),
                 
                 const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
+                // Increment button with icon "+", this button calls _incrementCounter to increment counter by one
+                FloatingActionButton(
+                  onPressed: _incrementCounter,
+                  child: const Icon(Icons.add),
+                ),
               ],
             ),
           ],

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class ProfileCard extends StatelessWidget {
+  // Widget properties with required name, email, and age and oprional - url
   final String name;
   final String email;
   final int age;
   final String? avatarUrl;
 
+  // Widget constructor with parameters above
   const ProfileCard({
     super.key,
     required this.name,
@@ -23,16 +25,49 @@ class ProfileCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
+              /*
+                User avatar circle with fixed radius 50,
+                displayed image by provided URL,
+                but if no URL provided, then with displayed uppercase first name letter
+              */
+              CircleAvatar(
+                radius: 50,
+                backgroundImage: avatarUrl != null
+                    ? NetworkImage(avatarUrl!)
+                    : null,
+                child: avatarUrl == null
+                    ? Text(
+                      name.isEmpty
+                      ? "?"
+                      : name[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 40,),
+                    )
+                    : null
+              ),
             const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
+            // User's name field display
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    ),
+                ),
             const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
+            // User's age field display
+            Text(
+              'Age: $age',
+              style: const TextStyle(fontSize: 16,),
+            ),
             const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
+            // User's email field display
+              Text(
+                email,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
             
           ],
         ),
