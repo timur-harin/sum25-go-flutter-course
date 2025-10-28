@@ -42,12 +42,39 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	for {
+		select {
+		case <-b.ctx.Done():
+			close(b.done)
+			return
+		case msg := <-b.input:
+			b.usersMutex.RLock()
+			if msg.Broadcast {
+				for _, ch := range b.users {
+					select {
+					case ch <- msg:
+					default:
+					}
+				}
+			} else {
+				if ch, ok := b.users[msg.Recipient]; ok {
+					select {
+					case ch <- msg:
+					default:
+					}
+				}
+			}
+			b.usersMutex.RUnlock()
+		}
+	}
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
+	select {
+	case b.input <- msg:
+	default:
+	}
 	return nil
 }
 
