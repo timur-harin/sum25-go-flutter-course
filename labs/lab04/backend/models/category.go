@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -51,6 +52,12 @@ func (c *Category) BeforeCreate(tx *gorm.DB) error {
 	// - Set default values
 	// - Perform any pre-creation logic
 	// Example: if c.Color == "" { c.Color = "#007bff" }
+	if len(c.Name) < 3 {
+		return fmt.Errorf("category name must be at least 3 characters")
+	}
+	if len(c.Color) > 0 && c.Color[0] != '#' {
+		return fmt.Errorf("color must be a valid hex code starting with '#'")
+	}
 	return nil
 }
 
@@ -96,20 +103,25 @@ func (req *CreateCategoryRequest) ToCategory() *Category {
 	//     Color:       req.Color,
 	//     Active:      true,
 	// }
-	return nil
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       req.Color,
+		Active:      true,
+	}
 }
 
 // TODO: Implement GORM scopes (reusable query logic)
 func ActiveCategories(db *gorm.DB) *gorm.DB {
 	// TODO: GORM scope for active categories
 	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
 	// TODO: GORM scope for categories with posts
 	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.Joins("Posts").Where("posts.id IS NOT NULL")
 }
 
 // TODO: Implement model validation methods
@@ -123,5 +135,7 @@ func (c *Category) PostCount(db *gorm.DB) (int64, error) {
 	// var count int64
 	// err := db.Model(c).Association("Posts").Count(&count)
 	// return count, err
-	return 0, nil
+	var count int64
+	err := db.Table("post_categories").Where("category_id = ?", c.ID).Count(&count).Error
+	return count, err
 }

@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -32,6 +34,12 @@ func (u *User) Validate() error {
 	// - Name should not be empty and should be at least 2 characters
 	// - Email should be valid format
 	// Return appropriate errors if validation fails
+	if len(u.Name) < 2 {
+		return fmt.Errorf("name must be at least 2 characters")
+	}
+	if !strings.Contains(u.Email, "@") {
+		return fmt.Errorf("invalid email format")
+	}
 	return nil
 }
 
@@ -41,6 +49,12 @@ func (req *CreateUserRequest) Validate() error {
 	// - Name should not be empty and should be at least 2 characters
 	// - Email should be valid format and not empty
 	// Return appropriate errors if validation fails
+	if len(req.Name) < 2 {
+		return fmt.Errorf("name must be at least 2 characters")
+	}
+	if !strings.Contains(req.Email, "@") {
+		return fmt.Errorf("invalid email format")
+	}
 	return nil
 }
 
@@ -48,19 +62,38 @@ func (req *CreateUserRequest) Validate() error {
 func (req *CreateUserRequest) ToUser() *User {
 	// TODO: Convert CreateUserRequest to User
 	// Set timestamps to current time
-	return nil
+	now := time.Now()
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
 
 // TODO: Implement ScanRow method for User
 func (u *User) ScanRow(row *sql.Row) error {
 	// TODO: Scan database row into User struct
 	// Handle the case where row might be nil
-	return nil
+	if row == nil {
+		return fmt.Errorf("row is nil")
+	}
+	return row.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
 }
 
 // TODO: Implement ScanRows method for User slice
 func ScanUsers(rows *sql.Rows) ([]User, error) {
 	// TODO: Scan multiple database rows into User slice
 	// Make sure to close rows and handle errors properly
-	return nil, nil
+	defer rows.Close()
+	var users []User
+	for rows.Next() {
+		var u User
+		err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, nil
 }
