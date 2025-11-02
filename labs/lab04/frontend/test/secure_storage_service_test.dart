@@ -1,8 +1,54 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lab04_frontend/services/secure_storage_service.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  // Mock MethodChannel for flutter_secure_storage
+  const MethodChannel channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+
+  setUpAll(() {
+    final Map<String, String> fakeStorage = {};
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      channel,
+      (MethodCall methodCall) async {
+        switch (methodCall.method) {
+          case 'write':
+            final key = methodCall.arguments['key'] as String;
+            final value = methodCall.arguments['value'] as String?;
+            if (value == null) {
+              fakeStorage.remove(key);
+            } else {
+              fakeStorage[key] = value;
+            }
+            return null;
+          case 'read':
+            final key = methodCall.arguments['key'] as String;
+            return fakeStorage[key];
+          case 'delete':
+            final key = methodCall.arguments['key'] as String;
+            fakeStorage.remove(key);
+            return null;
+          case 'deleteAll':
+            fakeStorage.clear();
+            return null;
+          case 'readAll':
+            return Map<String, String>.from(fakeStorage);
+          case 'containsKey':
+            final key = methodCall.arguments['key'] as String;
+            return fakeStorage.containsKey(key);
+          default:
+            return null;
+        }
+      },
+    );
+  });
+
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+  });
+
   // Initialize Flutter bindings for platform channels
   TestWidgetsFlutterBinding.ensureInitialized(); 
 
