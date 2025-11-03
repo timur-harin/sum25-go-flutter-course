@@ -7,7 +7,6 @@ import (
 
 // Message represents a chat message
 // Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
 
 type Message struct {
 	Sender    string
@@ -26,12 +25,10 @@ type Broker struct {
 	users      map[string]chan Message // userID -> receiving channel
 	usersMutex sync.RWMutex            // Protects users map
 	done       chan struct{}           // For shutdown
-	// TODO: Add more fields if needed
 }
 
 // NewBroker creates a new message broker
 func NewBroker(ctx context.Context) *Broker {
-	// TODO: Initialize broker fields
 	return &Broker{
 		ctx:   ctx,
 		input: make(chan Message, 100),
@@ -42,21 +39,57 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	for {
+		select {
+		case <-b.ctx.Done(): // Job must be terminated
+			close(b.done)
+			return
+
+		case msg := <-b.input: // Got message
+			b.SendMessage(msg) // Send message
+		}
+	}
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+
+	if msg.Broadcast { // Send to everyone
+
+		b.usersMutex.RLock() // Lock for all operations
+		for _, msgBuf := range b.users {
+			// Since channels are thread-safe
+			msgBuf <- msg // Write to the user messages buffer
+		}
+		b.usersMutex.RUnlock() // Job is done -> Unlock
+
+	} else { // Send to a particular person
+
+		// Check if the user exists
+		// Purpose: to avoid panic
+		b.usersMutex.RLock() // Lock for read operations
+		_, found := b.users[msg.Recipient]
+		if found { // User does exist
+			// Since channels are thread-safe
+			b.users[msg.Recipient] <- msg // Write the message
+		}
+		b.usersMutex.RUnlock() // User is checked -> Unlock
+
+	}
+
+	return b.ctx.Err() // Since no explanation on error messages was given
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()    // Lock for all operations
+	b.users[userID] = recv // Create a channel for messages
+	b.usersMutex.Unlock()  // Job is done -> Unlock
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()     // Lock for all operations
+	delete(b.users, userID) // Create a channel for messages
+	b.usersMutex.Unlock()   // Job is done -> Unlock
 }

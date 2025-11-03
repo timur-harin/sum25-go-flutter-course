@@ -1,12 +1,10 @@
 package message
 
 import (
-	"errors"
 	"sync"
 )
 
 // Message represents a chat message
-// TODO: Add more fields if needed
 
 type Message struct {
 	Sender    string
@@ -19,13 +17,11 @@ type Message struct {
 
 type MessageStore struct {
 	messages []Message
-	mutex    sync.RWMutex
-	// TODO: Add more fields if needed
+	mutex    sync.RWMutex // for accessing messages
 }
 
 // NewMessageStore creates a new MessageStore
 func NewMessageStore() *MessageStore {
-	// TODO: Initialize MessageStore fields
 	return &MessageStore{
 		messages: make([]Message, 0, 100),
 	}
@@ -33,12 +29,27 @@ func NewMessageStore() *MessageStore {
 
 // AddMessage stores a new message
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
-	return nil
+	s.mutex.Lock()                       // Write operation -> lock for all operations
+	s.messages = append(s.messages, msg) // Add the message
+	s.mutex.Unlock()                     // Job is done -> Unlock
+
+	return nil // OK - no error
 }
 
 // GetMessages retrieves messages (optionally by user)
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	res := make([]Message, 0, 100) // Since max messages number is 100
+
+	s.mutex.RLock() // For thread safety
+	for _, msg := range s.messages {
+		if len(user) != 0 && msg.Sender != user { // Unneeded message
+			continue
+		}
+
+		// OK -> add the message
+		res = append(res, msg)
+	}
+	s.mutex.RUnlock()
+
+	return res, nil
 }
