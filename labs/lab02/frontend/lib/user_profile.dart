@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lab02_chat/user_service.dart';
 
-// UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final UserService userService;
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -12,21 +10,82 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  Map<String, String>? _userData;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+      final userData = await widget.userService.fetchUser();
+      setState(() {
+        _userData = userData;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'error';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchUserData,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.account_circle, size: 100),
+            const SizedBox(height: 20),
+            Text(
+              _userData?['name'] ?? 'No name',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _userData?['email'] ?? 'No email',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: _fetchUserData,
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
