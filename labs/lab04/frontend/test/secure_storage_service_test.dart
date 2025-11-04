@@ -7,14 +7,24 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized(); 
 
   group('SecureStorageService Tests', () {
+    setUpAll(() {
+      // Enable test mode for all tests in this group
+      SecureStorageService.enableTestMode();
+    });
+
     setUp(() async {
-      // Clear secure storage before each test
-      await SecureStorageService.clearAll();
+      // Clear test storage before each test
+      SecureStorageService.clearTestStorage();
     });
 
     tearDown(() async {
       // Clean up after each test
-      await SecureStorageService.clearAll();
+      SecureStorageService.clearTestStorage();
+    });
+
+    tearDownAll(() {
+      // Disable test mode after all tests
+      SecureStorageService.disableTestMode();
     });
 
     test('should save and get auth token', () async {

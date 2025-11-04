@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'services/preferences_service.dart';
+import 'services/database_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
@@ -11,7 +12,10 @@ void main() async {
     await PreferencesService.init();
 
     // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    // Initialize DatabaseService to ensure database is created
+    await DatabaseService.database;
+    
+    print('Services initialized successfully');
   } catch (e) {
     print('Error initializing services: $e');
   }

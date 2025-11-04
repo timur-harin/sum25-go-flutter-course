@@ -18,108 +18,227 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lab 04 - Database & Persistence'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text(
+          'Lab 04 - Database & Persistence',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Status',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE3F2FD), Color(0xFFF3E5F5)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    gradient: const LinearGradient(
+                      colors: [Colors.white, Color(0xFFF8F9FA)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(height: 8),
-                    Text(_statusMessage),
-                    if (_isLoading)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8),
-                        child: LinearProgressIndicator(),
-                      ),
-                  ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.deepPurple),
+                            SizedBox(width: 8),
+                            Text(
+                              'Status',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _statusMessage,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        if (_isLoading)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: LinearProgressIndicator(
+                              backgroundColor: Colors.grey,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Storage Options',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-
-            // SharedPreferences Section
-            _buildStorageSection(
-              'SharedPreferences',
-              'Simple key-value storage for app settings',
-              [
-                ElevatedButton(
-                  onPressed: _testSharedPreferences,
-                  child: const Text('Test SharedPreferences'),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  gradient: const LinearGradient(
+                    colors: [Colors.deepPurple, Colors.purple],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
                 ),
-              ],
-            ),
-
-            // SQLite Section
-            _buildStorageSection(
-              'SQLite Database',
-              'Local SQL database for structured data',
-              [
-                ElevatedButton(
-                  onPressed: _testSQLite,
-                  child: const Text('Test SQLite'),
+                child: const Text(
+                  'Storage Options',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
 
-            // Secure Storage Section
-            _buildStorageSection(
-              'Secure Storage',
-              'Encrypted storage for sensitive data',
-              [
-                ElevatedButton(
-                  onPressed: _testSecureStorage,
-                  child: const Text('Test Secure Storage'),
+              // SharedPreferences Section
+              _buildStorageSection(
+                'SharedPreferences',
+                'Simple key-value storage for app settings',
+                Icons.settings,
+                const LinearGradient(
+                  colors: [Color(0xFF64B5F6), Color(0xFF42A5F5)],
                 ),
-              ],
-            ),
-          ],
+                [
+                  ElevatedButton(
+                    onPressed: _testSharedPreferences,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text('Test SharedPreferences'),
+                  ),
+                ],
+              ),
+
+              // SQLite Section
+              _buildStorageSection(
+                'SQLite Database',
+                'Local SQL database for structured data',
+                Icons.storage,
+                const LinearGradient(
+                  colors: [Color(0xFF81C784), Color(0xFF66BB6A)],
+                ),
+                [
+                  ElevatedButton(
+                    onPressed: _testSQLite,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text('Test SQLite'),
+                  ),
+                ],
+              ),
+
+              // Secure Storage Section
+              _buildStorageSection(
+                'Secure Storage',
+                'Encrypted storage for sensitive data',
+                Icons.security,
+                const LinearGradient(
+                  colors: [Color(0xFFFFB74D), Color(0xFFFFA726)],
+                ),
+                [
+                  ElevatedButton(
+                    onPressed: _testSecureStorage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text('Test Secure Storage'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildStorageSection(
-      String title, String description, List<Widget> buttons) {
+      String title, String description, IconData icon, Gradient gradient, List<Widget> buttons) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: buttons,
-            ),
-          ],
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          gradient: gradient,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, color: Colors.white, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: buttons,
+              ),
+            ],
+          ),
         ),
       ),
     );
