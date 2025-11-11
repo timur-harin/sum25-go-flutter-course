@@ -2,15 +2,25 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
+
+func validatePublishedContent(fl validator.FieldLevel) bool {
+	post, ok := fl.Parent().Interface().(Post)
+	if !ok { return false }
+	return !post.Published || post.Published && post.Content != ""
+}
 
 // Post represents a blog post in the system
 type Post struct {
 	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
-	Title     string    `json:"title" db:"title"`
-	Content   string    `json:"content" db:"content"`
+	UserID    int       `json:"user_id" db:"user_id" validate:"required,min=1"`
+	Title     string    `json:"title" db:"title" validate:"required,min=5"`
+	Content   string    `json:"content" db:"content" validate:"required_if_published"`
 	Published bool      `json:"published" db:"published"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
@@ -18,56 +28,81 @@ type Post struct {
 
 // CreatePostRequest represents the payload for creating a post
 type CreatePostRequest struct {
-	UserID    int    `json:"user_id"`
-	Title     string `json:"title"`
-	Content   string `json:"content"`
+	UserID    int    `json:"user_id" validate:"required,min=1"`
+	Title     string `json:"title" validate:"required,min=5"`
+	Content   string `json:"content" validate:"required_if_published"`
 	Published bool   `json:"published"`
 }
 
 // UpdatePostRequest represents the payload for updating a post
 type UpdatePostRequest struct {
-	Title     *string `json:"title,omitempty"`
-	Content   *string `json:"content,omitempty"`
+	Title     *string `json:"title,omitempty" validate:"min=5"`
+	Content   *string `json:"content,omitempty" validate:"required_if_published"`
 	Published *bool   `json:"published,omitempty"`
 }
 
-// TODO: Implement Validate method for Post
 func (p *Post) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - Content should not be empty if published is true
-	// - UserID should be greater than 0
-	// Return appropriate errors if validation fails
-	return nil
+	return validate.Struct(p)
 }
 
-// TODO: Implement Validate method for CreatePostRequest
 func (req *CreatePostRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - UserID should be greater than 0
-	// - Content should not be empty if published is true
-	// Return appropriate errors if validation fails
-	return nil
+	return validate.Struct(req)
 }
 
-// TODO: Implement ToPost method for CreatePostRequest
 func (req *CreatePostRequest) ToPost() *Post {
-	// TODO: Convert CreatePostRequest to Post
-	// Set timestamps to current time
-	return nil
+	return &Post{
+		UserID: req.UserID,
+		Title: req.Title,
+		Content: req.Content,
+		Published: req.Published,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
-// TODO: Implement ScanRow method for Post
 func (p *Post) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into Post struct
-	// Handle the case where row might be nil
+	if row == nil {
+		return errNilRow
+	}
+	err := row.Scan(
+		&p.ID, &p.UserID, &p.Title, &p.Content,
+		&p.CreatedAt, &p.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("user not found: %w", err)
+		}
+		return err
+	}
 	return nil
 }
 
-// TODO: Implement ScanRows method for Post slice
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
-	// TODO: Scan multiple database rows into Post slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	if rows == nil {
+		return nil, errNilRows
+	}
+	defer rows.Close()
+	
+	var posts []Post
+	
+	for rows.Next() {
+		var user Post
+		err := rows.Scan(
+			&user.ID,
+			&user.Title,
+			&user.Content,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, user)
+	}
+	
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	
+	return posts, nil
 }
