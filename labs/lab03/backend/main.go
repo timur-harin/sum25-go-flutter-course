@@ -1,7 +1,11 @@
 package main
 
 import (
-	"log"
+    "lab03-backend/api"
+    "lab03-backend/storage"
+    "log"
+    "net/http"
+    "os"
 )
 
 func main() {
@@ -16,6 +20,16 @@ func main() {
 	//   - IdleTimeout: 60 seconds
 	// TODO: Add logging to show server is starting
 	// TODO: Start the server and handle any errors
+	
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
 
-	log.Println("TODO: Implement main function")
+    memStore := storage.NewMemoryStorage()
+    handler := api.NewHandler(memStore)
+    router := handler.SetupRoutes()
+
+    log.Printf("Server started at http://localhost:%s", port)
+    log.Fatal(http.ListenAndServe(":"+port, router))
 }
