@@ -6,9 +6,6 @@ import (
 )
 
 // Message represents a chat message
-// Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
-
 type Message struct {
 	Sender    string
 	Recipient string
@@ -18,45 +15,83 @@ type Message struct {
 }
 
 // Broker handles message routing between users
-// Contains context, input channel, user registry, mutex, done channel
-
 type Broker struct {
 	ctx        context.Context
-	input      chan Message            // Incoming messages
-	users      map[string]chan Message // userID -> receiving channel
-	usersMutex sync.RWMutex            // Protects users map
-	done       chan struct{}           // For shutdown
-	// TODO: Add more fields if needed
+	input      chan Message            // Входящие сообщения от клиентов
+	users      map[string]chan Message // userID -> личный канал
+	usersMutex sync.RWMutex            // Защита users от гонки
+	done       chan struct{}           // Сигнал завершения
 }
 
-// NewBroker creates a new message broker
+// NewBroker создает новый брокер
 func NewBroker(ctx context.Context) *Broker {
-	// TODO: Initialize broker fields
 	return &Broker{
 		ctx:   ctx,
-		input: make(chan Message, 100),
+		input: make(chan Message, 100), // буферизованный канал входящих сообщений
 		users: make(map[string]chan Message),
 		done:  make(chan struct{}),
 	}
 }
 
-// Run starts the broker event loop (goroutine)
+// Run запускает основной цикл обработки сообщений
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	for {
+		select {
+		case msg := <-b.input:
+			if msg.Broadcast {
+				// Рассылаем всем пользователям
+				b.usersMutex.RLock()
+				for _, ch := range b.users {
+					select {
+					case ch <- msg:
+					default:
+						// Если канал переполнен — пропускаем (fail-safe)
+					}
+				}
+				b.usersMutex.RUnlock()
+			} else {
+				// Отправляем только конкретному получателю
+				b.usersMutex.RLock()
+				if ch, ok := b.users[msg.Recipient]; ok {
+					select {
+					case ch <- msg:
+					default:
+						// Канал переполнен — сообщение теряется
+					}
+				}
+				b.usersMutex.RUnlock()
+			}
+
+		case <-b.ctx.Done():
+			return // Завершение через внешний контекст
+		case <-b.done:
+			return // Завершение вручную
+		}
+	}
 }
 
-// SendMessage sends a message to the broker
+// SendMessage отправляет сообщение в брокер
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+	case b.input <- msg:
+		return nil
+	case <-b.ctx.Done():
+		return context.Canceled
+	case <-b.done:
+		return context.Canceled
+	}
 }
 
-// RegisterUser adds a user to the broker
+// RegisterUser добавляет пользователя в систему
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	b.users[userID] = recv
 }
 
-// UnregisterUser removes a user from the broker
+// UnregisterUser удаляет пользователя из системы
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	delete(b.users, userID)
 }
