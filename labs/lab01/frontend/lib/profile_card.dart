@@ -16,24 +16,32 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final initial = (name.isNotEmpty) ? name[0].toUpperCase() : '?';
+
     return Card(
-      margin: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.all(16),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
-            const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
-            
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                  ? NetworkImage(avatarUrl!)
+                  : null,
+              child: (avatarUrl == null || avatarUrl!.isEmpty)
+                  ? Text(initial, style: const TextStyle(fontSize: 32))
+                  : null,
+            ),
+            const SizedBox(height: 12),
+            Text(name,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+            const SizedBox(height: 4),
+            Text(email,
+                style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            const SizedBox(height: 4),
+            Text('Age: $age', style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
