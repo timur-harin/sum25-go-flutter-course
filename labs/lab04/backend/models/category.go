@@ -1,6 +1,10 @@
 package models
 
 import (
+	"errors"
+	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -51,6 +55,21 @@ func (c *Category) BeforeCreate(tx *gorm.DB) error {
 	// - Set default values
 	// - Perform any pre-creation logic
 	// Example: if c.Color == "" { c.Color = "#007bff" }
+
+	if strings.TrimSpace(c.Name) == "" || len(c.Name) < 2 || len(c.Name) > 100 {
+		return errors.New("category name must be between 2 and 100 characters")
+	}
+
+	if len(c.Description) > 500 {
+		return errors.New("category description must not exceed 500 characters")
+	}
+
+	if c.Color == "" {
+		c.Color = "#007bff"
+	} else if !isValidHexColor(c.Color) {
+		return errors.New("color must be a valid hex code (e.g., #ffffff)")
+	}
+
 	return nil
 }
 
@@ -61,6 +80,7 @@ func (c *Category) AfterCreate(tx *gorm.DB) error {
 	// - Send notifications
 	// - Update cache
 	// Example: log.Printf("Category created: %s", c.Name)
+	log.Printf("Category created: %s", c.Name)
 	return nil
 }
 
@@ -70,6 +90,19 @@ func (c *Category) BeforeUpdate(tx *gorm.DB) error {
 	// - Validate changes
 	// - Prevent certain updates
 	// - Clean up related data
+
+	if len(c.Name) < 2 || len(c.Name) > 100 {
+		return errors.New("updated name must be between 2 and 100 characters")
+	}
+
+	if len(c.Description) > 500 {
+		return errors.New("updated description must not exceed 500 characters")
+	}
+
+	if c.Color != "" && !isValidHexColor(c.Color) {
+		return errors.New("updated color must be a valid hex code")
+	}
+
 	return nil
 }
 
@@ -81,6 +114,19 @@ func (req *CreateCategoryRequest) Validate() error {
 	// - Description should not exceed limits
 	// Example using validator package:
 	// return validator.New().Struct(req)
+
+	if strings.TrimSpace(req.Name) == "" || len(req.Name) < 2 || len(req.Name) > 100 {
+		return errors.New("name must be between 2 and 100 characters")
+	}
+
+	if len(req.Description) > 500 {
+		return errors.New("description must not exceed 500 characters")
+	}
+
+	if req.Color != "" && !isValidHexColor(req.Color) {
+		return errors.New("color must be a valid hex color")
+	}
+
 	return nil
 }
 
@@ -96,20 +142,34 @@ func (req *CreateCategoryRequest) ToCategory() *Category {
 	//     Color:       req.Color,
 	//     Active:      true,
 	// }
-	return nil
+
+	color := req.Color
+	if strings.TrimSpace(color) == "" {
+		color = "#007bff"
+	}
+
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       color,
+		Active:      true,
+	}
 }
 
 // TODO: Implement GORM scopes (reusable query logic)
 func ActiveCategories(db *gorm.DB) *gorm.DB {
 	// TODO: GORM scope for active categories
 	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
 	// TODO: GORM scope for categories with posts
 	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.
+		Joins("JOIN post_categories ON post_categories.category_id = categories.id").
+		Joins("JOIN posts ON posts.id = post_categories.post_id").
+		Group("categories.id")
 }
 
 // TODO: Implement model validation methods
@@ -119,9 +179,17 @@ func (c *Category) IsActive() bool {
 }
 
 func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
+	var count int64
+	err := db.
+		Table("post_categories").
+		Where("category_id = ?", c.ID).
+		Count(&count).
+		Error
+	return count, err
+}
+
+// Helper function for color validation (simple hex regex)
+func isValidHexColor(s string) bool {
+	matched, _ := regexp.MatchString(`^#(?:[0-9a-fA-F]{3}){1,2}$`, s)
+	return matched
 }

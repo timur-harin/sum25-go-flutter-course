@@ -10,12 +10,14 @@ import (
 // Handler holds the storage instance
 type Handler struct {
 	// TODO: Add storage field of type *storage.MemoryStorage
+	storage *storage.MemoryStorage
 }
 
 // NewHandler creates a new handler instance
 func NewHandler(storage *storage.MemoryStorage) *Handler {
 	// TODO: Return a new Handler instance with provided storage
-	return nil
+	return &Handler{
+		storage: storage,}
 }
 
 // SetupRoutes configures all API routes
@@ -148,6 +150,9 @@ func corsMiddleware(next http.Handler) http.Handler {
 	// Call next handler for non-OPTIONS requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Implement CORS logic here
+		w.Header.Set("Access-Control-Allow-Origin", "*")
+		w.Header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header.Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		next.ServeHTTP(w, r)
 	})
 }
