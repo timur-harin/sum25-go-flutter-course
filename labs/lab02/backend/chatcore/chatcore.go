@@ -2,13 +2,11 @@ package chatcore
 
 import (
 	"context"
+	"errors"
 	"sync"
 )
 
 // Message represents a chat message
-// Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
-
 type Message struct {
 	Sender    string
 	Recipient string
@@ -18,20 +16,16 @@ type Message struct {
 }
 
 // Broker handles message routing between users
-// Contains context, input channel, user registry, mutex, done channel
-
 type Broker struct {
 	ctx        context.Context
-	input      chan Message            // Incoming messages
-	users      map[string]chan Message // userID -> receiving channel
-	usersMutex sync.RWMutex            // Protects users map
-	done       chan struct{}           // For shutdown
-	// TODO: Add more fields if needed
+	input      chan Message
+	users      map[string]chan Message
+	usersMutex sync.RWMutex
+	done       chan struct{}
 }
 
 // NewBroker creates a new message broker
 func NewBroker(ctx context.Context) *Broker {
-	// TODO: Initialize broker fields
 	return &Broker{
 		ctx:   ctx,
 		input: make(chan Message, 100),
@@ -42,21 +36,75 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	go func() {
+		defer close(b.done)
+		for {
+			select {
+			case <-b.ctx.Done():
+				close(b.input)
+				return
+			case msg, ok := <-b.input:
+				if !ok {
+					return
+				}
+				b.dispatch(msg)
+			}
+		}
+	}()
 }
 
-// SendMessage sends a message to the broker
+// dispatch routes a message to the appropriate users
+func (b *Broker) dispatch(msg Message) {
+	b.usersMutex.RLock()
+	defer b.usersMutex.RUnlock()
+
+	if msg.Broadcast {
+		// Broadcast to all users including sender
+		for _, ch := range b.users {
+			select {
+			case ch <- msg:
+			default:
+				// Drop message if channel is full (or handle differently)
+			}
+		}
+	} else {
+		// Private message
+		if ch, ok := b.users[msg.Recipient]; ok {
+			select {
+			case ch <- msg:
+			default:
+				// Drop if full
+			}
+		}
+	}
+}
+
+// SendMessage sends a message to the broker input channel
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+	case <-b.ctx.Done():
+		return errors.New("broker is stopped")
+	default:
+	}
+
+	select {
+	case b.input <- msg:
+		return nil
+	case <-b.ctx.Done():
+		return errors.New("broker is stopped")
+	}
 }
 
-// RegisterUser adds a user to the broker
+// RegisterUser registers a user and their receiving channel
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	b.users[userID] = recv
 }
 
-// UnregisterUser removes a user from the broker
+// UnregisterUser unregisters a user
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	delete(b.users, userID)
 }
