@@ -30,6 +30,30 @@ jobs:
         with:
           flutter-version: '3.32.1'
 
+      # ─────────────────────────────────────────────────────────────
+      # Добавляем Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          cd labs/lab03/proxy
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      # Запускаем proxy-сервер
+      - name: Start proxy server
+        run: |
+          cd labs/lab03/proxy
+          python proxy.py &
+          echo $! > proxy.pid
+          sleep 5  # Даем proxy запуститься
+      # ─────────────────────────────────────────────────────────────
+
       - name: Install Go dependencies
         run: |
           cd labs/lab03/backend
@@ -85,6 +109,17 @@ jobs:
           if flutter test test/integration_test.dart; then
             echo "integration_passed=true" >> $GITHUB_OUTPUT
           fi
+
+      # ─────────────────────────────────────────────────────────────
+      # Останавливаем proxy-сервер
+      - name: Stop proxy server
+        if: always()
+        run: |
+          if [ -f labs/lab03/proxy/proxy.pid ]; then
+            kill $(cat labs/lab03/proxy/proxy.pid) || true
+            rm labs/lab03/proxy/proxy.pid
+          fi
+      # ─────────────────────────────────────────────────────────────
 
       - name: Stop backend server
         if: always()

@@ -28,7 +28,7 @@ void main() {
       test('should get messages successfully', () async {
         // Mock client that returns a successful response
         final mockClient = MockClient((request) async {
-          if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+          if (request.url.toString() == 'http://localhost:8888/api/messages' &&
               request.method == 'GET') {
             final response = {
               'success': true,
@@ -57,7 +57,7 @@ void main() {
 
       test('should create message successfully', () async {
         final mockClient = MockClient((request) async {
-          if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+          if (request.url.toString() == 'http://localhost:8888/api/messages' &&
               request.method == 'POST') {
             final response = {
               'success': true,
@@ -85,7 +85,7 @@ void main() {
       test('should update message successfully', () async {
         final mockClient = MockClient((request) async {
           if (request.url.toString() ==
-                  'http://localhost:8080/api/messages/1' &&
+                  'http://localhost:8888/api/messages/1' &&
               request.method == 'PUT') {
             final response = {
               'success': true,
@@ -111,7 +111,7 @@ void main() {
       test('should delete message successfully', () async {
         final mockClient = MockClient((request) async {
           if (request.url.toString() ==
-                  'http://localhost:8080/api/messages/1' &&
+                  'http://localhost:8888/api/messages/1' &&
               request.method == 'DELETE') {
             return http.Response('', 204);
           }
@@ -127,7 +127,7 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString().contains('/api/status/200')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8080/api/cat/200"}}',
+                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8888/api/cat/200"}}',
                 200);
           }
           return http.Response('Not Found', 404);
@@ -143,7 +143,7 @@ void main() {
 
       test('should perform health check successfully', () async {
         final mockClient = MockClient((request) async {
-          if (request.url.toString() == 'http://localhost:8080/api/health' &&
+          if (request.url.toString() == 'http://localhost:8888/api/health' &&
               request.method == 'GET') {
             final response = {
               'status': 'healthy',
@@ -258,17 +258,17 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString().contains('/api/status/200')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8080/api/cat/200"}}',
+                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8888/api/cat/200"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/404')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"http://localhost:8080/api/cat/404"}}',
+                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"http://localhost:8888/api/cat/404"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/500')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"http://localhost:8080/api/cat/500"}}',
+                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"http://localhost:8888/api/cat/500"}}',
                 200);
           }
           return http.Response('Not Found', 404);
@@ -349,17 +349,17 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString().contains('/api/status/200')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8080/api/cat/200"}}',
+                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8888/api/cat/200"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/404')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"http://localhost:8080/api/cat/404"}}',
+                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"http://localhost:8888/api/cat/404"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/500')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"http://localhost:8080/api/cat/500"}}',
+                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"http://localhost:8888/api/cat/500"}}',
                 200);
           }
           return http.Response('Not Found', 404);

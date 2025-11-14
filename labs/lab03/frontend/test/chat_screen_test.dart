@@ -25,7 +25,7 @@ void main() {
     // Helper function to create mock client
     MockClient _createMockClient() {
       return MockClient((request) async {
-        if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+        if (request.url.toString() == 'http://localhost:8888/api/messages' &&
             request.method == 'GET') {
           final response = {
             'success': true,
@@ -40,7 +40,7 @@ void main() {
           };
           return http.Response(jsonEncode(response), 200);
         }
-        if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+        if (request.url.toString() == 'http://localhost:8888/api/messages' &&
             request.method == 'POST') {
           final response = {
             'success': true,
@@ -53,23 +53,23 @@ void main() {
           };
           return http.Response(jsonEncode(response), 201);
         }
-        if (request.url.toString() == 'http://localhost:8080/api/status/200') {
+        if (request.url.toString() == 'http://localhost:8888/api/status/200') {
           final response = {
             'success': true,
             'data': {
               'status_code': 200,
-              'image_url': 'http://localhost:8080/api/cat/200',
+              'image_url': 'http://localhost:8888/api/cat/200',
               'description': 'OK'
             }
           };
           return http.Response(jsonEncode(response), 200);
         }
-        if (request.url.toString() == 'http://localhost:8080/api/status/404') {
+        if (request.url.toString() == 'http://localhost:8888/api/status/404') {
           final response = {
             'success': true,
             'data': {
               'status_code': 404,
-              'image_url': 'http://localhost:8080/api/cat/404',
+              'image_url': 'http://localhost:8888/api/cat/404',
               'description': 'Not Found'
             }
           };
@@ -272,7 +272,7 @@ void main() {
           (WidgetTester tester) async {
         // Create a mock client that returns empty messages
         final emptyMockClient = MockClient((request) async {
-          if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+          if (request.url.toString() == 'http://localhost:8888/api/messages' &&
               request.method == 'GET') {
             final response = {'success': true, 'data': []};
             return http.Response(jsonEncode(response), 200);

@@ -104,7 +104,7 @@ void main() {
           expect(statusResponse, isA<HTTPStatusResponse>());
           expect(statusResponse.statusCode, equals(code));
           expect(statusResponse.imageUrl,
-              contains('localhost:8080/api/cat/$code'));
+              contains('localhost:8888/api/cat/$code'));
 
           // Test that the image URL is accessible and returns an image
           final imageResponse =
@@ -156,7 +156,7 @@ void main() {
           final statusResponse = await apiService.getHTTPStatus(code);
           expect(statusResponse.statusCode, equals(code));
           expect(statusResponse.imageUrl,
-              contains('localhost:8080/api/cat/$code'));
+              contains('localhost:8888/api/cat/$code'));
 
           // Verify image is accessible
           final imageResponse =
@@ -169,7 +169,7 @@ void main() {
     group('CORS Configuration Tests', () {
       test('should handle CORS headers correctly for API requests', () async {
         final response = await http.get(
-          Uri.parse('http://localhost:8080/api/messages'),
+          Uri.parse('http://localhost:8888/api/messages'),
           headers: {
             'Origin': 'http://localhost:3000',
             'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ void main() {
 
       test('should handle OPTIONS preflight request', () async {
         final response = await http.post(
-          Uri.parse('http://localhost:8080/api/messages'),
+          Uri.parse('http://localhost:8888/api/messages'),
           headers: {
             'Origin': 'http://localhost:3000',
             'Access-Control-Request-Method': 'POST',
@@ -213,7 +213,7 @@ void main() {
 
         // Test PUT with CORS headers
         final response = await http.put(
-          Uri.parse('http://localhost:8080/api/messages/${message.id}'),
+          Uri.parse('http://localhost:8888/api/messages/${message.id}'),
           headers: {
             'Origin': 'http://localhost:3000',
             'Content-Type': 'application/json',
@@ -239,7 +239,7 @@ void main() {
 
         // Test DELETE with CORS headers
         final response = await http.delete(
-          Uri.parse('http://localhost:8080/api/messages/${message.id}'),
+          Uri.parse('http://localhost:8888/api/messages/${message.id}'),
           headers: {
             'Origin': 'http://localhost:3000',
           },
