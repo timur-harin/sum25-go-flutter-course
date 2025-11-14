@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 
 	"github.com/pressly/goose/v3"
 )
@@ -19,7 +20,7 @@ func RunMigrations(db *sql.DB) error {
 	}
 
 	// Get path to migrations directory (relative to backend directory)
-	migrationsDir := "../migrations"
+	migrationsDir := filepath.Join("..", "migrations")
 
 	// Run migrations from the migrations directory
 	if err := goose.Up(db, migrationsDir); err != nil {
