@@ -57,6 +57,16 @@ class User {
     // TODO: Return string representation of User
     return super.toString();
   }
+
+  static User fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'] as int,
+      name: map['name'] as String,
+      email: map['email'] as String,
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+    );
+  }
 }
 
 @JsonSerializable()
