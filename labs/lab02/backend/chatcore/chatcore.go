@@ -26,6 +26,8 @@ type Broker struct {
 	users      map[string]chan Message // userID -> receiving channel
 	usersMutex sync.RWMutex            // Protects users map
 	done       chan struct{}           // For shutdown
+	closed     bool                    // закрыт ли брокер
+	closedMu   sync.Mutex              // мьютекс для closed
 	// TODO: Add more fields if needed
 }
 
@@ -42,21 +44,71 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	for {
+		select {
+		case <-b.ctx.Done():
+			b.closedMu.Lock()
+			if !b.closed {
+				b.closed = true
+				close(b.input)
+				close(b.done)
+			}
+			b.closedMu.Unlock()
+			return
+		case msg, ok := <-b.input:
+			if !ok {
+				return
+			}
+			if msg.Broadcast {
+				b.usersMutex.RLock()
+				for _, ch := range b.users {
+					// Не блокируемся, если канал переполнен
+					select {
+					case ch <- msg:
+					default:
+					}
+				}
+				b.usersMutex.RUnlock()
+			} else if msg.Recipient != "" {
+				b.usersMutex.RLock()
+				if ch, ok := b.users[msg.Recipient]; ok {
+					select {
+					case ch <- msg:
+					default:
+					}
+				}
+				b.usersMutex.RUnlock()
+			}
+		}
+	}
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	b.closedMu.Lock()
+	closed := b.closed
+	b.closedMu.Unlock()
+	if closed {
+		return context.Canceled
+	}
+	select {
+	case <-b.ctx.Done():
+		return context.Canceled
+	case b.input <- msg:
+		return nil
+	}
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	b.users[userID] = recv
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	delete(b.users, userID)
 }
