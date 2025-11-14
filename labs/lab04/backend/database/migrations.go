@@ -29,20 +29,23 @@ func RunMigrations(db *sql.DB) error {
 	return nil
 }
 
-// TODO: Implement this function
 // RollbackMigration rolls back the last migration using goose
 func RollbackMigration(db *sql.DB) error {
-	return nil
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return err
+	}
+	return goose.Down(db, "../migrations")
 }
 
-// TODO: Implement this function
 // GetMigrationStatus checks migration status using goose
 func GetMigrationStatus(db *sql.DB) error {
-	return nil
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return err
+	}
+	return goose.Status(db, "../migrations")
 }
 
-// TODO: Implement this function
 // CreateMigration creates a new migration file
 func CreateMigration(name string) error {
-	return nil
+	return goose.Create(nil, "../migrations", name, "sql")
 }
