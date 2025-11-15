@@ -7,10 +7,24 @@ class User {
   final int id;
   final String name;
   final String email;
-  @JsonKey(name: 'created_at')
+  // Changed because of error, probably in time
+  @JsonKey(name: 'created_at', fromJson: _fromJson, toJson: _toJson)
   final DateTime createdAt;
-  @JsonKey(name: 'updated_at')
+  @JsonKey(name: 'updated_at', fromJson: _fromJson, toJson: _toJson)
   final DateTime updatedAt;
+  // Helper functions for fix errors with time  
+  static DateTime _fromJson(dynamic value) {
+    if (value is String) {
+      return DateTime.parse(value);
+    } else if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
+    throw Exception('Invalid date format');
+  }
+
+  static dynamic _toJson(DateTime date) {
+    return date.toIso8601String(); // or millisecondsSinceEpoch if you prefer
+  }
 
   User({
     required this.id,
@@ -23,7 +37,7 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
-  // TODO: Implement copyWith method
+  // Implement copyWith method
   User copyWith({
     int? id,
     String? name,
@@ -31,31 +45,40 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    // TODO: Create a copy of User with updated fields
+    // Create a copy of User with updated fields
     // Return new User instance with updated values or original values if null
-    throw UnimplementedError('TODO: implement copyWith method');
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt
+      );
   }
 
-  // TODO: Implement equality operator
+  // Implement equality operator
   @override
   bool operator ==(Object other) {
-    // TODO: Compare User objects for equality
+    // Compare User objects for equality
     // Check if other is User and all fields are equal
-    return super == other;
+    if (other is User) {
+      return (name == other.name) && (email == other.email) && (createdAt == other.createdAt) && (updatedAt == other.updatedAt);
+    }
+    return false;
   }
 
-  // TODO: Implement hashCode
+  // Implement hashCode
   @override
   int get hashCode {
-    // TODO: Generate hash code based on all fields
-    return super.hashCode;
+    // Generate hash code based on all fields
+    return name.hashCode + email.hashCode + createdAt.hashCode + updatedAt.hashCode;
   }
 
-  // TODO: Implement toString
+  // Implement toString
   @override
   String toString() {
-    // TODO: Return string representation of User
-    return super.toString();
+    // Return string representation of User
+    return "User: {name: $name, email: $email}";
   }
 }
 
@@ -73,11 +96,18 @@ class CreateUserRequest {
       _$CreateUserRequestFromJson(json);
   Map<String, dynamic> toJson() => _$CreateUserRequestToJson(this);
 
-  // TODO: Implement validate method
+  // Implement validate method
   bool validate() {
-    // TODO: Validate user creation request
+    // Validate user creation request
     // - Name should not be empty and should be at least 2 characters
+    if (name.length < 2) {
+      return false;
+    }
     // - Email should be valid format
-    return false;
+    if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email)) {
+      return false;
+    }
+    
+    return true;
   }
 }
