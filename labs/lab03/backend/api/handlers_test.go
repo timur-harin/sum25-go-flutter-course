@@ -31,14 +31,15 @@ func TestGetMessages(t *testing.T) {
 		t.Errorf("Expected status %v, got %v", http.StatusOK, status)
 	}
 
-	var response models.APIResponse
-	err = json.NewDecoder(rr.Body).Decode(&response)
+	var messages []models.Message
+	err = json.NewDecoder(rr.Body).Decode(&messages)
 	if err != nil {
 		t.Fatalf("Could not decode response: %v", err)
 	}
 
-	if !response.Success {
-		t.Error("Expected success to be true")
+	// Should return an array of messages
+	if messages == nil {
+		t.Error("Expected messages array, got nil")
 	}
 }
 
