@@ -1,0 +1,1 @@
+:  /home/lisoon/Documents/sum25-go-flutter-course/labs/lab07/frontend/web/index.html
