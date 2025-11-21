@@ -1,101 +1,165 @@
+// ignore_for_file: json_serializable
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+/// PreferencesService provides a simple key-value storage solution
+/// using SharedPreferences for non-sensitive data like user settings,
+/// app configuration, and cached data.
+/// 
+/// This service demonstrates:
+/// - Simple key-value storage patterns
+/// - Type-safe data operations
+/// - Error handling for uninitialized state
+/// - JSON serialization for complex objects
 class PreferencesService {
+  /// Static instance of SharedPreferences for singleton pattern
+  /// This ensures we have a single instance across the app
   static SharedPreferences? _prefs;
 
-  // TODO: Implement init method
+  /// Initialize the SharedPreferences instance
+  /// Must be called before any other operations
   static Future<void> init() async {
-    // TODO: Initialize SharedPreferences
-    // Store the instance in _prefs variable
-    throw UnimplementedError('TODO: implement init method');
+    _prefs = await SharedPreferences.getInstance();
   }
 
-  // TODO: Implement setString method
+  /// Store a string value with the given key
+  /// Throws exception if SharedPreferences is not initialized
   static Future<void> setString(String key, String value) async {
-    // TODO: Set string value in SharedPreferences
-    // Make sure _prefs is not null
-    throw UnimplementedError('TODO: implement setString method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    await _prefs!.setString(key, value);
   }
 
-  // TODO: Implement getString method
+  /// Retrieve a string value by key
+  /// Returns null if key doesn't exist or SharedPreferences is not initialized
   static String? getString(String key) {
-    // TODO: Get string value from SharedPreferences
-    // Return null if key doesn't exist
-    throw UnimplementedError('TODO: implement getString method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    return _prefs!.getString(key);
   }
 
-  // TODO: Implement setInt method
+  /// Store an integer value with the given key
+  /// Useful for storing numeric settings like theme mode, language index, etc.
   static Future<void> setInt(String key, int value) async {
-    // TODO: Set int value in SharedPreferences
-    throw UnimplementedError('TODO: implement setInt method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    await _prefs!.setInt(key, value);
   }
 
-  // TODO: Implement getInt method
+  /// Retrieve an integer value by key
+  /// Returns null if key doesn't exist
   static int? getInt(String key) {
-    // TODO: Get int value from SharedPreferences
-    throw UnimplementedError('TODO: implement getInt method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    return _prefs!.getInt(key);
   }
 
-  // TODO: Implement setBool method
+  /// Store a boolean value with the given key
+  /// Perfect for feature flags, settings toggles, etc.
   static Future<void> setBool(String key, bool value) async {
-    // TODO: Set bool value in SharedPreferences
-    throw UnimplementedError('TODO: implement setBool method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    await _prefs!.setBool(key, value);
   }
 
-  // TODO: Implement getBool method
+  /// Retrieve a boolean value by key
+  /// Returns null if key doesn't exist
   static bool? getBool(String key) {
-    // TODO: Get bool value from SharedPreferences
-    throw UnimplementedError('TODO: implement getBool method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    return _prefs!.getBool(key);
   }
 
-  // TODO: Implement setStringList method
+  /// Store a list of strings with the given key
+  /// Useful for storing arrays of data like recent searches, favorites, etc.
   static Future<void> setStringList(String key, List<String> value) async {
-    // TODO: Set string list in SharedPreferences
-    throw UnimplementedError('TODO: implement setStringList method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    await _prefs!.setStringList(key, value);
   }
 
-  // TODO: Implement getStringList method
+  /// Retrieve a list of strings by key
+  /// Returns null if key doesn't exist
   static List<String>? getStringList(String key) {
-    // TODO: Get string list from SharedPreferences
-    throw UnimplementedError('TODO: implement getStringList method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    return _prefs!.getStringList(key);
   }
 
-  // TODO: Implement setObject method
+  /// Store a complex object as JSON string
+  /// Converts Map<String, dynamic> to JSON for storage
+  /// Useful for storing structured data like user preferences, app state, etc.
   static Future<void> setObject(String key, Map<String, dynamic> value) async {
-    // TODO: Set object (as JSON string) in SharedPreferences
-    // Convert object to JSON string first
-    throw UnimplementedError('TODO: implement setObject method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    final jsonString = jsonEncode(value);
+    await _prefs!.setString(key, jsonString);
   }
 
-  // TODO: Implement getObject method
+  /// Retrieve a complex object by key
+  /// Decodes JSON string back to Map<String, dynamic>
+  /// Throws exception if stored value is not a valid JSON object
   static Map<String, dynamic>? getObject(String key) {
-    // TODO: Get object from SharedPreferences
-    // Parse JSON string back to Map
-    throw UnimplementedError('TODO: implement getObject method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    final jsonString = _prefs!.getString(key);
+    if (jsonString == null) return null;
+    
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      } else {
+        throw Exception('Stored value is not a Map<String, dynamic>');
+      }
+    } catch (e) {
+      throw Exception('Failed to decode JSON for key "$key": $e');
+    }
   }
 
-  // TODO: Implement remove method
+  /// Remove a specific key-value pair
+  /// Useful for cleaning up individual settings
   static Future<void> remove(String key) async {
-    // TODO: Remove key from SharedPreferences
-    throw UnimplementedError('TODO: implement remove method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    await _prefs!.remove(key);
   }
 
-  // TODO: Implement clear method
+  /// Clear all stored preferences
+  /// Use with caution - this removes all app data
   static Future<void> clear() async {
-    // TODO: Clear all data from SharedPreferences
-    throw UnimplementedError('TODO: implement clear method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    await _prefs!.clear();
   }
 
-  // TODO: Implement containsKey method
+  /// Check if a key exists in storage
+  /// Returns false if key doesn't exist or SharedPreferences is not initialized
   static bool containsKey(String key) {
-    // TODO: Check if key exists in SharedPreferences
-    throw UnimplementedError('TODO: implement containsKey method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    return _prefs!.containsKey(key);
   }
 
-  // TODO: Implement getAllKeys method
+  /// Get all stored keys
+  /// Useful for debugging or data export functionality
   static Set<String> getAllKeys() {
-    // TODO: Get all keys from SharedPreferences
-    throw UnimplementedError('TODO: implement getAllKeys method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences not initialized. Call PreferencesService.init() first.');
+    }
+    return _prefs!.getKeys();
   }
 }

@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      json_serializable:json_serializable:
+        generate_for:
+          exclude:
+            - "lib/services/**" 

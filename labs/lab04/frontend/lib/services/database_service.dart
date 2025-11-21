@@ -1,38 +1,85 @@
+// ignore_for_file: json_serializable
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/user.dart';
 
+/// DatabaseService provides SQLite database operations for the Flutter app
+/// This service demonstrates local database management with SQLite,
+/// including schema creation, CRUD operations, and data relationships.
+/// 
+/// This service demonstrates:
+/// - SQLite database initialization and management
+/// - Database schema creation and versioning
+/// - CRUD operations for complex data structures
+/// - Search and filtering capabilities
+/// - Database path management and cleanup
 class DatabaseService {
+  /// Static database instance for singleton pattern
+  /// Ensures single database connection across the app
   static Database? _database;
+  
+  /// Database file name
   static const String _dbName = 'lab04_app.db';
+  
+  /// Database schema version for migration management
   static const int _version = 1;
 
-  // TODO: Implement database getter
+  /// Get database instance, initializing if necessary
+  /// Returns the database instance or creates a new one
   static Future<Database> get database async {
-    // TODO: Return existing database or initialize new one
-    // Use the null-aware operator to check if _database exists
-    throw UnimplementedError('TODO: implement database getter');
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
+    return _database!;
   }
 
-  // TODO: Implement _initDatabase method
+  /// Initialize the SQLite database
+  /// Creates database file, sets up schema, and configures callbacks
   static Future<Database> _initDatabase() async {
-    // TODO: Initialize the SQLite database
-    // - Get the databases path
-    // - Join with database name
-    // - Open database with version and callbacks
-    throw UnimplementedError('TODO: implement _initDatabase method');
+    // Get the default databases location
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, _dbName);
+
+    // Open the database, set version, and provide onCreate and onUpgrade callbacks
+    return await openDatabase(
+      path,
+      version: _version,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
-  // TODO: Implement _onCreate method
+  /// Create database schema on first run
+  /// Defines table structures and relationships
   static Future<void> _onCreate(Database db, int version) async {
-    // TODO: Create tables when database is first created
-    // Create users table with: id, name, email, created_at, updated_at
-    // Create posts table with: id, user_id, title, content, published, created_at, updated_at
-    // Include proper PRIMARY KEY and FOREIGN KEY constraints
-    throw UnimplementedError('TODO: implement _onCreate method');
+    // Create users table with proper constraints
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    // Create posts table with foreign key relationship to users
+    await db.execute('''
+      CREATE TABLE posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        published INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
-  // TODO: Implement _onUpgrade method
+  /// Handle database schema upgrades
+  /// Called when database version increases
+  /// For now, this is a placeholder for future migrations
   static Future<void> _onUpgrade(
       Database db, int oldVersion, int newVersion) async {
     // TODO: Handle database schema upgrades
@@ -41,85 +88,186 @@ class DatabaseService {
 
   // User CRUD operations
 
-  // TODO: Implement createUser method
+  /// Create a new user in the database
+  /// Validates input data and returns the created user with generated ID
   static Future<User> createUser(CreateUserRequest request) async {
-    // TODO: Insert user into database
-    // - Get database instance
-    // - Insert user data
-    // - Return User object with generated ID and timestamps
-    throw UnimplementedError('TODO: implement createUser method');
+    final db = await database;
+
+    final now = DateTime.now();
+    final userMap = {
+      'name': request.name.trim(),
+      'email': request.email.trim(),
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+    };
+
+    final id = await db.insert(
+      'users',
+      userMap,
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
+
+    return User(
+      id: id,
+      name: userMap['name'] as String,
+      email: userMap['email'] as String,
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 
-  // TODO: Implement getUser method
+  /// Retrieve a user by ID
+  /// Returns null if user doesn't exist
   static Future<User?> getUser(int id) async {
-    // TODO: Get user by ID from database
-    // - Query users table by ID
-    // - Return User object or null if not found
-    throw UnimplementedError('TODO: implement getUser method');
+    final db = await database;
+    final maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      final userMap = maps.first;
+      return User(
+        id: userMap['id'] as int,
+        name: userMap['name'] as String,
+        email: userMap['email'] as String,
+        createdAt: DateTime.parse(userMap['created_at'] as String),
+        updatedAt: DateTime.parse(userMap['updated_at'] as String),
+      );
+    }
+    return null;
   }
 
-  // TODO: Implement getAllUsers method
+  /// Retrieve all users ordered by creation date
+  /// Returns empty list if no users exist
   static Future<List<User>> getAllUsers() async {
-    // TODO: Get all users from database
-    // - Query all users ordered by created_at
-    // - Convert query results to User objects
-    throw UnimplementedError('TODO: implement getAllUsers method');
+    final db = await database;
+    final maps = await db.query(
+      'users',
+      orderBy: 'created_at ASC',
+    );
+    return maps.map((userMap) => User(
+      id: userMap['id'] as int,
+      name: userMap['name'] as String,
+      email: userMap['email'] as String,
+      createdAt: DateTime.parse(userMap['created_at'] as String),
+      updatedAt: DateTime.parse(userMap['updated_at'] as String),
+    )).toList();
   }
 
-  // TODO: Implement updateUser method
+  /// Update an existing user with new data
+  /// Only updates provided fields and automatically updates timestamp
   static Future<User> updateUser(int id, Map<String, dynamic> updates) async {
-    // TODO: Update user in database
-    // - Update user with provided data
-    // - Update the updated_at timestamp
-    // - Return updated User object
-    throw UnimplementedError('TODO: implement updateUser method');
+    final db = await database;
+
+    // Prepare the updates map and update the updated_at timestamp
+    final updatedAt = DateTime.now();
+    final updateData = Map<String, dynamic>.from(updates);
+    updateData['updated_at'] = updatedAt.toIso8601String();
+
+    // Update the user in the database
+    await db.update(
+      'users',
+      updateData,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    // Fetch the updated user and return
+    final maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      final userMap = maps.first;
+      return User(
+        id: userMap['id'] as int,
+        name: userMap['name'] as String,
+        email: userMap['email'] as String,
+        createdAt: DateTime.parse(userMap['created_at'] as String),
+        updatedAt: DateTime.parse(userMap['updated_at'] as String),
+      );
+    } else {
+      throw Exception('User not found');
+    }
   }
 
-  // TODO: Implement deleteUser method
+  /// Delete a user by ID
+  /// Also deletes related posts due to CASCADE constraint
   static Future<void> deleteUser(int id) async {
-    // TODO: Delete user from database
-    // - Delete user by ID
-    // - Consider cascading deletes for related data
-    throw UnimplementedError('TODO: implement deleteUser method');
+    final db = await database;
+
+    // Delete the user by ID
+    await db.delete(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    // If you have related tables (e.g., posts, comments), consider deleting related data here.
+    // For now, this only deletes the user from the users table.
   }
 
-  // TODO: Implement getUserCount method
+  /// Get total count of users in database
+  /// Useful for pagination or statistics
   static Future<int> getUserCount() async {
-    // TODO: Count total number of users
-    // - Query count from users table
-    throw UnimplementedError('TODO: implement getUserCount method');
+    final db = await database;
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM users');
+    if (result.isNotEmpty) {
+      return result.first['count'] as int;
+    } else {
+      return 0;
+    }
   }
 
-  // TODO: Implement searchUsers method
+  /// Search users by name or email
+  /// Uses SQL LIKE operator for partial matching
+  /// Returns empty list if no matches found
   static Future<List<User>> searchUsers(String query) async {
-    // TODO: Search users by name or email
-    // - Use LIKE operator for pattern matching
-    // - Search in both name and email fields
-    throw UnimplementedError('TODO: implement searchUsers method');
+    final db = await database;
+    final searchQuery = '%${query.trim()}%';
+    final maps = await db.query(
+      'users',
+      where: 'name LIKE ? OR email LIKE ?',
+      whereArgs: [searchQuery, searchQuery],
+      orderBy: 'name ASC',
+    );
+    return maps.map((userMap) => User(
+      id: userMap['id'] as int,
+      name: userMap['name'] as String,
+      email: userMap['email'] as String,
+      createdAt: DateTime.parse(userMap['created_at'] as String),
+      updatedAt: DateTime.parse(userMap['updated_at'] as String),
+    )).toList();
   }
 
-  // Database utility methods
-
-  // TODO: Implement closeDatabase method
+  /// Close the database connection
+  /// Should be called when app is shutting down
   static Future<void> closeDatabase() async {
-    // TODO: Close database connection
-    // - Close the database if it exists
-    // - Set _database to null
-    throw UnimplementedError('TODO: implement closeDatabase method');
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 
-  // TODO: Implement clearAllData method
-  static Future<void> clearAllData() async {
-    // TODO: Clear all data from database (for testing)
-    // - Delete all records from all tables
-    // - Reset auto-increment counters if needed
-    throw UnimplementedError('TODO: implement clearAllData method');
-  }
-
-  // TODO: Implement getDatabasePath method
+  /// Get the database file path
+  /// Useful for debugging or backup purposes
   static Future<String> getDatabasePath() async {
-    // TODO: Get the full path to the database file
-    // - Return the complete path to the database file
-    throw UnimplementedError('TODO: implement getDatabasePath method');
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, _dbName);
+  }
+
+  /// Clear all data from all tables
+  /// Use with caution - this removes all app data
+  static Future<void> clearAllData() async {
+    final db = await database;
+
+    // Delete all records from all tables
+    await db.delete('posts');
+    await db.delete('users');
   }
 }

@@ -1,6 +1,10 @@
 package models
 
 import (
+	"errors"
+	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -44,84 +48,129 @@ func (Category) TableName() string {
 	return "categories"
 }
 
-// TODO: Implement BeforeCreate hook
+// BeforeCreate hook: set default values and perform pre-creation logic
 func (c *Category) BeforeCreate(tx *gorm.DB) error {
-	// TODO: GORM BeforeCreate hook
-	// - Validate data before creation
-	// - Set default values
-	// - Perform any pre-creation logic
-	// Example: if c.Color == "" { c.Color = "#007bff" }
+	if c.Color == "" {
+		c.Color = "#007bff"
+	}
+	c.Active = true
+	c.Name = stringTrim(c.Name)
+	c.Description = stringTrim(c.Description)
+
+	// Проверка уникальности имени (если есть подключение к БД)
+	if tx != nil && tx.Statement != nil && tx.Statement.DB != nil {
+		var count int64
+		err := tx.Model(&Category{}).Where("name = ?", c.Name).Count(&count).Error
+		if err == nil && count > 0 {
+			return errors.New("category name must be unique")
+		}
+	}
 	return nil
 }
 
-// TODO: Implement AfterCreate hook
+func stringTrim(s string) string {
+	for len(s) > 0 && (s[0] == ' ' || s[0] == '\t' || s[0] == '\n' || s[0] == '\r') {
+		s = s[1:]
+	}
+	for len(s) > 0 && (s[len(s)-1] == ' ' || s[len(s)-1] == '\t' || s[len(s)-1] == '\n' || s[len(s)-1] == '\r') {
+		s = s[:len(s)-1]
+	}
+	return s
+}
+
+// AfterCreate hook: логирование, уведомления, обновление кэша
 func (c *Category) AfterCreate(tx *gorm.DB) error {
-	// TODO: GORM AfterCreate hook
-	// - Log creation
-	// - Send notifications
-	// - Update cache
-	// Example: log.Printf("Category created: %s", c.Name)
+	// Log creation
+	log.Printf("Category created: %s (ID: %d)", c.Name, c.ID)
+
+	// Send notifications (stub)
+	go func(categoryName string) {
+		log.Printf("Notification: New category created: %s", categoryName)
+	}(c.Name)
+
+	// Update cache (stub)
+	go func(categoryID uint, categoryName string) {
+		log.Printf("Cache updated for category: %d (%s)", categoryID, categoryName)
+	}(c.ID, c.Name)
+
 	return nil
 }
 
-// TODO: Implement BeforeUpdate hook
+// BeforeUpdate hook: валидация, запрет изменения ID, обработка деактивации
 func (c *Category) BeforeUpdate(tx *gorm.DB) error {
-	// TODO: GORM BeforeUpdate hook
-	// - Validate changes
-	// - Prevent certain updates
-	// - Clean up related data
+	c.Name = stringTrim(c.Name)
+	c.Description = stringTrim(c.Description)
+	if len(c.Name) < 2 || len(c.Name) > 100 {
+		return gorm.ErrInvalidData
+	}
+	if len(c.Description) > 500 {
+		return gorm.ErrInvalidData
+	}
+	// Запрет изменения ID
+	if tx.Statement.Changed("ID") {
+		return errors.New("cannot change category ID")
+	}
+	// Если деактивируем категорию — деактивируем посты (stub)
+	if tx.Statement.Changed("Active") && !c.Active {
+		go func(categoryID uint) {
+			log.Printf("Related posts for category %d marked as inactive (stub)", categoryID)
+		}(c.ID)
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateCategoryRequest
+// Validate method for CreateCategoryRequest
 func (req *CreateCategoryRequest) Validate() error {
-	// TODO: Add validation logic for GORM model
-	// - Name should be unique (checked at database level via GORM)
-	// - Color should be valid hex color
-	// - Description should not exceed limits
-	// Example using validator package:
-	// return validator.New().Struct(req)
+	// Trim spaces
+	req.Name = strings.TrimSpace(req.Name)
+	req.Description = strings.TrimSpace(req.Description)
+	req.Color = strings.TrimSpace(req.Color)
+	// Name: required, length 2-100
+	if len(req.Name) < 2 || len(req.Name) > 100 {
+		return errors.New("category name must be between 2 and 100 characters")
+	}
+	// Description: max 500
+	if len(req.Description) > 500 {
+		return errors.New("category description must not exceed 500 characters")
+	}
+	// Color: if present, must be valid hex color (#RRGGBB)
+	if req.Color != "" {
+		matched, _ := regexp.MatchString(`^#[0-9a-fA-F]{6}$`, req.Color)
+		if !matched {
+			return errors.New("color must be a valid hex code in the format #RRGGBB")
+		}
+	}
 	return nil
 }
 
-// TODO: Implement ToCategory method
+// ToCategory: преобразует CreateCategoryRequest в Category
 func (req *CreateCategoryRequest) ToCategory() *Category {
-	// TODO: Convert request to GORM model
-	// - Map fields from request to model
-	// - Set default values
-	// Example:
-	// return &Category{
-	//     Name:        req.Name,
-	//     Description: req.Description,
-	//     Color:       req.Color,
-	//     Active:      true,
-	// }
-	return nil
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       req.Color,
+		Active:      true,
+	}
 }
 
-// TODO: Implement GORM scopes (reusable query logic)
+// GORM scope for active categories
 func ActiveCategories(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for active categories
-	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
+// GORM scope for categories with posts (через ассоциацию)
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for categories with posts
-	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.Joins("JOIN post_categories ON post_categories.category_id = categories.id").Joins("JOIN posts ON posts.id = post_categories.post_id")
 }
 
-// TODO: Implement model validation methods
+// Проверяет, активна ли категория
 func (c *Category) IsActive() bool {
-	// TODO: Check if category is active
 	return c.Active
 }
 
+// Подсчёт постов через ассоциацию GORM
 func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
+	var count int64
+	err := db.Model(&Post{}).Where("id IN (SELECT post_id FROM post_categories WHERE category_id = ?)", c.ID).Count(&count).Error
+	return count, err
 }
