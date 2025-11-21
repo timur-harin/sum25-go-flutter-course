@@ -7,13 +7,11 @@ void main() async {
 
   // TODO: Initialize services
   try {
-    // TODO: Initialize PreferencesService
     await PreferencesService.init();
-
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    // здесь можно инициализировать другие сервисы, если потребуется
+    // например: await DatabaseService.database;
   } catch (e) {
-    print('Error initializing services: $e');
+    print('Ошибка инициализации сервисов: $e');
   }
 
   runApp(const MyApp());

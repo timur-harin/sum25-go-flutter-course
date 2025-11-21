@@ -4,6 +4,7 @@ import (
 	"errors"
 	_ "regexp"
 
+	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
 )
 
@@ -13,9 +14,7 @@ type PasswordService struct{}
 // TODO: Implement NewPasswordService function
 // NewPasswordService creates a new password service
 func NewPasswordService() *PasswordService {
-	// TODO: Implement this function
-	// Return a new PasswordService instance
-	return nil
+	return &PasswordService{}
 }
 
 // TODO: Implement HashPassword method
@@ -25,9 +24,15 @@ func NewPasswordService() *PasswordService {
 // - use bcrypt with cost 10
 // - return the hashed password as string
 func (p *PasswordService) HashPassword(password string) (string, error) {
-	// TODO: Implement password hashing
-	// Use golang.org/x/crypto/bcrypt.GenerateFromPassword
-	return "", errors.New("not implemented")
+	if password == "" {
+		return "", errors.New("password must not be empty")
+	}
+	// Import bcrypt at the top: "golang.org/x/crypto/bcrypt"
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return "", err
+	}
+	return string(hashed), nil
 }
 
 // TODO: Implement VerifyPassword method
@@ -37,10 +42,12 @@ func (p *PasswordService) HashPassword(password string) (string, error) {
 // - return true if password matches hash
 // - return false if password doesn't match
 func (p *PasswordService) VerifyPassword(password, hash string) bool {
-	// TODO: Implement password verification
-	// Use bcrypt.CompareHashAndPassword
-	// Return true only if passwords match exactly
-	return false
+	if password == "" || hash == "" {
+		return false
+	}
+	// Import bcrypt at the top: "golang.org/x/crypto/bcrypt"
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // TODO: Implement ValidatePassword function
@@ -49,7 +56,24 @@ func (p *PasswordService) VerifyPassword(password, hash string) bool {
 // - At least 6 characters
 // - Contains at least one letter and one number
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Check length and basic complexity requirements
-	return errors.New("not implemented")
+	if len(password) < 6 {
+		return errors.New("password must be at least 6 characters long")
+	}
+	hasLetter := false
+	hasNumber := false
+	for _, c := range password {
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+			hasLetter = true
+		}
+		if c >= '0' && c <= '9' {
+			hasNumber = true
+		}
+	}
+	if !hasLetter {
+		return errors.New("password must contain at least one letter")
+	}
+	if !hasNumber {
+		return errors.New("password must contain at least one number")
+	}
+	return nil
 }

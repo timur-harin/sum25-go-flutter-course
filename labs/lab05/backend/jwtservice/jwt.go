@@ -2,7 +2,9 @@ package jwtservice
 
 import (
 	"errors"
-	_ "github.com/golang-jwt/jwt/v4"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // JWTService handles JWT token operations
@@ -15,9 +17,15 @@ type JWTService struct {
 // Requirements:
 // - secretKey must not be empty
 func NewJWTService(secretKey string) (*JWTService, error) {
-	// TODO: Implement this function
-	// Validate secretKey and create service instance
-	return nil, errors.New("not implemented")
+	if secretKey == "" {
+		return nil, ErrValidationError("secretKey", "secret key must not be empty")
+	}
+	return &JWTService{secretKey: secretKey}, nil
+}
+
+// ErrValidationError is a helper for validation errors (if not already defined)
+func ErrValidationError(field, message string) error {
+	return NewValidationError(field, message)
 }
 
 // TODO: Implement GenerateToken method
@@ -28,10 +36,29 @@ func NewJWTService(secretKey string) (*JWTService, error) {
 // - Token expires in 24 hours
 // - Use HS256 signing method
 func (j *JWTService) GenerateToken(userID int, email string) (string, error) {
-	// TODO: Implement token generation
-	// Create claims with userID, email, and expiration
-	// Sign token with secret key
-	return "", errors.New("not implemented")
+	if userID <= 0 {
+		return "", NewValidationError("userID", "userID must be positive")
+	}
+	if email == "" {
+		return "", NewValidationError("email", "email must not be empty")
+	}
+
+	claims := Claims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(24 * time.Hour),
+			),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", err
+	}
+	return signedToken, nil
 }
 
 // TODO: Implement ValidateToken method
@@ -41,8 +68,34 @@ func (j *JWTService) GenerateToken(userID int, email string) (string, error) {
 // - Verify token is not expired
 // - Return parsed claims on success
 func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
-	// TODO: Implement token validation
-	// Parse token and verify signature
-	// Return claims if valid
-	return nil, errors.New("not implemented")
+	if tokenString == "" {
+		return nil, ErrEmptyToken
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the signing method is HMAC and HS256
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, NewInvalidSigningMethodError(token.Method.Alg())
+		}
+		return []byte(j.secretKey), nil
+	})
+	if err != nil {
+		// Check for token expired error
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, ErrTokenExpired
+		}
+		return nil, ErrInvalidToken
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, ErrInvalidClaims
+	}
+
+	// Check expiration (redundant, but explicit)
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
+		return nil, ErrTokenExpired
+	}
+
+	return claims, nil
 }
