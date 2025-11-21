@@ -211,6 +211,7 @@ void main() {
         ];
 
         for (final user in validNames) {
+          print('Name: " [33m${user.name} [0m", length:  [36m${user.name.length} [0m, trimmed:  [36m${user.name.trim().length} [0m');
           expect(user.isValidName(), isTrue,
               reason: 'Name "${user.name}" should be valid');
         }
