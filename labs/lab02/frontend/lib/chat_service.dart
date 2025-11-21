@@ -13,18 +13,18 @@ class ChatService {
   ChatService();
 
   Future<void> connect() async {
-    // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+    // Симуляция подключения
+    await Future.delayed(Duration(milliseconds: 200));
   }
 
   Future<void> sendMessage(String msg) async {
-    // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+    // Симуляция отправки сообщения
+    await Future.delayed(Duration(milliseconds: 100));
+    if (failSend) throw Exception('message sending failed');
+    _controller.add(msg);
   }
 
   Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
+    return _controller.stream;
   }
 }

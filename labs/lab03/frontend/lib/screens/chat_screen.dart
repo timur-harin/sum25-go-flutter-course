@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/message.dart';
+import '../main.dart';
 import '../services/api_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -11,128 +12,308 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add final ApiService _apiService = ApiService();
-  // TODO: Add List<Message> _messages = [];
-  // TODO: Add bool _isLoading = false;
-  // TODO: Add String? _error;
-  // TODO: Add final TextEditingController _usernameController = TextEditingController();
-  // TODO: Add final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // TODO: Call _loadMessages() to load initial data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ChatProvider>().loadMessages();
+    });
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and API service
+    _usernameController.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
-    // TODO: Implement _loadMessages
-    // Set _isLoading = true and _error = null
-    // Try to get messages from _apiService.getMessages()
-    // Update _messages with result
-    // Catch any exceptions and set _error
-    // Set _isLoading = false in finally block
-    // Call setState() to update UI
-  }
-
   Future<void> _sendMessage() async {
-    // TODO: Implement _sendMessage
-    // Get username and content from controllers
-    // Validate that both fields are not empty
-    // Create CreateMessageRequest
-    // Try to send message using _apiService.createMessage()
-    // Add new message to _messages list
-    // Clear the message controller
-    // Catch any exceptions and show error
-    // Call setState() to update UI
+    final username = _usernameController.text.trim();
+    final content = _messageController.text.trim();
+    if (username.isEmpty || content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Username and message are required')),
+      );
+      return;
+    }
+    final request = CreateMessageRequest(username: username, content: content);
+    await context.read<ChatProvider>().createMessage(request);
+    _messageController.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Message sent!')),
+    );
   }
 
   Future<void> _editMessage(Message message) async {
-    // TODO: Implement _editMessage
-    // Show dialog with text field pre-filled with message content
-    // Allow user to edit the content
-    // When saved, create UpdateMessageRequest
-    // Try to update message using _apiService.updateMessage()
-    // Update the message in _messages list
-    // Catch any exceptions and show error
-    // Call setState() to update UI
+    final controller = TextEditingController(text: message.content);
+    final newContent = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Message'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Message'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (newContent != null && newContent.isNotEmpty) {
+      final request = UpdateMessageRequest(content: newContent);
+      await context.read<ChatProvider>().updateMessage(message.id, request);
+    }
   }
 
   Future<void> _deleteMessage(Message message) async {
-    // TODO: Implement _deleteMessage
-    // Show confirmation dialog
-    // If confirmed, try to delete using _apiService.deleteMessage()
-    // Remove message from _messages list
-    // Catch any exceptions and show error
-    // Call setState() to update UI
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Message'),
+        content: const Text('Are you sure you want to delete this message?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await context.read<ChatProvider>().deleteMessage(message.id);
+    }
   }
 
   Future<void> _showHTTPStatus(int statusCode) async {
-    // TODO: Implement _showHTTPStatus
-    // Try to get HTTP status info using _apiService.getHTTPStatus()
-    // Show dialog with status code, description, and HTTP cat image
-    // Use Image.network() to display the cat image
-    // http.cat
-    // Handle loading and error states for the image
+    try {
+      final apiService = context.read<ApiService>();
+      final status = await apiService.getHTTPStatus(statusCode);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('HTTP Status: $statusCode'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(status.description),
+              const SizedBox(height: 16),
+              Image.network(
+                status.imageUrl,
+                height: 200,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(child: CircularProgressIndicator());
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error, size: 100);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   Widget _buildMessageTile(Message message) {
-    // TODO: Implement _buildMessageTile
-    // Return ListTile with:
-    // - leading: CircleAvatar with first letter of username
-    // - title: Text with username and timestamp
-    // - subtitle: Text with message content
-    // - trailing: PopupMenuButton with Edit and Delete options
-    // - onTap: Show HTTP status dialog for random status code (200, 404, 500)
-    return Container(); // Placeholder
+    return ListTile(
+      leading: CircleAvatar(
+        child: Text(message.username[0].toUpperCase()),
+      ),
+      title: Row(
+        children: [
+          Text(message.username),
+          const SizedBox(width: 8),
+          Text(
+            _formatTimestamp(message.timestamp),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+      subtitle: Text(message.content),
+      trailing: PopupMenuButton<String>(
+        onSelected: (value) {
+          switch (value) {
+            case 'edit':
+              _editMessage(message);
+              break;
+            case 'delete':
+              _deleteMessage(message);
+              break;
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(value: 'edit', child: Text('Edit')),
+          const PopupMenuItem(value: 'delete', child: Text('Delete')),
+        ],
+      ),
+      onTap: () {
+        final statusCodes = [200, 404, 500];
+        final randomCode = statusCodes[DateTime.now().millisecond % statusCodes.length];
+        _showHTTPStatus(randomCode);
+      },
+    );
   }
 
   Widget _buildMessageInput() {
-    // TODO: Implement _buildMessageInput
-    // Return Container with:
-    // - Padding and background color
-    // - Column with username TextField and message TextField
-    // - Row with Send button and HTTP Status demo buttons (200, 404, 500)
-    // - Connect controllers to text fields
-    // - Handle send button press
-    return Container(); // Placeholder
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey[100],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _usernameController,
+            decoration: const InputDecoration(
+              labelText: 'Enter your username',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _messageController,
+            decoration: const InputDecoration(
+              labelText: 'Enter your message',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 2,
+            onSubmitted: (_) => _sendMessage(),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _sendMessage,
+                  child: const Text('Send'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => _showHTTPStatus(200),
+                child: const Text('200 OK'),
+              ),
+              const SizedBox(width: 4),
+              ElevatedButton(
+                onPressed: () => _showHTTPStatus(404),
+                child: const Text('404 Not Found'),
+              ),
+              const SizedBox(width: 4),
+              ElevatedButton(
+                onPressed: () => _showHTTPStatus(500),
+                child: const Text('500 Error'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildErrorWidget() {
-    // TODO: Implement _buildErrorWidget
-    // Return Center widget with:
-    // - Column containing error icon, error message, and retry button
-    // - Red color scheme for error state
-    // - Retry button should call _loadMessages()
-    return Container(); // Placeholder
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            context.watch<ChatProvider>().error ?? 'Unknown error',
+            style: TextStyle(color: Colors.red[700]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context.read<ChatProvider>().loadMessages(),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildLoadingWidget() {
-    // TODO: Implement _buildLoadingWidget
-    // Return Center widget with CircularProgressIndicator
-    return Container(); // Placeholder
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement build method
-    // Return Scaffold with:
-    // - AppBar with title "REST API Chat" and refresh action
-    // - Body that shows loading, error, or message list based on state
-    // - BottomSheet with message input
-    // - FloatingActionButton for refresh
-    // Handle different states: loading, error, success
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TODO: Implement ChatScreen'),
+        title: const Text('REST API Chat'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<ChatProvider>().refreshMessages(),
+          ),
+        ],
       ),
-      body: const Center(
-        child: Text('TODO: Implement chat functionality'),
+      body: Consumer<ChatProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return _buildLoadingWidget();
+          } else if (provider.error != null) {
+            return _buildErrorWidget();
+          } else {
+            if (provider.messages.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text('No messages yet'),
+                    SizedBox(height: 8),
+                    Text('Send your first message to get started!'),
+                  ],
+                ),
+              );
+            }
+            return ListView.builder(
+              itemCount: provider.messages.length,
+              itemBuilder: (context, index) {
+                return _buildMessageTile(provider.messages[index]);
+              },
+            );
+          }
+        },
+      ),
+      bottomSheet: _buildMessageInput(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.read<ChatProvider>().refreshMessages(),
+        child: const Icon(Icons.refresh),
       ),
     );
   }
@@ -144,9 +325,40 @@ class HTTPStatusDemo {
   // Generate random status code from [200, 201, 400, 404, 500]
   // Call _showHTTPStatus with the random code
   // This demonstrates different HTTP cat images
+  static void showRandomStatus(BuildContext context, ApiService apiService) {
+    final statusCodes = [200, 201, 400, 404, 500];
+    final randomCode = statusCodes[DateTime.now().millisecond % statusCodes.length];
+    // This would need to be implemented in the ChatScreen context
+  }
 
   // TODO: Add static method showStatusPicker(BuildContext context, ApiService apiService)
   // Show dialog with buttons for different status codes
   // Allow user to pick which HTTP cat they want to see
   // Common codes: 100, 200, 201, 400, 401, 403, 404, 418, 500, 503
+  static void showStatusPicker(BuildContext context, ApiService apiService) {
+    final statusCodes = [100, 200, 201, 400, 401, 403, 404, 418, 500, 503];
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select HTTP Status'),
+        content: Wrap(
+          spacing: 8,
+          children: statusCodes.map((code) => ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // This would need to be implemented in the ChatScreen context
+            },
+            child: Text(code.toString()),
+          )).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
 }
