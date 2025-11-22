@@ -1,131 +1,182 @@
-# Go database migration management with goose
-# Usage: make migrate-up, make migrate-down, make migrate-status, etc.
+package repository
 
-# Database configuration
-DATABASE_URL ?= ./lab04.db
-MIGRATIONS_DIR = ./migrations
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
 
-# Default target
-.PHONY: help
-help:
-	@echo "Available commands:"
-	@echo "  make migrate-up       - Run all pending migrations"
-	@echo "  make migrate-down     - Rollback last migration"
-	@echo "  make migrate-status   - Show migration status"
-	@echo "  make migrate-reset    - Reset database (DROP ALL TABLES)"
-	@echo "  make migrate-create   - Create new migration (usage: make migrate-create NAME=add_new_table)"
-	@echo "  make install-goose    - Install goose migration tool"
-	@echo "  make clean-db         - Remove database file"
-	@echo "  make setup-db         - Clean and setup fresh database"
+	"lab04-backend/models"
+)
 
-# Install goose if not present
-.PHONY: install-goose
-install-goose:
-	@which goose > /dev/null || go install github.com/pressly/goose/v3/cmd/goose@latest
-	@echo "✅ Goose migration tool ready"
+// UserRepository handles database operations for users
+// This repository demonstrates MANUAL SQL approach with database/sql package
+type UserRepository struct {
+	db *sql.DB
+}
 
-# Run all pending migrations
-.PHONY: migrate-up
-migrate-up: install-goose
-	@echo "🚀 Running migrations..."
-	@goose -dir $(MIGRATIONS_DIR) sqlite3 $(DATABASE_URL) up
-	@echo "✅ Migrations completed"
+// NewUserRepository creates a new UserRepository
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
+}
 
-# Rollback last migration
-.PHONY: migrate-down
-migrate-down: install-goose
-	@echo "⏪ Rolling back last migration..."
-	@goose -dir $(MIGRATIONS_DIR) sqlite3 $(DATABASE_URL) down
-	@echo "✅ Rollback completed"
+func (r *UserRepository) Create(req *models.CreateUserRequest) (*models.User, error) {
+	// - Validate the request
+	// - Insert into users table
+	// - Return the created user with ID and timestamps
+	// Use RETURNING clause to get the generated ID and timestamps
 
-# Show migration status
-.PHONY: migrate-status
-migrate-status: install-goose
-	@echo "📊 Migration status:"
-	@goose -dir $(MIGRATIONS_DIR) sqlite3 $(DATABASE_URL) status
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
 
-# Reset database (WARNING: removes all data)
-.PHONY: migrate-reset
-migrate-reset: install-goose
-	@echo "⚠️  WARNING: This will remove ALL data!"
-	@read -p "Are you sure? (y/N): " confirm && [ "$$confirm" = "y" ]
-	@goose -dir $(MIGRATIONS_DIR) sqlite3 $(DATABASE_URL) reset
-	@echo "🗑️  Database reset completed"
+	query := "INSERT INTO users (name, email) VALUES (?, ?) RETURNING id, created_at, updated_at"
+	var id int
+	var createdAt, updatedAt time.Time
 
-# Create new migration
-.PHONY: migrate-create
-migrate-create: install-goose
-	@if [ -z "$(NAME)" ]; then \
-		echo "❌ Error: NAME is required. Usage: make migrate-create NAME=add_new_table"; \
-		exit 1; \
-	fi
-	@echo "📝 Creating migration: $(NAME)"
-	@goose -dir $(MIGRATIONS_DIR) create $(NAME) sql
-	@echo "✅ Migration created in $(MIGRATIONS_DIR)/"
+	if err := r.db.QueryRow(query, req.Name, req.Email).Scan(&id, &createdAt, &updatedAt); err != nil {
+		return nil, err
+	}
 
-# Remove database file
-.PHONY: clean-db
-clean-db:
-	@echo "🗑️  Removing database file..."
-	@rm -f $(DATABASE_URL)
-	@echo "✅ Database file removed"
+	return &models.User{
+		ID:        id,
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
 
-# Setup fresh database
-.PHONY: setup-db
-setup-db: clean-db migrate-up
-	@echo "🎉 Fresh database setup completed!"
+func (r *UserRepository) GetByID(id int) (*models.User, error) {
+	// - Query users table by ID
+	// - Return user or sql.ErrNoRows if not found
+	// - Handle scanning properly
 
-# Run tests with fresh database
-.PHONY: test-with-fresh-db
-test-with-fresh-db: setup-db
-	@echo "🧪 Running tests with fresh database..."
-	@go test ./...
+	u := &models.User{}
+	query := "SELECT id, name, email, created_at, updated_at FROM users WHERE id=?"
 
-# Show database schema (requires sqlite3 command)
-.PHONY: show-schema
-show-schema:
-	@echo "📋 Database schema:"
-	@sqlite3 $(DATABASE_URL) ".schema"
+	if err := r.db.QueryRow(query, id).Scan(
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	return u, nil
+}
 
-# Show all tables
-.PHONY: show-tables
-show-tables:
-	@echo "📊 Database tables:"
-	@sqlite3 $(DATABASE_URL) ".tables"
+func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
+	// - Query users table by email
+	// - Return user or sql.ErrNoRows if not found
+	// - Handle scanning properly
 
-# Backup database
-.PHONY: backup-db
-backup-db:
-	@echo "💾 Creating database backup..."
-	@cp $(DATABASE_URL) "./lab04_backup_$(shell date +%Y%m%d_%H%M%S).db"
-	@echo "✅ Backup created"
+	u := &models.User{}
+	query := "SELECT id, name, email, created_at, updated_at FROM users WHERE email=?"
 
-# Development helpers
-.PHONY: dev-setup
-dev-setup: install-goose setup-db
-	@echo "👨‍💻 Development environment setup completed!"
-	@echo "📚 Next steps:"
-	@echo "  - Run 'make test-with-fresh-db' to verify setup"
-	@echo "  - Use 'make migrate-create NAME=your_migration' to add migrations"
-	@echo "  - Use 'make migrate-status' to check migration state"
+	if err := r.db.QueryRow(query, email).Scan(
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	return u, nil
+}
 
-# Run go mod tidy
-.PHONY: tidy
-tidy:
-	@echo "🧹 Running go mod tidy..."
-	@go mod tidy
-	@echo "✅ Dependencies updated"
+func (r *UserRepository) GetAll() ([]models.User, error) {
+	// - Query all users ordered by created_at
+	// - Return slice of users
+	// - Handle empty result properly
 
-# Run all tests
-.PHONY: test
-test:
-	@echo "🧪 Running all tests..."
-	@go test ./... -v
+	users := make([]models.User, 0)
+	rows, err := r.db.Query("SELECT id, name, email, created_at, updated_at FROM users ORDER BY created_at")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-# Run tests with coverage
-.PHONY: test-coverage
-test-coverage:
-	@echo "📊 Running tests with coverage..."
-	@go test ./... -cover -coverprofile=coverage.out
-	@go tool cover -html=coverage.out -o coverage.html
-	@echo "✅ Coverage report generated: coverage.html" 
+	for rows.Next() {
+		u := &models.User{}
+		if err = rows.Scan(
+			&u.ID,
+			&u.Name,
+			&u.Email,
+			&u.CreatedAt,
+			&u.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, *u)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) Update(id int, req *models.UpdateUserRequest) (*models.User, error) {
+	// - Build dynamic UPDATE query based on non-nil fields in req
+	// - Update updated_at timestamp
+	// - Return updated user
+	// - Handle case where user doesn't exist
+	var (
+		set  []string
+		args []interface{}
+	)
+
+	if req.Name != nil {
+		set = append(set, "name = ?")
+		args = append(args, *req.Name)
+	}
+	if req.Email != nil {
+		set = append(set, "email = ?")
+		args = append(args, *req.Email)
+	}
+	if len(set) == 0 {
+		return nil, fmt.Errorf("no fields to update")
+	}
+
+	set = append(set, "updated_at = ?")
+	args = append(args, time.Now())
+
+	query := fmt.Sprintf(`UPDATE users SET %s WHERE id = ?
+                          RETURNING id, name, email, created_at, updated_at`,
+		strings.Join(set, ", "))
+	args = append(args, id)
+
+	var u models.User
+	if err := r.db.QueryRow(query, args...).
+		Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user %d not found", id)
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *UserRepository) Delete(id int) error {
+	// - Delete from users table by ID
+	// - Return error if user doesn't exist
+	// - Consider cascading deletes for posts
+	res, err := r.db.Exec(`DELETE FROM users WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("user %d not found", id)
+	}
+	return nil
+}
+
+func (r *UserRepository) Count() (int, error) {
+	// - Return count of users in database
+	var cnt int
+	if err := r.db.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&cnt); err != nil {
+		return 0, err
+	}
+	return cnt, nil
+}
