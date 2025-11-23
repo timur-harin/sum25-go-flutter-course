@@ -12,26 +12,49 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add TextEditingController for input
-  // TODO: Add state for messages, loading, and error
-  // TODO: Subscribe to chatService.messageStream
-  // TODO: Implement UI for sending and displaying messages
-  // TODO: Simulate chat logic for tests (current implementation is a simulation)
+  final TextEditingController _controller = TextEditingController();
+  final List<String> _messages = [];
+  StreamSubscription<String>? _subscription;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service and set up listeners
+    _subscription = widget.chatService.messageStream.listen(
+      (msg) {
+        setState(() {
+          _messages.add(msg);
+        });
+      },
+      onError: (_) {
+        setState(() {
+          _error = 'Connection error';
+        });
+      },
+    );
+    widget.chatService.connect().catchError((_) {
+      setState(() {
+        _error = 'Connection error';
+      });
+    });
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and subscriptions
+    _subscription?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
-  void _sendMessage() async {
-    // TODO: Send message using chatService
+  void _sendMessage() {
+    final text = _controller.text;
+    if (text.isEmpty) return;
+    _controller.clear();
+    widget.chatService.sendMessage(text).catchError((_) {
+      setState(() {
+        _error = 'Connection error';
+      });
+    });
   }
 
   @override
@@ -39,7 +62,30 @@ class _ChatScreenState extends State<ChatScreen> {
     // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
-      body: const Center(child: Text('TODO: Implement chat UI')),
+      body: _error != null
+          ? Center(child: Text(_error!))
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) =>
+                        ListTile(title: Text(_messages[index])),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(controller: _controller),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }
