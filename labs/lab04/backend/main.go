@@ -31,7 +31,4 @@ func main() {
 	fmt.Println("Database initialized successfully!")
 	fmt.Printf("User repository: %T\n", userRepo)
 	fmt.Printf("Post repository: %T\n", postRepo)
-
-	// TODO: Add some demo data operations here
-	// You can test your CRUD operations
 }

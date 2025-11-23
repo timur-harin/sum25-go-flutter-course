@@ -3,6 +3,7 @@ package chatcore
 import (
 	"context"
 	"sync"
+	"errors"
 )
 
 // Message represents a chat message
@@ -43,20 +44,67 @@ func NewBroker(ctx context.Context) *Broker {
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
 	// TODO: Implement event loop (fan-in/fan-out pattern)
+	defer close(b.done)
+	for{
+		select{
+		case <-b.ctx.Done():
+			return
+		case msg:=<-b.input:
+			if msg.Broadcast {         
+                b.usersMutex.RLock()
+                for _, ch := range b.users {
+                    select {
+					case ch <- msg:
+                    default:
+                    }
+                }
+                b.usersMutex.RUnlock()
+
+            } else if msg.Recipient != "" {
+                b.usersMutex.RLock()
+                ch, ok := b.users[msg.Recipient]
+                b.usersMutex.RUnlock()
+                if ok {
+                    select {
+					case ch <- msg:
+                    default:
+                    }
+                }
+            }
+		}
+	}
+
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
 	// TODO: Send message to appropriate channel/queue
-	return nil
+	if err := b.ctx.Err(); err != nil {
+			return err
+		}
+		select {
+		case b.input <- msg:
+			return nil
+		case <-b.done:
+			return errors.New("broker has been shut down")
+		}
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
 	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	b.users[userID] = recv
+	b.usersMutex.Unlock()
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
 	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	if ch, ok := b.users[userID]; ok {
+		close(ch)
+		delete(b.users, userID)
+	}
+	b.usersMutex.Unlock()
 }

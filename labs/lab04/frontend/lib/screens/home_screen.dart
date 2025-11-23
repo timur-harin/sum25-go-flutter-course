@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lab04_frontend/models/user.dart';
 import '../services/preferences_service.dart';
 import '../services/database_service.dart';
 import '../services/secure_storage_service.dart';
@@ -132,12 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
       final value = PreferencesService.getString('test_key');
+      await PreferencesService.remove('test_key');
 
       setState(() {
         _statusMessage = 'SharedPreferences test result: $value';
@@ -160,10 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
       final userCount = await DatabaseService.getUserCount();
+      final user = await DatabaseService.createUser(
+          CreateUserRequest(name: 'Test', email: 'test@example.com'));
+      final fetched = await DatabaseService.getUser(user.id);
+      await DatabaseService.deleteUser(user.id);
 
       setState(() {
         _statusMessage =
@@ -187,11 +187,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
       final value = await SecureStorageService.getSecureData('test_secure');
+      await SecureStorageService.deleteSecureData('test_secure');
 
       setState(() {
         _statusMessage = 'Secure Storage test result: $value';
