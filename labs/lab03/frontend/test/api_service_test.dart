@@ -26,7 +26,7 @@ void main() {
     // MOCK TESTS
     group('Mock Tests', () {
       test('should get messages successfully', () async {
-        // Mock client that returns a successful response
+
         final mockClient = MockClient((request) async {
           if (request.url.toString() == 'http://localhost:8080/api/messages' &&
               request.method == 'GET') {
