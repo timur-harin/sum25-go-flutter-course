@@ -17,8 +17,25 @@ type User struct {
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	if u.Name == "" {
+		return errors.New("name is required")
+	}
+	if u.Email == "" || !containsAt(u.Email) {
+		return errors.New("invalid email")
+	}
+	if u.ID == "" {
+		return errors.New("id is required")
+	}
 	return nil
+}
+
+func containsAt(s string) bool {
+	for _, c := range s {
+		if c == '@' {
+			return true
+		}
+	}
+	return false
 }
 
 // UserManager manages users
@@ -33,15 +50,14 @@ type UserManager struct {
 
 // NewUserManager creates a new UserManager
 func NewUserManager() *UserManager {
-	// TODO: Initialize UserManager fields
 	return &UserManager{
+		ctx:   context.Background(),
 		users: make(map[string]User),
 	}
 }
 
 // NewUserManagerWithContext creates a new UserManager with context
 func NewUserManagerWithContext(ctx context.Context) *UserManager {
-	// TODO: Initialize UserManager with context
 	return &UserManager{
 		ctx:   ctx,
 		users: make(map[string]User),
@@ -50,18 +66,37 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
-	// TODO: Add user to map, check context
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return errors.New("context canceled")
+		default:
+		}
+	}
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.users[u.ID] = u
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
-	// TODO: Remove user from map
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if _, ok := m.users[id]; !ok {
+		return errors.New("not found")
+	}
+	delete(m.users, id)
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
-	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	u, ok := m.users[id]
+	if !ok {
+		return User{}, errors.New("not found")
+	}
+	return u, nil
 }
