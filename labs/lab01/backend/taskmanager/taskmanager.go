@@ -29,35 +29,84 @@ type TaskManager struct {
 // NewTaskManager creates a new task manager
 func NewTaskManager() *TaskManager {
 	// TODO: Implement this function
-	return nil
+	newTaskManager := TaskManager{
+		tasks:  map[int]Task{},
+		nextID: 1,
+	}
+	return &newTaskManager
 }
 
 // AddTask adds a new task to the manager, returns an error if the title is empty, and increments the nextID
 func (tm *TaskManager) AddTask(title, description string) (Task, error) {
 	// TODO: Implement this function
-	return Task{}, nil
+	if len(title) == 0 {
+		return Task{}, ErrEmptyTitle
+	}
+	newTask := Task{
+		ID:          tm.nextID,
+		Title:       title,
+		Description: description,
+		Done:        false,
+		CreatedAt:   time.Now(),
+	}
+
+	tm.tasks[tm.nextID] = newTask
+	tm.nextID = tm.nextID + 1
+	return newTask, nil
 }
 
 // UpdateTask updates an existing task, returns an error if the title is empty or the task is not found
 func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) error {
 	// TODO: Implement this function
+	task, ok := tm.tasks[id]
+	if ok == false {
+		return ErrTaskNotFound
+	}
+	if len(title) == 0 {
+		return ErrEmptyTitle
+	}
+	task.Title = title
+	task.Description = description
+	task.Done = done
+	tm.tasks[id] = task
 	return nil
 }
 
 // DeleteTask removes a task from the manager, returns an error if the task is not found
 func (tm *TaskManager) DeleteTask(id int) error {
 	// TODO: Implement this function
+	_, ok := tm.tasks[id]
+	if ok == false {
+		return ErrTaskNotFound
+	}
+	delete(tm.tasks, id)
 	return nil
 }
 
 // GetTask retrieves a task by ID, returns an error if the task is not found
 func (tm *TaskManager) GetTask(id int) (Task, error) {
 	// TODO: Implement this function
-	return Task{}, nil
+	task, ok := tm.tasks[id]
+	if ok == false {
+		return Task{}, ErrTaskNotFound
+	}
+	return task, nil
 }
 
 // ListTasks returns all tasks, optionally filtered by done status, returns an empty slice if no tasks are found
 func (tm *TaskManager) ListTasks(filterDone *bool) []Task {
 	// TODO: Implement this function
-	return nil
+	tasks := make([]Task, 0)
+	if filterDone != nil {
+		for _, task := range tm.tasks {
+			if task.Done == *filterDone {
+				tasks = append(tasks, task)
+			}
+		}
+	} else {
+		for _, task := range tm.tasks {
+			tasks = append(tasks, task)
+		}
+	}
+	return tasks
 }
