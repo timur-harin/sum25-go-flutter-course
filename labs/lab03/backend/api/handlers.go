@@ -1,153 +1,316 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"lab03-backend/models"
 	"lab03-backend/storage"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 // Handler holds the storage instance
 type Handler struct {
-	// TODO: Add storage field of type *storage.MemoryStorage
+	storage *storage.MemoryStorage
 }
 
 // NewHandler creates a new handler instance
 func NewHandler(storage *storage.MemoryStorage) *Handler {
-	// TODO: Return a new Handler instance with provided storage
-	return nil
+	return &Handler{storage: storage}
 }
 
 // SetupRoutes configures all API routes
 func (h *Handler) SetupRoutes() *mux.Router {
-	// TODO: Create a new mux router
-	// TODO: Add CORS middleware
-	// TODO: Create API v1 subrouter with prefix "/api"
-	// TODO: Add the following routes:
-	// GET /messages -> h.GetMessages
-	// POST /messages -> h.CreateMessage
-	// PUT /messages/{id} -> h.UpdateMessage
-	// DELETE /messages/{id} -> h.DeleteMessage
-	// GET /status/{code} -> h.GetHTTPStatus
-	// GET /health -> h.HealthCheck
-	// TODO: Return the router
-	return nil
+	router := mux.NewRouter()
+	router.Use(corsMiddleware)
+
+	api := router.PathPrefix("/api").Subrouter()
+	api.HandleFunc("/messages", h.GetMessages).Methods(http.MethodGet)
+	api.HandleFunc("/messages", h.CreateMessage).Methods(http.MethodPost)
+	api.HandleFunc("/messages/{id}", h.UpdateMessage).Methods(http.MethodPut)
+	api.HandleFunc("/messages/{id}", h.DeleteMessage).Methods(http.MethodDelete)
+	api.HandleFunc("/status/{code}", h.GetHTTPStatus).Methods(http.MethodGet)
+	api.HandleFunc("/cat/{code}", h.GetCatImage).Methods(http.MethodGet)
+	api.HandleFunc("/health", h.HealthCheck).Methods(http.MethodGet)
+
+	return router
 }
 
 // GetMessages handles GET /api/messages
 func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement GetMessages handler
-	// Get all messages from storage
-	// Create successful API response
-	// Write JSON response with status 200
-	// Handle any errors appropriately
+	messages := h.storage.GetAll()
+
+	response := models.APIResponse{
+		Success: true,
+		Data:    messages,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 // CreateMessage handles POST /api/messages
 func (h *Handler) CreateMessage(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement CreateMessage handler
-	// Parse JSON request body into CreateMessageRequest
-	// Validate the request
-	// Create message in storage
-	// Create successful API response
-	// Write JSON response with status 201
-	// Handle validation and storage errors appropriately
+	var req models.CreateMessageRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Invalid JSON",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	message, err := h.storage.Create(req.Username, req.Content)
+	if err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Failed to create message",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := models.APIResponse{
+		Success: true,
+		Data:    message,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }
 
 // UpdateMessage handles PUT /api/messages/{id}
 func (h *Handler) UpdateMessage(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement UpdateMessage handler
-	// Extract ID from URL path variables
-	// Parse JSON request body into UpdateMessageRequest
-	// Validate the request
-	// Update message in storage
-	// Create successful API response
-	// Write JSON response with status 200
-	// Handle validation, parsing, and storage errors appropriately
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Invalid message ID",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	var req models.UpdateMessageRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Invalid JSON",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	message, err := h.storage.Update(id, req.Content)
+	if err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Message not found",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := models.APIResponse{
+		Success: true,
+		Data:    message,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 // DeleteMessage handles DELETE /api/messages/{id}
 func (h *Handler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement DeleteMessage handler
-	// Extract ID from URL path variables
-	// Delete message from storage
-	// Write response with status 204 (No Content)
-	// Handle parsing and storage errors appropriately
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Invalid message ID",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	err = h.storage.Delete(id)
+	if err != nil {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Message not found",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // GetHTTPStatus handles GET /api/status/{code}
 func (h *Handler) GetHTTPStatus(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement GetHTTPStatus handler
-	// Extract status code from URL path variables
-	// Validate status code (must be between 100-599)
-	// Create HTTPStatusResponse with:
-	//   - StatusCode: parsed code
-	//   - ImageURL: "https://http.cat/{code}"
-	//   - Description: HTTP status description
-	// Create successful API response
-	// Write JSON response with status 200
-	// Handle parsing and validation errors appropriately
+	vars := mux.Vars(r)
+	code, err := strconv.Atoi(vars["code"])
+	if err != nil || code < 100 || code > 599 {
+		response := models.APIResponse{
+			Success: false,
+			Error:   "Invalid status code",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	statusDescriptions := map[int]string{
+		200: "OK",
+		201: "Created",
+		204: "No Content",
+		400: "Bad Request",
+		404: "Not Found",
+		500: "Internal Server Error",
+	}
+
+	description, exists := statusDescriptions[code]
+	if !exists {
+		description = "Unknown Status"
+	}
+
+	httpStatus := models.HTTPStatusResponse{
+		StatusCode:  code,
+		ImageURL:    fmt.Sprintf("http://localhost:8080/api/cat/%d", code),
+		Description: description,
+	}
+
+	response := models.APIResponse{
+		Success: true,
+		Data:    httpStatus,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// GetCatImage handles GET /api/cat/{code} - proxies to HTTP Cat API
+func (h *Handler) GetCatImage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	code := vars["code"]
+
+	// Fetch the image from HTTP Cat API
+	resp, err := http.Get(fmt.Sprintf("https://http.cat/%s", code))
+	if err != nil {
+		http.Error(w, "Failed to fetch cat image", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Set CORS headers for image response
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		origin = "http://localhost:3000"
+	}
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Origin")
+
+	// Set content type from the original response
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "" {
+		w.Header().Set("Content-Type", contentType)
+	} else {
+		w.Header().Set("Content-Type", "image/jpeg")
+	}
+
+	// Set cache headers
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+
+	// Copy the image data
+	w.WriteHeader(resp.StatusCode)
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		// Log error but don't try to write response again
+		fmt.Printf("Error copying image data: %v\n", err)
+	}
 }
 
 // HealthCheck handles GET /api/health
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement HealthCheck handler
-	// Create a simple health check response with:
-	//   - status: "ok"
-	//   - message: "API is running"
-	//   - timestamp: current time
-	//   - total_messages: count from storage
-	// Write JSON response with status 200
-}
+	response := map[string]interface{}{
+		"status":    "healthy",
+		"service":   "chat-api",
+		"timestamp": time.Now().Format(time.RFC3339),
+		"version":   "1.0.0",
+	}
 
-// Helper function to write JSON responses
-func (h *Handler) writeJSON(w http.ResponseWriter, status int, data interface{}) {
-	// TODO: Implement writeJSON helper
-	// Set Content-Type header to "application/json"
-	// Set status code
-	// Encode data as JSON and write to response
-	// Log any encoding errors
-}
-
-// Helper function to write error responses
-func (h *Handler) writeError(w http.ResponseWriter, status int, message string) {
-	// TODO: Implement writeError helper
-	// Create APIResponse with Success: false and Error: message
-	// Use writeJSON to send the error response
-}
-
-// Helper function to parse JSON request body
-func (h *Handler) parseJSON(r *http.Request, dst interface{}) error {
-	// TODO: Implement parseJSON helper
-	// Create JSON decoder from request body
-	// Decode into destination interface
-	// Return any decoding errors
-	return nil
-}
-
-// Helper function to get HTTP status description
-func getHTTPStatusDescription(code int) string {
-	// TODO: Implement getHTTPStatusDescription
-	// Return appropriate description for common HTTP status codes
-	// Use a switch statement or map to handle:
-	// 200: "OK", 201: "Created", 204: "No Content"
-	// 400: "Bad Request", 401: "Unauthorized", 404: "Not Found"
-	// 500: "Internal Server Error", etc.
-	// Return "Unknown Status" for unrecognized codes
-	return "Unknown Status"
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 // CORS middleware
 func corsMiddleware(next http.Handler) http.Handler {
-	// TODO: Implement CORS middleware
-	// Set the following headers:
-	// Access-Control-Allow-Origin: *
-	// Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
-	// Access-Control-Allow-Headers: Content-Type, Authorization
-	// Handle OPTIONS preflight requests
-	// Call next handler for non-OPTIONS requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Implement CORS logic here
+		origin := r.Header.Get("Origin")
+		// Set default origin for tests
+		if origin == "" {
+			origin = "http://localhost:3000"
+		}
+
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
