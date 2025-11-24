@@ -79,7 +79,6 @@ class AuthService {
   // Get current user
   User? get currentUser => _currentState.currentUser;
 
-  // TODO: Implement login method
   // login authenticates a user with email and password
   // Requirements:
   // - Validate email and password using FormValidator.validateEmail() and FormValidator.validatePassword()
@@ -94,8 +93,33 @@ class AuthService {
   // - Return AuthResult.success on successful authentication
   // - Return AuthResult.networkError if any exception occurs during the process
   Future<AuthResult> login(String email, String password) async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService login not implemented');
+    // Валидация email и пароля
+    final emailError = _validator.validateEmail(email);
+    final passwordError = _validator.validatePassword(password);
+    if (emailError != null || passwordError != null) {
+      return AuthResult.validationError;
+    }
+    final sanitizedEmail = _validator.sanitizeText(email);
+    try {
+      final user = await _userRepository.findByEmail(sanitizedEmail);
+      if (user == null) {
+        return AuthResult.invalidCredentials;
+      }
+      final passwordOk = await _userRepository.verifyPassword(sanitizedEmail, password);
+      if (!passwordOk) {
+        return AuthResult.invalidCredentials;
+      }
+      final token = _jwtService.generateToken(user.id.toString(), user.email);
+      _currentState = AuthState(
+        isAuthenticated: true,
+        currentUser: user,
+        token: token,
+        loginTime: DateTime.now(),
+      );
+      return AuthResult.success;
+    } catch (e) {
+      return AuthResult.networkError;
+    }
   }
 
   // TODO: Implement logout method
@@ -105,8 +129,7 @@ class AuthService {
   // - This should clear isAuthenticated, currentUser, token, and loginTime
   // - Method should complete without throwing exceptions
   Future<void> logout() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService logout not implemented');
+    _currentState = const AuthState();
   }
 
   // TODO: Implement isSessionValid method
@@ -118,8 +141,11 @@ class AuthService {
   // - Return true if session duration is less than 24 hours
   // - Return false if session has expired (24+ hours)
   bool isSessionValid() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService isSessionValid not implemented');
+    if (!_currentState.isAuthenticated) return false;
+    if (_currentState.loginTime == null) return false;
+    final now = DateTime.now();
+    final diff = now.difference(_currentState.loginTime!);
+    return diff.inHours < 24;
   }
 
   // TODO: Implement refreshAuth method
@@ -132,8 +158,21 @@ class AuthService {
   // - Return true if session and token are valid
   // - Handle any exceptions and return false if errors occur
   Future<bool> refreshAuth() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService refreshAuth not implemented');
+    try {
+      if (!isSessionValid()) {
+        await logout();
+        return false;
+      }
+      final token = _currentState.token;
+      if (token == null || !_jwtService.validateToken(token)) {
+        await logout();
+        return false;
+      }
+      return true;
+    } catch (e) {
+      await logout();
+      return false;
+    }
   }
 
   // TODO: Implement getUserInfo method
@@ -147,8 +186,16 @@ class AuthService {
   //   - 'loginTime': _currentState.loginTime?.toIso8601String() (convert to string or null)
   //   - 'sessionValid': result of calling isSessionValid()
   Map<String, dynamic>? getUserInfo() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService getUserInfo not implemented');
+    if (!_currentState.isAuthenticated || _currentState.currentUser == null) {
+      return null;
+    }
+    return {
+      'id': _currentState.currentUser!.id,
+      'name': _currentState.currentUser!.name,
+      'email': _currentState.currentUser!.email,
+      'loginTime': _currentState.loginTime?.toIso8601String(),
+      'sessionValid': isSessionValid(),
+    };
   }
 }
 
