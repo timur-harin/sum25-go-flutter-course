@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Status Card showing current status and loading indicator
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -55,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
 
-            // SharedPreferences Section
+            // SharedPreferences Section with test button
             _buildStorageSection(
               'SharedPreferences',
               'Simple key-value storage for app settings',
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // SQLite Section
+            // SQLite Section with test button
             _buildStorageSection(
               'SQLite Database',
               'Local SQL database for structured data',
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // Secure Storage Section
+            // Secure Storage Section with test button
             _buildStorageSection(
               'Secure Storage',
               'Encrypted storage for sensitive data',
@@ -96,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Helper widget to create storage sections with title, description, and buttons
   Widget _buildStorageSection(
       String title, String description, List<Widget> buttons) {
     return Card(
@@ -125,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Test method for SharedPreferences usage
   Future<void> _testSharedPreferences() async {
     setState(() {
       _isLoading = true;
@@ -132,11 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
+      // Save a test string in SharedPreferences
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
+      // Retrieve the stored string
       final value = PreferencesService.getString('test_key');
 
       setState(() {
@@ -153,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Test method for SQLite database usage
   Future<void> _testSQLite() async {
     setState(() {
       _isLoading = true;
@@ -160,9 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
+      // Get the count of users from the database
       final userCount = await DatabaseService.getUserCount();
 
       setState(() {
@@ -180,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Test method for Secure Storage usage
   Future<void> _testSecureStorage() async {
     setState(() {
       _isLoading = true;
@@ -187,10 +189,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
+      // Save test data securely
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
+      // Retrieve the stored secure data
       final value = await SecureStorageService.getSecureData('test_secure');
 
       setState(() {

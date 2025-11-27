@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"net/mail"
 	"time"
 )
 
@@ -26,41 +28,66 @@ type UpdateUserRequest struct {
 	Email *string `json:"email,omitempty"`
 }
 
-// TODO: Implement Validate method for User
+// Validate method for User
 func (u *User) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format
-	// Return appropriate errors if validation fails
+	if len(u.Name) < 2 {
+		return errors.New("name must be at least 2 characters long")
+	}
+	if _, err := mail.ParseAddress(u.Email); err != nil {
+		return errors.New("invalid email format")
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateUserRequest
+// Validate method for CreateUserRequest
 func (req *CreateUserRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format and not empty
-	// Return appropriate errors if validation fails
+	if len(req.Name) < 2 {
+		return errors.New("name must be at least 2 characters long")
+	}
+	if req.Email == "" {
+		return errors.New("email cannot be empty")
+	}
+	if _, err := mail.ParseAddress(req.Email); err != nil {
+		return errors.New("invalid email format")
+	}
 	return nil
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
+// ToUser converts CreateUserRequest to User with timestamps
 func (req *CreateUserRequest) ToUser() *User {
-	// TODO: Convert CreateUserRequest to User
-	// Set timestamps to current time
-	return nil
+	now := time.Now()
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
 
-// TODO: Implement ScanRow method for User
+// ScanRow scans a single row into a User struct
 func (u *User) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into User struct
-	// Handle the case where row might be nil
-	return nil
+	if row == nil {
+		return errors.New("row is nil")
+	}
+	return row.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
 }
 
-// TODO: Implement ScanRows method for User slice
+// ScanUsers scans multiple rows into a slice of Users
 func ScanUsers(rows *sql.Rows) ([]User, error) {
-	// TODO: Scan multiple database rows into User slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	defer rows.Close()
+	var users []User
+
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
