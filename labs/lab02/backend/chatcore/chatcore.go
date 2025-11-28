@@ -2,12 +2,10 @@ package chatcore
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"time"
 )
-
-// Message represents a chat message
-// Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
 
 type Message struct {
 	Sender    string
@@ -17,46 +15,119 @@ type Message struct {
 	Timestamp int64
 }
 
-// Broker handles message routing between users
-// Contains context, input channel, user registry, mutex, done channel
-
 type Broker struct {
 	ctx        context.Context
-	input      chan Message            // Incoming messages
-	users      map[string]chan Message // userID -> receiving channel
-	usersMutex sync.RWMutex            // Protects users map
-	done       chan struct{}           // For shutdown
-	// TODO: Add more fields if needed
+	cancelCtx  context.CancelFunc
+	input      chan Message
+	users      map[string]chan Message
+	usersMutex sync.RWMutex
+	done       chan struct{}
+	wg         sync.WaitGroup
 }
 
-// NewBroker creates a new message broker
-func NewBroker(ctx context.Context) *Broker {
-	// TODO: Initialize broker fields
+func NewBroker(parentCtx context.Context) *Broker {
+	ctx, cancel := context.WithCancel(parentCtx)
 	return &Broker{
-		ctx:   ctx,
-		input: make(chan Message, 100),
-		users: make(map[string]chan Message),
-		done:  make(chan struct{}),
+		ctx:       ctx,
+		cancelCtx: cancel,
+		input:     make(chan Message, 100),
+		users:     make(map[string]chan Message),
+		done:      make(chan struct{}),
 	}
 }
 
-// Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	b.wg.Add(1)
+	go func() {
+		defer b.wg.Done()
+		defer close(b.done)
+		fmt.Println("Broker: Starting event loop...")
+
+		for {
+			select {
+			case msg := <-b.input:
+				b.usersMutex.RLock()
+
+				if msg.Broadcast {
+					for userID, userChan := range b.users {
+						select {
+						case userChan <- msg:
+						case <-time.After(100 * time.Millisecond):
+							fmt.Printf("Broker: Warning: User %s's channel is blocked, dropping broadcast message.\n", userID)
+						case <-b.ctx.Done():
+							b.usersMutex.RUnlock()
+							fmt.Println("Broker: Context cancelled during broadcast, shutting down.")
+							return
+						}
+					}
+				} else {
+					if userChan, ok := b.users[msg.Recipient]; ok {
+						select {
+						case userChan <- msg:
+						case <-time.After(100 * time.Millisecond):
+							fmt.Printf("Broker: Warning: Recipient %s's channel is blocked, dropping direct message.\n", msg.Recipient)
+						case <-b.ctx.Done():
+							b.usersMutex.RUnlock()
+							fmt.Println("Broker: Context cancelled during direct message, shutting down.")
+							return
+						}
+					} else {
+						fmt.Printf("Broker: Recipient %s not found for direct message.\n", msg.Recipient)
+					}
+				}
+				b.usersMutex.RUnlock()
+
+			case <-b.ctx.Done():
+				fmt.Println("Broker: Context cancelled, shutting down event loop.")
+				return
+			}
+		}
+	}()
 }
 
-// SendMessage sends a message to the broker
+func (b *Broker) Shutdown() {
+	fmt.Println("Broker: Initiating shutdown...")
+	b.cancelCtx()
+	b.wg.Wait()
+	close(b.input)
+	fmt.Println("Broker: Shutdown complete.")
+}
+
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+	case b.input <- msg:
+		return nil
+	case <-b.done:
+		return fmt.Errorf("broker is shut down, cannot send message: %v", b.ctx.Err())
+	case <-b.ctx.Done():
+		return fmt.Errorf("broker context cancelled, cannot send message: %v", b.ctx.Err())
+	case <-time.After(500 * time.Millisecond):
+		return fmt.Errorf("failed to send message to broker input channel: timeout")
+	}
 }
 
-// RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+
+	if _, exists := b.users[userID]; exists {
+		fmt.Printf("Broker: User %s already registered.\n", userID)
+		return
+	}
+
+	b.users[userID] = recv
+	fmt.Printf("Broker: User %s registered.\n", userID)
 }
 
-// UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+
+	if userChan, ok := b.users[userID]; ok {
+		delete(b.users, userID)
+		close(userChan)
+		fmt.Printf("Broker: User %s unregistered and channel closed.\n", userID)
+	} else {
+		fmt.Printf("Broker: User %s not found for unregistration.\n", userID)
+	}
 }
