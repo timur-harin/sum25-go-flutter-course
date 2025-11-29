@@ -3,8 +3,9 @@ package security
 import (
 	"errors"
 	_ "regexp"
+	"strings"
 
-	_ "golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // PasswordService handles password operations
@@ -15,7 +16,7 @@ type PasswordService struct{}
 func NewPasswordService() *PasswordService {
 	// TODO: Implement this function
 	// Return a new PasswordService instance
-	return nil
+	return &PasswordService{}
 }
 
 // TODO: Implement HashPassword method
@@ -27,7 +28,14 @@ func NewPasswordService() *PasswordService {
 func (p *PasswordService) HashPassword(password string) (string, error) {
 	// TODO: Implement password hashing
 	// Use golang.org/x/crypto/bcrypt.GenerateFromPassword
-	return "", errors.New("not implemented")
+	if password == "" {
+		return "", errors.New("empty pass")
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }
 
 // TODO: Implement VerifyPassword method
@@ -38,9 +46,13 @@ func (p *PasswordService) HashPassword(password string) (string, error) {
 // - return false if password doesn't match
 func (p *PasswordService) VerifyPassword(password, hash string) bool {
 	// TODO: Implement password verification
+	if password == "" || hash == "" {
+		return false
+	}
 	// Use bcrypt.CompareHashAndPassword
 	// Return true only if passwords match exactly
-	return false
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // TODO: Implement ValidatePassword function
@@ -51,5 +63,11 @@ func (p *PasswordService) VerifyPassword(password, hash string) bool {
 func ValidatePassword(password string) error {
 	// TODO: Implement password validation
 	// Check length and basic complexity requirements
-	return errors.New("not implemented")
+	if !strings.ContainsAny(password, "0123456789") || !strings.ContainsAny(password, "abcdefghijklmnopqrstuvwxyz") {
+		return errors.New("password must contain at least one number and one letter")
+	}
+	if len(password) < 6 {
+		return errors.New("password must be at least 6 chars long")
+	}
+	return nil
 }
