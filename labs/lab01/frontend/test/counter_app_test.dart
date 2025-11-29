@@ -83,7 +83,7 @@ void main() {
     expect(find.byType(AppBar), findsOneWidget);
     expect(find.text('Counter App'), findsOneWidget);
     expect(find.byType(Column), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsNWidgets(2));
+    expect(find.byType(IconButton), findsNWidgets(3));
     expect(find.byIcon(Icons.add), findsOneWidget);
     expect(find.byIcon(Icons.remove), findsOneWidget);
     expect(find.byIcon(Icons.refresh), findsOneWidget);
