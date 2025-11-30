@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// User represents a user entity in the domain layer
-/// This class follows Clean Architecture principles and implements
-/// value equality through Equatable
+
 class User extends Equatable {
   final int id;
   final String name;
@@ -19,7 +17,6 @@ class User extends Equatable {
   @override
   List<Object> get props => [id, name, email, createdAt];
 
-  /// Creates a copy of this User with optionally updated fields
   User copyWith({
     int? id,
     String? name,
@@ -34,7 +31,6 @@ class User extends Equatable {
     );
   }
 
-  /// Validates email format using regex pattern
   bool isValidEmail() {
     if (email.isEmpty) return false;
 
@@ -45,7 +41,6 @@ class User extends Equatable {
     return emailRegex.hasMatch(email);
   }
 
-  /// Validates name is between 2-51 characters and not empty
   bool isValidName() {
     final trimmedName = name.trim();
     return trimmedName.isNotEmpty &&
@@ -53,12 +48,10 @@ class User extends Equatable {
         trimmedName.length <= 51;
   }
 
-  /// Validates all fields are valid
   bool isValid() {
     return isValidEmail() && isValidName();
   }
 
-  /// Provides string representation for debugging
   @override
   String toString() {
     return 'User{id: $id, name: $name, email: $email, createdAt: $createdAt}';
