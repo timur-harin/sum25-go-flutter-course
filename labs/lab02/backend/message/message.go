@@ -3,6 +3,7 @@ package message
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 // Message represents a chat message
@@ -33,12 +34,42 @@ func NewMessageStore() *MessageStore {
 
 // AddMessage stores a new message
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
+	if msg.Sender == "" {
+		return errors.New("sender cannot be empty")
+	}
+	if msg.Content == "" {
+		return errors.New("content cannot be empty")
+	}
+	if msg.Timestamp == 0 {
+		msg.Timestamp = time.Now().Unix()
+	}
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.messages = append(s.messages, msg)
 	return nil
 }
 
 // GetMessages retrieves messages (optionally by user)
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	if user == "" {
+		// Return all messages
+		copied := make([]Message, len(s.messages))
+		copy(copied, s.messages)
+		return copied, nil
+	}
+
+	// Filter by user
+	var filtered []Message
+	for _, m := range s.messages {
+		if m.Sender == user {
+			filtered = append(filtered, m)
+		}
+	}
+
+	return filtered, nil
 }

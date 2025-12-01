@@ -12,26 +12,65 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add TextEditingController for input
-  // TODO: Add state for messages, loading, and error
-  // TODO: Subscribe to chatService.messageStream
-  // TODO: Implement UI for sending and displaying messages
-  // TODO: Simulate chat logic for tests (current implementation is a simulation)
+
+  late TextEditingController _textController;
+  late Future<void> _connectionFuture;
+  late StreamSubscription<String> _subscription;
+  final List<String> _messages = [];
+  String? _error;
+
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service and set up listeners
+
+    _textController = TextEditingController();
+
+    _connectionFuture = widget.chatService.connect().catchError((e) {
+      setState(() {
+        _error = e.toString();
+      });
+    });
+
+    _subscription = widget.chatService.messageStream.listen(
+      (message) {
+        setState(() {
+          _messages.add(message);
+        });
+      },
+      onError: (e) {
+        setState(() {
+          _error = e.toString();
+        });
+      },
+    );
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and subscriptions
+
+    _textController.dispose();
+    _subscription.cancel();
+
     super.dispose();
   }
 
   void _sendMessage() async {
-    // TODO: Send message using chatService
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _error = null; // Clear previous error
+    });
+
+    try {
+      await widget.chatService.sendMessage(text);
+      _textController.clear();
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    }
   }
 
   @override
@@ -39,7 +78,65 @@ class _ChatScreenState extends State<ChatScreen> {
     // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
-      body: const Center(child: Text('TODO: Implement chat UI')),
+      body: FutureBuilder<void>(
+        future: _connectionFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (_error != null) {
+            return Center(
+              child: Text(
+                'Connection error: $_error',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_messages[index]),
+                    );
+                  },
+                ),
+              ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    'Connection error: $_error',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter message',
+                        ),
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
