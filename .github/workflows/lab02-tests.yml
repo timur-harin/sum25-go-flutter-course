@@ -5,8 +5,8 @@ on:
     branches: [lab02-*]
   pull_request:
     paths:
-      - 'labs/lab02/**'
-      - '.github/workflows/lab02-tests.yml'
+      - "labs/lab02/**"
+      - ".github/workflows/lab02-tests.yml"
 
 permissions:
   pull-requests: write
@@ -23,12 +23,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: "1.24"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.1'
+          flutter-version: "3.32.1"
 
       - name: Install Go dependencies
         run: |
@@ -132,7 +132,7 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
-            
+
       - name: Create commit comment with score
         if: github.event_name == 'push'
         uses: actions/github-script@v7
@@ -173,4 +173,4 @@ jobs:
               repo: context.repo.repo,
               commit_sha: context.sha,
               body: comment
-            }); 
+            });

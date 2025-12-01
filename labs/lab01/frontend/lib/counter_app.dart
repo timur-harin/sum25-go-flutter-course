@@ -44,10 +44,9 @@ class _CounterAppState extends State<CounterApp> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
+
                 const SizedBox(width: 32),
                 // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
               ],
             ),
           ],
