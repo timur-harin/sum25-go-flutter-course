@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"strings"
+	"net/mail"
 )
 
 // User represents a chat user
@@ -17,7 +19,16 @@ type User struct {
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	if strings.TrimSpace(u.Name) == "" {
+		return errors.New("name is empty")
+	}
+	if strings.TrimSpace(u.ID) == "" {
+		return errors.New("id is empty")
+	}
+	// проверяем корректность email
+	if _, err := mail.ParseAddress(u.Email); err != nil {
+		return errors.New("invalid email")
+	}
 	return nil
 }
 
@@ -51,17 +62,66 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
 	// TODO: Add user to map, check context
+	if m.ctx != nil {
+    	if err := m.ctx.Err(); err != nil {
+        	return err
+    	}
+	}
+
+	if err := u.Validate(); err != nil {
+		return err
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, exists := m.users[u.ID]; exists {
+		return errors.New("user already exists")
+	}
+
+	m.users[u.ID] = u
+
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
 	// TODO: Remove user from map
+	if m.ctx != nil {
+    	if err := m.ctx.Err(); err != nil {
+        	return err
+    	}
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, ok := m.users[id]; !ok {
+		return errors.New("not found")
+	}
+
+	delete(m.users, id)
+
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
 	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	if m.ctx != nil {
+    	if err := m.ctx.Err(); err != nil {
+        	return User{}, err
+    	}
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	u, ok := m.users[id]
+
+	if !ok {
+		return User{}, errors.New("not found")
+	}
+
+	return u, nil
 }

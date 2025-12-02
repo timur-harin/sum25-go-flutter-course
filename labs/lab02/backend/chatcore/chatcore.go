@@ -43,20 +43,69 @@ func NewBroker(ctx context.Context) *Broker {
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
 	// TODO: Implement event loop (fan-in/fan-out pattern)
+
+	defer close(b.done)
+
+    for {
+        // Если контекст отменён — чистим и выходим
+        if err := b.ctx.Err(); err != nil {
+            b.usersMutex.Lock()
+            // defer здесь сработает при выходе из Run, разблокировав mutex
+            defer b.usersMutex.Unlock()
+
+            for id, ch := range b.users {
+                close(ch)
+                delete(b.users, id)
+            }
+            return
+        }
+
+        // Ждём новое сообщение (блокирующий receive)
+        msg := <-b.input
+
+        b.usersMutex.Lock()
+        // Broadcast — рассылаем всем
+        if msg.Broadcast {
+            for _, ch := range b.users {
+                // blocking send; если канал заполнен, рутина заблокируется
+                ch <- msg
+            }
+        } else {
+            // адресная пересылка
+            if recvCh, ok := b.users[msg.Recipient]; ok {
+                recvCh <- msg
+            }
+        }
+        b.usersMutex.Unlock()
+    }
+
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
 	// TODO: Send message to appropriate channel/queue
-	return nil
+	if err := b.ctx.Err(); err != nil {
+        return err
+    }
+    b.input <- msg
+    return nil
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	// TODO: Register user and their receiving 
+	b.usersMutex.Lock()
+    defer b.usersMutex.Unlock()
+    b.users[userID] = recv
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
 	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+    defer b.usersMutex.Unlock()
+    if ch, ok := b.users[userID]; ok {
+        close(ch)
+        delete(b.users, userID)
+    }
 }
