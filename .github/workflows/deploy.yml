@@ -1,0 +1,34 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - lab07-lutfullin-sarmat
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.32.1
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: labs/lab07/frontend
+
+      - name: Build web
+        run: |
+          flutter build web --base-href /sum25-go-flutter-course/
+        working-directory: labs/lab07/frontend
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: labs/lab07/frontend/build/web
