@@ -2,9 +2,9 @@ package security
 
 import (
 	"errors"
-	_ "regexp"
+	"regexp"
 
-	_ "golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // PasswordService handles password operations
@@ -13,9 +13,7 @@ type PasswordService struct{}
 // TODO: Implement NewPasswordService function
 // NewPasswordService creates a new password service
 func NewPasswordService() *PasswordService {
-	// TODO: Implement this function
-	// Return a new PasswordService instance
-	return nil
+	return &PasswordService{}
 }
 
 // TODO: Implement HashPassword method
@@ -25,9 +23,14 @@ func NewPasswordService() *PasswordService {
 // - use bcrypt with cost 10
 // - return the hashed password as string
 func (p *PasswordService) HashPassword(password string) (string, error) {
-	// TODO: Implement password hashing
-	// Use golang.org/x/crypto/bcrypt.GenerateFromPassword
-	return "", errors.New("not implemented")
+	if password == "" {
+		return "", errors.New("password must not be empty")
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return "", err
+	}
+	return string(hashed), nil
 }
 
 // TODO: Implement VerifyPassword method
@@ -37,10 +40,11 @@ func (p *PasswordService) HashPassword(password string) (string, error) {
 // - return true if password matches hash
 // - return false if password doesn't match
 func (p *PasswordService) VerifyPassword(password, hash string) bool {
-	// TODO: Implement password verification
-	// Use bcrypt.CompareHashAndPassword
-	// Return true only if passwords match exactly
-	return false
+	if password == "" || hash == "" {
+		return false
+	}
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // TODO: Implement ValidatePassword function
@@ -49,7 +53,16 @@ func (p *PasswordService) VerifyPassword(password, hash string) bool {
 // - At least 6 characters
 // - Contains at least one letter and one number
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Check length and basic complexity requirements
-	return errors.New("not implemented")
+	if len(password) < 6 {
+		return errors.New("password must be at least 6 characters")
+	}
+
+	hasLetter := regexp.MustCompile(`[A-Za-z]`).MatchString(password)
+	hasNumber := regexp.MustCompile(`[0-9]`).MatchString(password)
+
+	if !hasLetter || !hasNumber {
+		return errors.New("password must contain at least one letter and one number")
+	}
+
+	return nil
 }
