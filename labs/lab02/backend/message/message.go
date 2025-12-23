@@ -6,7 +6,12 @@ import (
 )
 
 // Message represents a chat message
-// TODO: Add more fields if needed
+
+var (
+	ErrEmptySender   = errors.New("sender cannot be empty")
+	ErrEmptyContent  = errors.New("content cannot be empty")
+	ErrInvalidTimestamp = errors.New("timestamp must be positive")
+)
 
 type Message struct {
 	Sender    string
@@ -20,25 +25,55 @@ type Message struct {
 type MessageStore struct {
 	messages []Message
 	mutex    sync.RWMutex
-	// TODO: Add more fields if needed
+	maxSize  int
 }
 
 // NewMessageStore creates a new MessageStore
 func NewMessageStore() *MessageStore {
-	// TODO: Initialize MessageStore fields
 	return &MessageStore{
-		messages: make([]Message, 0, 100),
+		messages: make([]Message, 0),
+		maxSize:  1000,
 	}
 }
 
 // AddMessage stores a new message
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
+	if msg.Sender == "" {
+		return ErrEmptySender
+	}
+	if msg.Content == "" {
+		return ErrEmptyContent
+	}
+	if msg.Timestamp < 0 {
+		return ErrInvalidTimestamp
+	}
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if len(s.messages) >= s.maxSize {
+		return errors.New("message storage limit reached")
+	}
+
+	s.messages = append(s.messages, msg)
 	return nil
 }
 
 // GetMessages retrieves messages (optionally by user)
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	
+	if user == "" {
+		messages := make([]Message, len(s.messages))
+		copy(messages, s.messages)
+		return messages, nil
+	}
+	
+	var userMassages []Message
+	for _, msg := range s.messages {
+		if msg.Sender == user {
+			userMassages = append(userMassages, msg)
+		}
+	}
+	return userMassages, nil
 }
