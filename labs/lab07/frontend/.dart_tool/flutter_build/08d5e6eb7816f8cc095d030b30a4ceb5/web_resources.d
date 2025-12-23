@@ -1,0 +1,1 @@
+:  C:\\Users\\pc\\Desktop\\Go\\sum25-go-flutter-course\\labs\\lab07\\frontend\\web\\index.html
