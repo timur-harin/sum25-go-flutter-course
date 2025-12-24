@@ -1,5 +1,11 @@
-# Build stage
-# TODO: Add build stage
+FROM golang:1.23.4-alpine AS builder
 
-# Final image
-# TODO: Add final image instructions
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download && go mod verify
+
+COPY . .
+
+RUN go build -o main main.go

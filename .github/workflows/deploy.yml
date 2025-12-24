@@ -20,17 +20,20 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-        working-directory: labs/lab07/frontend
+        working-directory: ./labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web
+        run: flutter build web --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
+
+      - name: List build output
+        run: ls -l ./labs/lab07/frontend/build/web
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.TOKEN }}
-          publish_dir: labs/lab07/frontend/build/web
+          publish_dir: ./labs/lab07/frontend/build/web
           user_name: ${{ secrets.USER_NAME }}
           user_email: ${{ secrets.USER_EMAIL }}
           commit_message: "Deploy Flutter Web"
