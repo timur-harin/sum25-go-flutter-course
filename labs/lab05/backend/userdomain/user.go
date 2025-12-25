@@ -2,7 +2,7 @@ package userdomain
 
 import (
 	"errors"
-	_ "regexp"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -17,52 +17,125 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// TODO: Implement NewUser function
-// NewUser creates a new user with validation
-// Requirements:
-// - Email must be valid format
-// - Name must be 2-51 characters
-// - Password must be at least 8 characters
-// - CreatedAt and UpdatedAt should be set to current time
 func NewUser(email, name, password string) (*User, error) {
-	// TODO: Implement this function
-	// Hint: Use ValidateEmail, ValidateName, ValidatePassword helper functions
-	return nil, errors.New("not implemented")
+	user := &User{Email: email, Name: name, Password: password, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
-// TODO: Implement Validate method
-// Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement validation logic
-	// Check email, name, and password validity
-	return errors.New("not implemented")
+	if err := ValidateEmail(u.Email); err != nil {
+		return err
+	}
+	if err := ValidateName(u.Name); err != nil {
+		return err
+	}
+	if err := ValidatePassword(u.Password); err != nil {
+		return err
+	}
+	return nil
 }
 
-// TODO: Implement ValidateEmail function
-// ValidateEmail checks if email format is valid
 func ValidateEmail(email string) error {
-	// TODO: Implement email validation
-	// Use regex pattern to validate email format
-	// Email should not be empty and should match standard email pattern
-	return errors.New("not implemented")
+	email = strings.TrimSpace(email)
+	email = strings.ToLower(email)
+	if email == "" {
+		return errors.New("invalid email")
+	}
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(email) {
+		return errors.New("invalid email")
+	}
+	return nil
 }
 
-// TODO: Implement ValidateName function
-// ValidateName checks if name is valid
 func ValidateName(name string) error {
-	// TODO: Implement name validation
-	// Name should be 2-50 characters, trimmed of whitespace
-	// Should not be empty after trimming
-	return errors.New("not implemented")
+	name = strings.TrimSpace(name)
+	if len(name) < 2 || len(name) > 50 {
+		return errors.New("invalid name")
+	}
+	if name == "" {
+		return errors.New("invalid name")
+	}
+	return nil
 }
 
-// TODO: Implement ValidatePassword function
-// ValidatePassword checks if password meets security requirements
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Password should be at least 8 characters
-	// Should contain at least one uppercase, lowercase, and number
-	return errors.New("not implemented")
+	lowercaseLetters := []rune{}
+
+	for symbol := 'a'; symbol <= 'z'; symbol++ {
+		lowercaseLetters = append(lowercaseLetters, symbol)
+	}
+
+	uppercaseLetters := []rune{}
+
+	for symbol := 'A'; symbol <= 'Z'; symbol++ {
+		uppercaseLetters = append(uppercaseLetters, symbol)
+	}
+
+	if len(password) < 8 {
+		return errors.New("invalid password")
+	}
+
+	hasLowercaseLetter := false
+
+	for i := 0; i < len(password); i++ {
+		for j := 0; j < len(lowercaseLetters); j++ {
+			if byte(password[i]) == byte(lowercaseLetters[j]) {
+				hasLowercaseLetter = true
+				break
+			}
+		}
+		if hasLowercaseLetter {
+			break
+		}
+	}
+
+	if !hasLowercaseLetter {
+		return errors.New("invalid password")
+	}
+
+	hasUppercaseLetter := false
+
+	for i := 0; i < len(password); i++ {
+		for j := 0; j < len(uppercaseLetters); j++ {
+			if byte(password[i]) == byte(uppercaseLetters[j]) {
+				hasUppercaseLetter = true
+				break
+			}
+		}
+		if hasUppercaseLetter {
+			break
+		}
+	}
+
+	if !hasUppercaseLetter {
+		return errors.New("invalid password")
+	}
+
+	digits := []int{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+
+	hasDigit := false
+
+	for i := 0; i < len(password); i++ {
+		for j := 0; j < len(digits); j++ {
+			if byte(password[i]) == byte(digits[j]) {
+				hasDigit = true
+				break
+			}
+		}
+		if hasDigit {
+			break
+		}
+	}
+
+	if !hasDigit {
+		return errors.New("invalid password")
+	}
+
+	return nil
 }
 
 // UpdateName updates the user's name with validation
