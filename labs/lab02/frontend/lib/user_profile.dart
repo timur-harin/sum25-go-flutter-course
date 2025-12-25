@@ -15,18 +15,54 @@ class _UserProfileState extends State<UserProfile> {
   // TODO: Add state for user data, loading, and error
   // TODO: Fetch user info from userService (simulate for tests)
 
+
+  Map<String, String>? _userData;
+  bool _isLoading = true;
+  String? _error;
+
+  // Fetch user info from userService (simulate for tests)
+  Future<void> _fetchUser() async {
+    try {
+      final data = await widget.userService.fetchUser();
+      setState(() {
+        _userData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'error loading user data';
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _fetchUser();
     // TODO: Fetch user info and update state
   }
 
   @override
   Widget build(BuildContext context) {
     // TODO: Build user profile UI with loading, error, and user info
-    return Scaffold(
+     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text(_error!))
+              : _userData != null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(_userData!['name']!),
+                          Text(_userData!['email']!),
+                        ],
+                      ),
+                    )
+                  : const Center(child: Text('No user data')),
     );
   }
 }

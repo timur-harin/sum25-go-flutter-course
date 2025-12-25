@@ -3,7 +3,15 @@ package user
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
+)
+
+var (
+	ErrInvalidName  = errors.New("empty name")
+	ErrInvalidEmail = errors.New("invalid email")
+	ErrInvalidId    = errors.New("empty id")
+	ErrNotFound     = errors.New("not found")
 )
 
 // User represents a chat user
@@ -18,6 +26,18 @@ type User struct {
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
 	// TODO: Validate name, email, id
+	if u.Name == "" {
+		return ErrInvalidName
+	}
+
+	if u.Email == "" || !strings.Contains(u.Email, "@") {
+		return ErrInvalidEmail
+	}
+
+	if u.ID == "" {
+		return ErrInvalidId
+	}
+
 	return nil
 }
 
@@ -51,17 +71,66 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
 	// TODO: Add user to map, check context
+	if err := u.Validate(); err != nil {
+		return err
+	}
+
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		default:
+		}
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.users[u.ID] = u
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
 	// TODO: Remove user from map
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		default:
+		}
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, ok := m.users[id]; !ok {
+		return ErrNotFound
+	}
+
+	delete(m.users, id)
+
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
 	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return User{}, m.ctx.Err()
+		default:
+		}
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	user, ok := m.users[id]
+	if !ok {
+		return User{}, ErrNotFound
+	}
+
+	return user, nil
 }
