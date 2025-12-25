@@ -1,30 +1,47 @@
 import 'dart:async';
 
-// ChatService handles chat logic and backend communication
+/// A chat message model used in the frontend.
+class ChatMessage {
+  final String sender;
+  final String content;
+  final DateTime timestamp;
+
+  ChatMessage({
+    required this.sender,
+    required this.content,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+}
+
+/// ChatService provides a stream of incoming messages and a method to send messages.
 class ChatService {
-  // TODO: Use a StreamController to simulate incoming messages for tests
-  // TODO: Add simulation flags for connection and send failures
-  // TODO: Replace simulation with real backend logic in the future
+  final _controller = StreamController<ChatMessage>.broadcast();
+  Stream<ChatMessage> get messageStream => _controller.stream;
 
-  final StreamController<String> _controller =
-      StreamController<String>.broadcast();
-  bool failSend = false;
-
-  ChatService();
-
-  Future<void> connect() async {
-    // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+  /// Simulate sending a message to the backend.
+  Future<void> sendMessage(ChatMessage msg) async {
+    // simulate network latency
+    await Future.delayed(const Duration(milliseconds: 500));
+    // echo back the message as confirmation
+    _controller.sink.add(msg);
   }
 
-  Future<void> sendMessage(String msg) async {
-    // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+  Timer? _mockTimer;
+
+  /// Starts generating mock incoming messages every 10 seconds.
+  void startMocking() {
+    _mockTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      final incoming = ChatMessage(
+        sender: 'Server',
+        content: 'Automated ping at ${DateTime.now().toLocal()}',
+      );
+      _controller.sink.add(incoming);
+    });
   }
 
-  Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
+  /// Clean up resources.
+  void dispose() {
+    _mockTimer?.cancel();
+    _controller.close();
   }
 }
