@@ -9,22 +9,37 @@ class ChatService {
   final StreamController<String> _controller =
       StreamController<String>.broadcast();
   bool failSend = false;
+  bool failConnect = false;
+  Duration connectDelay;
+  Duration sendDelay;
 
-  ChatService();
+  ChatService({
+    this.connectDelay = const Duration(milliseconds: 100),
+    this.sendDelay = const Duration(milliseconds: 50),
+  });
 
   Future<void> connect() async {
-    // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+    if (failConnect) {
+      await Future.delayed(connectDelay);
+      _controller.addError('Connection failed');
+      return Future.error('Connection failed');
+    }
+    await Future.delayed(connectDelay);
+    _controller.add('Welcome to the chat!');
   }
 
   Future<void> sendMessage(String msg) async {
-    // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+    if (failSend) {
+      await Future.delayed(sendDelay);
+      _controller.addError('Send failed');
+      return Future.error('Send failed');
+    }
+    await Future.delayed(sendDelay);
+    _controller.add(msg);
   }
 
-  Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
+  Stream<String> get messageStream => _controller.stream;
+  void dispose() {
+    _controller.close();
   }
 }
