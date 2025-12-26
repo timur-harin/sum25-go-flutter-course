@@ -12,21 +12,65 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  Map<String, String>? user;
+  bool loading = true;
+  String? error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _fetchUser();
+  }
+
+  Future<void> _fetchUser() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      final data = await widget.userService.fetchUser();
+      setState(() {
+        user = data;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = 'An error occurred: $e';
+        loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
+    Widget content;
+    if (loading) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (error != null) {
+      content = Center(
+        child: Text(
+          error!,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    } else if (user != null) {
+      content = Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(user!['name'] ?? '', style: const TextStyle(fontSize: 24)),
+            const SizedBox(height: 8),
+            Text(user!['email'] ?? '', style: const TextStyle(fontSize: 16)),
+          ],
+        ),
+      );
+    } else {
+      content = const Center(child: Text('No user data'));
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: content,
     );
   }
 }
