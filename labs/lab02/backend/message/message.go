@@ -1,8 +1,8 @@
 package message
 
 import (
-	"errors"
 	"sync"
+	"time"
 )
 
 // Message represents a chat message
@@ -33,12 +33,38 @@ func NewMessageStore() *MessageStore {
 
 // AddMessage stores a new message
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
+	// Set timestamp if not provided
+	if msg.Timestamp == 0 {
+		msg.Timestamp = time.Now().Unix()
+	}
+	
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	
+	s.messages = append(s.messages, msg)
 	return nil
 }
 
 // GetMessages retrieves messages (optionally by user)
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	
+	// If no specific user is requested, return all messages
+	if user == "" {
+		// Create a copy to avoid returning reference to internal slice
+		result := make([]Message, len(s.messages))
+		copy(result, s.messages)
+		return result, nil
+	}
+	
+	// Filter messages by user
+	var filtered []Message
+	for _, msg := range s.messages {
+		if msg.Sender == user {
+			filtered = append(filtered, msg)
+		}
+	}
+	
+	return filtered, nil
 }

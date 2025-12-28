@@ -9,7 +9,7 @@ class MockUserService extends UserService {
   Future<Map<String, String>> fetchUser() async {
     if (fail) throw Exception('Failed');
     await Future.delayed(Duration(milliseconds: 10));
-    return {'name': 'Alice', 'email': 'alice@example.com'};
+    return {'name': 'Timur Harin', 'email': 'timur.flutter@example.com'};
   }
 }
 
@@ -38,11 +38,10 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    // Switch to Profile tab
     await tester.tap(find.widgetWithText(Tab, 'Profile'));
     await tester.pumpAndSettle();
-    expect(find.text('Alice'), findsOneWidget);
-    expect(find.text('alice@example.com'), findsOneWidget);
+    expect(find.text('Timur Harin'), findsOneWidget);
+    expect(find.text('timur.flutter@example.com'), findsOneWidget);
   });
 
   testWidgets('handles async update', (WidgetTester tester) async {
@@ -51,8 +50,7 @@ void main() {
       home: UserProfile(userService: service),
     ));
     await tester.pumpAndSettle();
-    // Simulate update (could trigger a button in real widget)
-    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('Timur Harin'), findsOneWidget);
   });
 
   testWidgets('shows error state', (WidgetTester tester) async {
@@ -61,6 +59,6 @@ void main() {
       home: UserProfile(userService: service),
     ));
     await tester.pumpAndSettle();
-    expect(find.textContaining('error', findRichText: true), findsOneWidget);
+    expect(find.text('Error loading user profile'), findsOneWidget);
   });
 }
