@@ -1,0 +1,7 @@
+services:
+  backend:
+    image: golang:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      

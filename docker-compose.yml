@@ -22,7 +22,7 @@ services:
   # Go Backend API
   backend:
     build:
-      context: ./backend
+      context: ./
       dockerfile: Dockerfile
       target: production
     container_name: course_backend
