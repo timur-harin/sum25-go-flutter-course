@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"fmt"
+	//"fmt"
 
 	"lab04-backend/models"
 
@@ -29,7 +29,9 @@ func (r *CategoryRepository) Create(category *models.Category) error {
 	// return result.Error
 	//
 	// Notice how much simpler this is compared to manual SQL!
-	return fmt.Errorf("TODO: implement Create method with GORM")
+	result := r.db.Create(category)
+	return result.Error
+	//return fmt.Errorf("TODO: implement Create method with GORM")
 }
 
 // TODO: Implement GetByID method using GORM
@@ -44,7 +46,10 @@ func (r *CategoryRepository) GetByID(id uint) (*models.Category, error) {
 	// return &category, result.Error
 	//
 	// Much cleaner than manual row scanning!
-	return nil, fmt.Errorf("TODO: implement GetByID method with GORM")
+	var category models.Category
+	result := r.db.First(&category, id)
+	return &category, result.Error
+	//return nil, fmt.Errorf("TODO: implement GetByID method with GORM")
 }
 
 // TODO: Implement GetAll method using GORM
@@ -57,7 +62,11 @@ func (r *CategoryRepository) GetAll() ([]models.Category, error) {
 	// var categories []models.Category
 	// result := r.db.Order("name").Find(&categories)
 	// return categories, result.Error
-	return nil, fmt.Errorf("TODO: implement GetAll method with GORM")
+	var categories []models.Category
+	result := r.db.Order("name").Find(&categories)
+	return categories, result.Error
+
+	//return nil, fmt.Errorf("TODO: implement GetAll method with GORM")
 }
 
 // TODO: Implement Update method using GORM
@@ -71,7 +80,10 @@ func (r *CategoryRepository) Update(category *models.Category) error {
 	// Example:
 	// result := r.db.Save(category)
 	// return result.Error
-	return fmt.Errorf("TODO: implement Update method with GORM")
+	result := r.db.Save(category)
+	return result.Error
+
+	//return fmt.Errorf("TODO: implement Update method with GORM")
 }
 
 // TODO: Implement Delete method using GORM
@@ -84,7 +96,10 @@ func (r *CategoryRepository) Delete(id uint) error {
 	// Example:
 	// result := r.db.Delete(&models.Category{}, id)
 	// return result.Error
-	return fmt.Errorf("TODO: implement Delete method with GORM")
+	result := r.db.Delete(&models.Category{}, id)
+	return result.Error
+
+	//return fmt.Errorf("TODO: implement Delete method with GORM")
 }
 
 // TODO: Implement FindByName method using GORM
@@ -98,7 +113,10 @@ func (r *CategoryRepository) FindByName(name string) (*models.Category, error) {
 	// var category models.Category
 	// result := r.db.Where("name = ?", name).First(&category)
 	// return &category, result.Error
-	return nil, fmt.Errorf("TODO: implement FindByName method with GORM")
+	var category models.Category
+	result := r.db.Where("name = ?", name).First(&category)
+	return &category, result.Error
+	//return nil, fmt.Errorf("TODO: implement FindByName method with GORM")
 }
 
 // TODO: Implement SearchCategories method using GORM
@@ -115,7 +133,14 @@ func (r *CategoryRepository) SearchCategories(query string, limit int) ([]models
 	//               Limit(limit).
 	//               Find(&categories)
 	// return categories, result.Error
-	return nil, fmt.Errorf("TODO: implement SearchCategories method with GORM")
+	var categories []models.Category
+	result := r.db.Where("name LIKE ?", "%"+query+"%").
+		Order("name").
+		Limit(limit).
+		Find(&categories)
+	return categories, result.Error
+
+	//return nil, fmt.Errorf("TODO: implement SearchCategories method with GORM")
 }
 
 // TODO: Implement GetCategoriesWithPosts method using GORM associations
@@ -131,7 +156,11 @@ func (r *CategoryRepository) GetCategoriesWithPosts() ([]models.Category, error)
 	// return categories, result.Error
 	//
 	// This assumes Category model has Posts relationship defined
-	return nil, fmt.Errorf("TODO: implement GetCategoriesWithPosts method with GORM Preload")
+	var categories []models.Category
+	result := r.db.Preload("Posts").Find(&categories)
+	return categories, result.Error
+
+	//return nil, fmt.Errorf("TODO: implement GetCategoriesWithPosts method with GORM Preload")
 }
 
 // TODO: Implement Count method using GORM
@@ -144,7 +173,11 @@ func (r *CategoryRepository) Count() (int64, error) {
 	// var count int64
 	// result := r.db.Model(&models.Category{}).Count(&count)
 	// return count, result.Error
-	return 0, fmt.Errorf("TODO: implement Count method with GORM")
+	var count int64
+	result := r.db.Model(&models.Category{}).Count(&count)
+	return count, result.Error
+
+	//return 0, fmt.Errorf("TODO: implement Count method with GORM")
 }
 
 // TODO: Implement Transaction example using GORM
@@ -163,5 +196,13 @@ func (r *CategoryRepository) CreateWithTransaction(categories []models.Category)
 	//     }
 	//     return nil // GORM will commit automatically
 	// })
-	return fmt.Errorf("TODO: implement CreateWithTransaction method with GORM")
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, category := range categories {
+			if err := tx.Create(&category).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	//return fmt.Errorf("TODO: implement CreateWithTransaction method with GORM")
 }
