@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/preferences_service.dart';
 import '../services/database_service.dart';
 import '../services/secure_storage_service.dart';
+import '../models/user.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,14 +12,44 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _statusMessage = 'Welcome to Lab 04 - Database & Persistence';
+  String _statusMessage = 'Welcome to Lab 04 – Database & Persistence';
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeServices();
+  }
+
+  Future<void> _initializeServices() async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Initializing services…';
+    });
+    try {
+      // Initialize SharedPreferences
+      await PreferencesService.init();
+      // Warm up SQLite
+      await DatabaseService.database;
+      setState(() {
+        _statusMessage = 'All services ready!';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Initialization failed: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lab 04 - Database & Persistence'),
+        title: const Text('Lab 04 – Database & Persistence'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
@@ -35,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Text(
                       'Status',
                       style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(_statusMessage),
@@ -107,7 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
@@ -128,19 +160,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSharedPreferences() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing SharedPreferences...';
+      _statusMessage = 'Testing SharedPreferences…';
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
+      const key = 'test_key';
+      const testValue = 'Hello from SharedPreferences!';
+      await PreferencesService.setString(key, testValue);
 
-      await PreferencesService.setString(
-          'test_key', 'Hello from SharedPreferences!');
-      final value = PreferencesService.getString('test_key');
-
+      final value = PreferencesService.getString(key);
       setState(() {
-        _statusMessage = 'SharedPreferences test result: $value';
+        _statusMessage = 'SharedPreferences test: "$value"';
       });
     } catch (e) {
       setState(() {
@@ -156,18 +186,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSQLite() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing SQLite database...';
+      _statusMessage = 'Testing SQLite database…';
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
+      // ensure table exists and start fresh for demo
+      await DatabaseService.clearAllData();
+
+      // insert a couple of users
+      await DatabaseService.createUser(
+          CreateUserRequest(name: 'Bob', email: 'bob@example.com'));
+      await DatabaseService.createUser(
+          CreateUserRequest(name: 'Carol', email: 'carol@example.com'));
 
       final userCount = await DatabaseService.getUserCount();
-
       setState(() {
-        _statusMessage =
-            'SQLite test result: Found $userCount users in database';
+        _statusMessage = 'SQLite test: $userCount users found';
       });
     } catch (e) {
       setState(() {
@@ -183,18 +217,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSecureStorage() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing Secure Storage...';
+      _statusMessage = 'Testing Secure Storage…';
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
-      await SecureStorageService.saveSecureData('test_secure', 'Secret data');
-      final value = await SecureStorageService.getSecureData('test_secure');
-
+      const key = 'test_secure';
+      const secret = 'Secret data';
+      await SecureStorageService.saveSecureData(key, secret);
+      final value = await SecureStorageService.getSecureData(key);
       setState(() {
-        _statusMessage = 'Secure Storage test result: $value';
+        _statusMessage = 'Secure Storage test: "$value"';
       });
     } catch (e) {
       setState(() {
