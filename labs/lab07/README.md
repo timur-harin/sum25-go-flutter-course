@@ -16,4 +16,4 @@
   - The Dockerfile and Go app source code
   - The GitHub Actions workflow and Flutter app source code
   - A link to the published Go Docker image
-  - A link to the deployed Flutter app on GitHub Pages 
+  - A link to the deployed Flutter app on GitHub Pages
