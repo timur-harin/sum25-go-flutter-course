@@ -2,27 +2,54 @@ name: Deploy Flutter Web to GitHub Pages
 
 on:
   # TODO: Add condition
-    
+
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - lab07-shafeev-rushan
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: "3.32.1"
 
       - name: Set up Flutter
         run: #TODO: Add command
+    - name: Enable Web Support
+      run: flutter config --enable-web
 
       - name: Install dependencies
         run: #TODO: Add command
         working-directory: labs/lab07/frontend
+    - name: Get Dependencies
+      run: flutter pub get
 
       - name: Build web
         run: #TODO: Add command
         working-directory: labs/lab07/frontend
+    - name: Build Web App
+      run: flutter build web
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
-        # TODO: add other and setup repository 
+        # TODO: add other and setup repository  
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: frontend/build/web
