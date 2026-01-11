@@ -63,8 +63,12 @@ class MyHomePage extends StatelessWidget {
             Center(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
+                child: ProfileCard(
+                  name: 'karim',
+                  email: 'karim@mail.com',
+                  age: 30,
+                  avatarUrl: null, // или укажи URL строки, если хочешь показать аватар
+                ),
               ),
             ),
             CounterApp(),
