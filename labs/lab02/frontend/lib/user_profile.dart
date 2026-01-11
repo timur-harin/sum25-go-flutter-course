@@ -13,20 +13,61 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   // TODO: Add state for user data, loading, and error
+  String? _name;
+  String? _email;
+  bool _isLoading = true;
+  String? _errorMessage;
+
   // TODO: Fetch user info from userService (simulate for tests)
+    void _loadUserInfo() async {
+    try {
+      final user = await widget.userService.fetchUser();
+      setState(() {
+        _name = user['name'];
+        _email = user['email'];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     // TODO: Fetch user info and update state
+    _loadUserInfo();
   }
 
   @override
   Widget build(BuildContext context) {
     // TODO: Build user profile UI with loading, error, and user info
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
-    );
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (_errorMessage != null) {
+      return Center(child: Text('error: $_errorMessage'));
+    } else {
+return Scaffold(
+    appBar: AppBar(title: const Text('User Profile')),
+    body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : _errorMessage != null
+            ? Center(child: Text('error: $_errorMessage'))
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_name ?? '', style: const TextStyle(fontSize: 18)),
+                    const SizedBox(height: 8),
+                    Text(_email ?? '', style: const TextStyle(fontSize: 18)),
+                  ],
+          ),
+        ),
+      );
+    }
   }
 }
