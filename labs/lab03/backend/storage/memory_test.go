@@ -41,7 +41,7 @@ func TestMemoryStorageCRUD(t *testing.T) {
 	}
 
 	// Test GetAll
-	messages := storage.GetAll()
+	messages, _ := storage.GetAll()
 	if len(messages) != 1 {
 		t.Errorf("Expected 1 message, got %d", len(messages))
 	}
