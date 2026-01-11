@@ -1,0 +1,36 @@
+name: Lab 07 (Deploy to GitHub pages)
+
+on:
+  push:
+    branches: [lab07-*]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3  # Checkout code
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2  # Install Flutter
+        with:
+          flutter-version: '3.x'  # Use a stable version
+          channel: 'stable'
+
+      - name: Enable web
+        run: flutter config --enable-web
+        working-directory: labs/lab07/frontend
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: labs/lab07/frontend
+
+      - name: Build web
+        run: flutter build web --base-href /sum25-go-flutter-course/ --release
+        working-directory: labs/lab07/frontend
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3  # Deploy to gh-pages branch
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: labs/lab07/frontend/build/web
