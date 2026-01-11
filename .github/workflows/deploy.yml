@@ -1,0 +1,65 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [lab07-*]
+    paths:
+      - 'labs/lab07/**'
+      - '.github/workflows/deploy.yml'
+    
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.10.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: labs/lab07/frontend
+
+      - name: Build web
+        run: |
+          cd labs/lab07/frontend
+          flutter clean
+          flutter pub get
+          flutter build web \
+            --release \
+            --base-href /sum25-go-flutter-course/ \
+            --web-renderer canvaskit \
+            --dart-define=FLUTTER_WEB_CANVASKIT_URL=/canvaskit/ \
+            --pwa-strategy none
+          ls -R build/web  # Verify files
+      
+      - name: Add critical files
+        run: |
+          cd labs/lab07/frontend/build/web
+          touch .nojekyll
+          echo "/sum25-go-flutter-course/" > CNAME
+      
+      - name: Fix index.html
+        run: |
+          cd labs/lab07/frontend/build/web
+          sed -i 's/flutter_bootstrap\.js/flutter.js/g' index.html
+          sed -i 's/<base href="\/">/<base href="\/sum25-go-flutter-course\/">/g' index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: labs/lab07/frontend/build/web
+          keep_files: false
+          enable_jekyll: false

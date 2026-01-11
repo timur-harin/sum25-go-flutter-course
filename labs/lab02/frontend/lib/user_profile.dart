@@ -13,12 +13,39 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   // TODO: Add state for user data, loading, and error
+  String? name;
+  String? email;
+  bool _loading = false;
+  String? _error;
   // TODO: Fetch user info from userService (simulate for tests)
 
   @override
   void initState() {
     super.initState();
     // TODO: Fetch user info and update state
+    _fetchUserData();
+  }
+
+  void _fetchUserData() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      var data = await widget.userService.fetchUser();
+      setState(() {
+        name = data["name"];
+        email = data["email"];
+        _loading = false;
+      });
+    }
+    catch (e) {
+      setState(() {
+        _loading = false;
+        _error = "User info fetch error: $e";
+      });
+    }
   }
 
   @override
@@ -26,7 +53,22 @@ class _UserProfileState extends State<UserProfile> {
     // TODO: Build user profile UI with loading, error, and user info
     return Scaffold(
       appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: Column(
+        children: [
+          if (_loading) const LinearProgressIndicator()
+          else if (_error != null) Text(_error!)
+          else Column(children: [
+          Row(children: [
+            Text("User Name:"),
+            Text(name!)
+          ],),
+          Row(children: [
+            Text("Email:"),
+            Text(email!)
+          ],)
+        ],)
+        ],
+      )
     );
   }
 }

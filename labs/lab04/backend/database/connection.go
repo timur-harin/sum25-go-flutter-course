@@ -2,7 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -28,31 +28,48 @@ func DefaultConfig() *Config {
 	}
 }
 
-// TODO: Implement InitDB function
+// Implement InitDB function
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
+	// Initialize database connection with SQLite
 	// - Open database connection using sqlite3 driver
 	// - Apply connection pool configuration from DefaultConfig()
 	// - Test connection with Ping()
 	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	return InitDBWithConfig(DefaultConfig())
 }
 
-// TODO: Implement InitDBWithConfig function
+// Implement InitDBWithConfig function
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
+	// Initialize database connection with custom configuration
 	// - Open database connection using the provided config
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		return nil, err
+	}
 	// - Apply all connection pool settings
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+	db.SetConnMaxLifetime(config.ConnMaxLifetime)
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
 	// - Test connection with Ping()
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
 	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+	return db, nil
 }
 
-// TODO: Implement CloseDB function
+// Implement CloseDB function
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
+	// Properly close database connection
 	// - Check if db is not nil
+	if db == nil {
+		return errors.New("error: db is nil")
+	}
 	// - Close the database connection
+	if err := db.Close(); err == nil {
+		return err
+	}
 	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+	return nil
 }
