@@ -3,8 +3,7 @@ import 'package:lab02_chat/user_service.dart';
 
 // UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final UserService userService;
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -12,21 +11,58 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  Map<String, String>? _userData;
+  bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _fetchUser();
+  }
+
+  Future<void> _fetchUser() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final data = await widget.userService.fetchUser();
+      setState(() {
+        _userData = data;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading user data';
+        _loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(child: Text(_error!, style: const TextStyle(color: Colors.red)));
+    }
+    if (_userData == null) {
+      return const Center(child: Text('No user data'));
+    }
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Name: ${_userData!['name']}', style: const TextStyle(fontSize: 20)),
+          const SizedBox(height: 8),
+          Text('Email: ${_userData!['email']}', style: const TextStyle(fontSize: 16)),
+        ],
+      ),
     );
   }
 }
+
+
