@@ -1,11 +1,11 @@
 {
-    "name": "Summer 2025 Go + Flutter Course",
-    "short_name": "Summer 2025 Course",
+    "name": "flutter_hello",
+    "short_name": "flutter_hello",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Summer 2025 Go + Flutter Course - Frontend Application",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
