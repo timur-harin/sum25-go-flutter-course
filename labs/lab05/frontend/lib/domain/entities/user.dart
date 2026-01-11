@@ -53,9 +53,40 @@ class User extends Equatable {
         trimmedName.length <= 51;
   }
 
+  /// Validates ID is positive
+  bool isValidId() {
+    return id > 0;
+  }
+
+  /// Validates createdAt is not in the future
+  bool isValidCreatedAt() {
+    return createdAt.isBefore(DateTime.now()) ||
+        createdAt.isAtSameMomentAs(DateTime.now());
+  }
+
   /// Validates all fields are valid
   bool isValid() {
-    return isValidEmail() && isValidName();
+    return isValidEmail() && isValidName() && isValidId() && isValidCreatedAt();
+  }
+
+  /// Factory constructor for creating User from JSON
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+
+  /// Converts User to JSON map
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'created_at': createdAt.toIso8601String(),
+    };
   }
 
   /// Provides string representation for debugging

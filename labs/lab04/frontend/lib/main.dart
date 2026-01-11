@@ -5,13 +5,11 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
   try {
-    // TODO: Initialize PreferencesService
+    // Initialize PreferencesService
     await PreferencesService.init();
-
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    // Optionally initialize other services here, e.g.:
+    // await DatabaseService.database;
   } catch (e) {
     print('Error initializing services: $e');
   }
