@@ -1,12 +1,13 @@
 module lab04-backend
 
-go 1.24
+go 1.24.4
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/georgysavva/scany v1.2.3
+	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/pressly/goose/v3 v3.24.3
-	gorm.io/gorm v1.25.12
+	gorm.io/gorm v1.30.0
 )
 
 require (
