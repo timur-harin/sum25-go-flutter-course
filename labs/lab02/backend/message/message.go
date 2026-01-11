@@ -1,44 +1,52 @@
 package message
 
-import (
-	"errors"
-	"sync"
-)
+import "sync"
 
-// Message represents a chat message
-// TODO: Add more fields if needed
-
+// Message represents a chat message record.
 type Message struct {
-	Sender    string
+	Sender    string // user ID
 	Content   string
 	Timestamp int64
 }
 
-// MessageStore stores chat messages
-// Contains a slice of messages and a mutex for concurrency
-
+// MessageStore holds messages and protects them with a mutex.
 type MessageStore struct {
 	messages []Message
 	mutex    sync.RWMutex
-	// TODO: Add more fields if needed
 }
 
-// NewMessageStore creates a new MessageStore
+// NewMessageStore initializes an empty store.
 func NewMessageStore() *MessageStore {
-	// TODO: Initialize MessageStore fields
 	return &MessageStore{
 		messages: make([]Message, 0, 100),
 	}
 }
 
-// AddMessage stores a new message
+// AddMessage appends a message in a thread-safe manner.
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.messages = append(s.messages, msg)
 	return nil
 }
 
-// GetMessages retrieves messages (optionally by user)
+// GetMessages returns all messages if user=="", or filters by Sender otherwise.
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	if user == "" {
+		// return a copy to avoid external mutation
+		cpy := make([]Message, len(s.messages))
+		copy(cpy, s.messages)
+		return cpy, nil
+	}
+
+	var filtered []Message
+	for _, m := range s.messages {
+		if m.Sender == user {
+			filtered = append(filtered, m)
+		}
+	}
+	return filtered, nil
 }

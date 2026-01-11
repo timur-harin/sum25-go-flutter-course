@@ -1,7 +1,4 @@
-// Simple form validation with basic security checks
-
 class FormValidator {
-  // TODO: Implement validateEmail method
   // validateEmail checks if an email is valid
   // Requirements:
   // - return null for valid emails
@@ -9,45 +6,58 @@ class FormValidator {
   // - check basic email format (contains @ and .)
   // - check reasonable length (max 100 characters)
   static String? validateEmail(String? email) {
-    // TODO: Implement email validation
-    // Check for null/empty, basic format, and length
-    throw UnimplementedError('FormValidator validateEmail not implemented');
+    if (email == null || email.trim().isEmpty) {
+      return 'email is required';
+    }
+    final sanitized = email.trim();
+    if (sanitized.length > 100) {
+      return 'email is too long';
+    }
+    if (!sanitized.contains('@') || !sanitized.contains('.')) {
+      return 'invalid email format';
+    }
+    return null;
   }
 
-  // TODO: Implement validatePassword method
-  // validatePassword checks if a password meets basic requirements
+  // validatePassword checks if a password is valid
   // Requirements:
   // - return null for valid passwords
   // - return error message for invalid passwords
-  // - minimum 6 characters
-  // - contains at least one letter and one number
+  // - check for null/empty, length >=6, contains letter and number
   static String? validatePassword(String? password) {
-    // TODO: Implement password validation
-    // Check length and basic complexity
-    throw UnimplementedError('FormValidator validatePassword not implemented');
+    if (password == null || password.isEmpty) {
+      return 'password is required';
+    }
+    if (password.length < 6) {
+      return 'password must be at least 6 characters';
+    }
+    final hasLetter = RegExp(r'[A-Za-z]').hasMatch(password);
+    final hasNumber = RegExp(r'\d').hasMatch(password);
+    if (!hasLetter || !hasNumber) {
+      return 'password must contain at least one letter and number';
+    }
+    return null;
   }
 
-  // TODO: Implement sanitizeText method
-  // sanitizeText removes basic dangerous characters
+  // sanitizeText removes HTML-like tags and trims whitespace
   // Requirements:
-  // - remove < and > characters
+  // - remove any <...> sequences
   // - trim whitespace
-  // - return cleaned text
+  // - handle null gracefully
   static String sanitizeText(String? text) {
-    // TODO: Implement text sanitization
-    // Clean basic dangerous characters
-    throw UnimplementedError('FormValidator sanitizeText not implemented');
+    if (text == null) return '';
+    final withoutTags = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    return withoutTags.trim();
   }
 
-  // TODO: Implement isValidLength method
   // isValidLength checks if text is within length limits
   // Requirements:
   // - return true if text length is between min and max
   // - handle null text gracefully
   static bool isValidLength(String? text,
       {int minLength = 1, int maxLength = 100}) {
-    // TODO: Implement length validation
-    // Check text length bounds
-    throw UnimplementedError('FormValidator isValidLength not implemented');
+    if (text == null) return false;
+    final length = text.length;
+    return length >= minLength && length <= maxLength;
   }
 }

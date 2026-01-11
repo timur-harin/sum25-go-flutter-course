@@ -1,76 +1,85 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/counter_app.dart';
-import 'package:frontend/profile_card.dart';
-import 'package:frontend/registration_form.dart';
+import 'profile_card.dart';
+import 'counter_app.dart';
+import 'registration_form.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lab 01 Demo',
+      title: 'Flutter Demo Suite',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const HomeScreen(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: const Text('Lab 01 Demo'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Profile'),
-              Tab(text: 'Counter'),
-              Tab(text: 'Register'),
-            ],
-          ),
-        ),
-        body: const TabBarView(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
-              ),
-            ),
-            CounterApp(),
-            RegistrationForm(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Flutter Demo Suite'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.person), text: 'Profile'),
+            Tab(icon: Icon(Icons.exposure_plus_1), text: 'Counter'),
+            Tab(icon: Icon(Icons.app_registration), text: 'Register'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: ProfileCard(
+                name: 'Alice Smith',
+                age: 30,
+                email: 'alice.smith@example.com',
+              ),
+            ),
+          ),
+          Center(child: CounterApp()),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: RegistrationForm(),
+            ),
+          ),
+        ],
       ),
     );
   }
