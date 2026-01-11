@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.1.0
+  intl: ^0.20.2
   provider: ^6.1.1
 
 dev_dependencies:

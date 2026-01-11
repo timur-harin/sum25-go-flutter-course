@@ -2,20 +2,30 @@ package main
 
 import (
 	"log"
+	"net/http"
+
+	"lab03-backend/api"
+	"lab03-backend/storage"
 )
 
 func main() {
-	// TODO: Create a new memory storage instance
-	// TODO: Create a new API handler with the storage
-	// TODO: Setup routes using the handler
-	// TODO: Configure server with:
-	//   - Address: ":8080"
-	//   - Handler: the router
-	//   - ReadTimeout: 15 seconds
-	//   - WriteTimeout: 15 seconds
-	//   - IdleTimeout: 60 seconds
-	// TODO: Add logging to show server is starting
-	// TODO: Start the server and handle any errors
+	log.Println("Starting REST API Chat Server...")
 
-	log.Println("TODO: Implement main function")
+	// Initialize storage
+	store := storage.NewMemoryStorage()
+
+	// Initialize handler with storage
+	handler := api.NewHandler(store)
+
+	// Setup routes
+	router := handler.SetupRoutes()
+
+	// Define server address
+	addr := ":8080"
+	log.Printf("Server listening on %s", addr)
+
+	// Start the server
+	if err := http.ListenAndServe(addr, router); err != nil {
+		log.Fatalf("Could not start server: %v\n", err)
+	}
 }
