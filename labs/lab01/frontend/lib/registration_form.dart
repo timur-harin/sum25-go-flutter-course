@@ -56,6 +56,9 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   ),
                   validator: (value) {
                     // TODO: validate if value is not null or empty and return 'Please enter your name'
+                    if (value == "" || value == null) {
+                      return 'Please enter your name';
+                    }
                     return null;
                   },
                 ),
@@ -69,6 +72,9 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   ),
                   validator: (value) {
                     // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
+                    if (value == null || value.isEmpty || !value.contains('@')) {
+                      return 'Please enter a valid email';
+                    }
                     return null;
                   },
                 ),
@@ -76,6 +82,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 TextFormField(
                   key: const Key('password'),
                   // TODO: use _passwordController
+                  controller: TextEditingController(),
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
@@ -83,11 +90,15 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   obscureText: true,
                   validator: (value) {
                     // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
+                    if (value == null || value.isEmpty || value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 32),
                 // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+                ElevatedButton(onPressed: _submitForm, child: Text('Submit'))
               ],
             ),
           ),
