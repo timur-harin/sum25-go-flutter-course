@@ -23,7 +23,6 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
-  // TODO: Implement copyWith method
   User copyWith({
     int? id,
     String? name,
@@ -31,31 +30,47 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    // TODO: Create a copy of User with updated fields
-    // Return new User instance with updated values or original values if null
-    throw UnimplementedError('TODO: implement copyWith method');
+    return User(
+      id: id != null ? id : this.id,
+      name: name != null ? name : this.name,
+      email: email != null ? email : this.email,
+      createdAt: createdAt != null ? createdAt : this.createdAt,
+      updatedAt: updatedAt != null ? updatedAt : this.updatedAt,
+    );
   }
 
-  // TODO: Implement equality operator
   @override
   bool operator ==(Object other) {
-    // TODO: Compare User objects for equality
-    // Check if other is User and all fields are equal
-    return super == other;
+    if (identical(this, other)) return true;
+    return other is User &&
+        other.email == email &&
+        other.name == name &&
+        other.id == id &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt;
   }
 
-  // TODO: Implement hashCode
   @override
   int get hashCode {
-    // TODO: Generate hash code based on all fields
-    return super.hashCode;
+    int hash = 17;
+    hash = 31 * hash + id.hashCode;
+    hash = 31 * hash + name.hashCode;
+    hash = 31 * hash + email.hashCode;
+    hash = 31 * hash + createdAt.hashCode;
+    hash = 31 * hash + updatedAt.hashCode;
+    return hash;
   }
 
-  // TODO: Implement toString
   @override
   String toString() {
-    // TODO: Return string representation of User
-    return super.toString();
+    return '''
+User(
+  id: $id,
+  name: $name,
+  email: $email,
+  createdAt: $createdAt,
+  updatedAt: $updatedAt
+)''';
   }
 }
 
@@ -73,11 +88,14 @@ class CreateUserRequest {
       _$CreateUserRequestFromJson(json);
   Map<String, dynamic> toJson() => _$CreateUserRequestToJson(this);
 
-  // TODO: Implement validate method
   bool validate() {
-    // TODO: Validate user creation request
-    // - Name should not be empty and should be at least 2 characters
-    // - Email should be valid format
-    return false;
+    final emailPattern = RegExp(r"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+    if (!emailPattern.hasMatch(email)) {
+      return false;
+    }
+    if (name.length < 2) {
+      return false;
+    }
+    return true;
   }
 }

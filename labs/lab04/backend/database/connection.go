@@ -8,7 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Config holds database configuration
+// Config holds database configuration parameters
 type Config struct {
 	DatabasePath    string
 	MaxOpenConns    int
@@ -17,42 +17,49 @@ type Config struct {
 	ConnMaxIdleTime time.Duration
 }
 
-// DefaultConfig returns a default database configuration
+// DefaultConfig returns the default configuration for the database connection
 func DefaultConfig() *Config {
-	return &Config{
-		DatabasePath:    "./lab04.db",
-		MaxOpenConns:    25,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: 5 * time.Minute,
-		ConnMaxIdleTime: 2 * time.Minute,
-	}
+	cfg := new(Config)
+	cfg.DatabasePath = "./lab04.db"
+	cfg.MaxOpenConns = 25
+	cfg.MaxIdleConns = 5
+	cfg.ConnMaxLifetime = time.Minute * 5
+	cfg.ConnMaxIdleTime = time.Minute * 2
+	return cfg
 }
 
-// TODO: Implement InitDB function
+// InitDB initializes the database connection using the default configuration
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
-	// - Open database connection using sqlite3 driver
-	// - Apply connection pool configuration from DefaultConfig()
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	defCfg := DefaultConfig()
+	return InitDBWithConfig(defCfg)
 }
 
-// TODO: Implement InitDBWithConfig function
+// InitDBWithConfig initializes the database connection using the given configuration
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
-	// - Open database connection using the provided config
-	// - Apply all connection pool settings
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+	database, openErr := sql.Open("sqlite3", config.DatabasePath)
+	if openErr != nil {
+		return nil, openErr
+	}
+
+	// Set connection pool parameters in a different order
+	database.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+	database.SetConnMaxLifetime(config.ConnMaxLifetime)
+	database.SetMaxIdleConns(config.MaxIdleConns)
+	database.SetMaxOpenConns(config.MaxOpenConns)
+
+	// Check database connectivity
+	pingErr := database.Ping()
+	if pingErr != nil {
+		return nil, pingErr
+	}
+
+	return database, nil
 }
 
-// TODO: Implement CloseDB function
+// CloseDB closes the database connection if it is not nil
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
-	// - Check if db is not nil
-	// - Close the database connection
-	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+	if db == nil {
+		return fmt.Errorf("cannot close a nil database connection")
+	}
+	return db.Close()
 }

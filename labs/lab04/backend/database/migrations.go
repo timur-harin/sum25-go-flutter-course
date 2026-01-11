@@ -7,42 +7,57 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-// RunMigrations runs database migrations using goose
 func RunMigrations(db *sql.DB) error {
 	if db == nil {
-		return fmt.Errorf("database connection cannot be nil")
+		return fmt.Errorf("nil database connection detected")
 	}
-
-	// Set goose dialect for SQLite
-	if err := goose.SetDialect("sqlite3"); err != nil {
-		return fmt.Errorf("failed to set goose dialect: %v", err)
+	err := goose.SetDialect("sqlite3")
+	if err != nil {
+		return fmt.Errorf("error setting dialect: %v", err)
 	}
-
-	// Get path to migrations directory (relative to backend directory)
-	migrationsDir := "../migrations"
-
-	// Run migrations from the migrations directory
-	if err := goose.Up(db, migrationsDir); err != nil {
-		return fmt.Errorf("failed to run migrations: %v", err)
+	migrationPath := "../migrations"
+	if upErr := goose.Up(db, migrationPath); upErr != nil {
+		return fmt.Errorf("migration execution failed: %v", upErr)
 	}
-
 	return nil
 }
 
-// TODO: Implement this function
-// RollbackMigration rolls back the last migration using goose
 func RollbackMigration(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection is nil")
+	}
+	if dialectErr := goose.SetDialect("sqlite3"); dialectErr != nil {
+		return fmt.Errorf("dialect setting error: %v", dialectErr)
+	}
+	migrationPath := "../migrations"
+	if downErr := goose.Down(db, migrationPath); downErr != nil {
+		return fmt.Errorf("rollback failed: %v", downErr)
+	}
 	return nil
 }
 
-// TODO: Implement this function
-// GetMigrationStatus checks migration status using goose
 func GetMigrationStatus(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("nil database connection provided")
+	}
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return fmt.Errorf("failed to configure dialect: %v", err)
+	}
+	migrationPath := "../migrations"
+	if statusErr := goose.Status(db, migrationPath); statusErr != nil {
+		return fmt.Errorf("migration status check failed: %v", statusErr)
+	}
 	return nil
 }
 
-// TODO: Implement this function
-// CreateMigration creates a new migration file
 func CreateMigration(name string) error {
+	if name == "" {
+		return fmt.Errorf("migration name must not be empty")
+	}
+	migrationPath := "../migrations"
+	err := goose.Create(nil, migrationPath, name, "sql")
+	if err != nil {
+		return fmt.Errorf("error creating migration: %v", err)
+	}
 	return nil
 }
