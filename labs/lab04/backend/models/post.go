@@ -1,73 +1,105 @@
+// File: models/post.go
 package models
 
 import (
-	"database/sql"
-	"time"
+    "database/sql"
+    "errors"
+    "strings"
+    "time"
 )
 
 // Post represents a blog post in the system
 type Post struct {
-	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
-	Title     string    `json:"title" db:"title"`
-	Content   string    `json:"content" db:"content"`
-	Published bool      `json:"published" db:"published"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+    ID        int       `json:"id" db:"id"`
+    UserID    int       `json:"user_id" db:"user_id"`
+    Title     string    `json:"title" db:"title"`
+    Content   string    `json:"content" db:"content"`
+    Published bool      `json:"published" db:"published"`
+    CreatedAt time.Time `json:"created_at" db:"created_at"`
+    UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // CreatePostRequest represents the payload for creating a post
 type CreatePostRequest struct {
-	UserID    int    `json:"user_id"`
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	Published bool   `json:"published"`
+    UserID    int    `json:"user_id"`
+    Title     string `json:"title"`
+    Content   string `json:"content"`
+    Published bool   `json:"published"`
 }
 
 // UpdatePostRequest represents the payload for updating a post
 type UpdatePostRequest struct {
-	Title     *string `json:"title,omitempty"`
-	Content   *string `json:"content,omitempty"`
-	Published *bool   `json:"published,omitempty"`
+    Title     *string `json:"title,omitempty"`
+    Content   *string `json:"content,omitempty"`
+    Published *bool   `json:"published,omitempty"`
 }
 
-// TODO: Implement Validate method for Post
+// Validate performs basic sanity checks on an existing Post.
 func (p *Post) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - Content should not be empty if published is true
-	// - UserID should be greater than 0
-	// Return appropriate errors if validation fails
-	return nil
+    if p.UserID <= 0 {
+        return errors.New("user_id must be greater than 0")
+    }
+    if len(strings.TrimSpace(p.Title)) < 5 {
+        return errors.New("title must be at least 5 characters long")
+    }
+    if p.Published && strings.TrimSpace(p.Content) == "" {
+        return errors.New("content cannot be empty when post is published")
+    }
+    return nil
 }
 
-// TODO: Implement Validate method for CreatePostRequest
+// Validate checks that the request payload is sensible before creating a Post.
 func (req *CreatePostRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - UserID should be greater than 0
-	// - Content should not be empty if published is true
-	// Return appropriate errors if validation fails
-	return nil
+    if req.UserID <= 0 {
+        return errors.New("user_id must be greater than 0")
+    }
+    if len(strings.TrimSpace(req.Title)) < 5 {
+        return errors.New("title must be at least 5 characters long")
+    }
+    if req.Published && strings.TrimSpace(req.Content) == "" {
+        return errors.New("content cannot be empty when post is published")
+    }
+    return nil
 }
 
-// TODO: Implement ToPost method for CreatePostRequest
+// ToPost converts the CreatePostRequest into a Post and populates timestamps.
 func (req *CreatePostRequest) ToPost() *Post {
-	// TODO: Convert CreatePostRequest to Post
-	// Set timestamps to current time
-	return nil
+    now := time.Now().UTC()
+    return &Post{
+        UserID:    req.UserID,
+        Title:     strings.TrimSpace(req.Title),
+        Content:   req.Content,
+        Published: req.Published,
+        CreatedAt: now,
+        UpdatedAt: now,
+    }
 }
 
-// TODO: Implement ScanRow method for Post
+// ScanRow scans a single *sql.Row into the Post struct.
 func (p *Post) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into Post struct
-	// Handle the case where row might be nil
-	return nil
+    if row == nil {
+        return errors.New("row is nil")
+    }
+    return row.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.Published, &p.CreatedAt, &p.UpdatedAt)
 }
 
-// TODO: Implement ScanRows method for Post slice
+// ScanPosts iterates over *sql.Rows and returns a slice of Post.
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
-	// TODO: Scan multiple database rows into Post slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+    if rows == nil {
+        return nil, errors.New("rows is nil")
+    }
+    defer rows.Close()
+
+    var posts []Post
+    for rows.Next() {
+        var p Post
+        if err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.Published, &p.CreatedAt, &p.UpdatedAt); err != nil {
+            return nil, err
+        }
+        posts = append(posts, p)
+    }
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+    return posts, nil
 }
