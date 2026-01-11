@@ -49,45 +49,57 @@ class _RegistrationFormState extends State<RegistrationForm> {
               children: [
                 TextFormField(
                   key: const Key('name'),
-                  // TODO: use _nameController
                   decoration: const InputDecoration(
                     labelText: 'Name',
                     hintText: 'Enter your name',
                   ),
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
+                    if (value == null || value.isEmpty) {
+                      return "Please enter your name";
+                    }
                     return null;
                   },
+                  onSaved: (value) => _nameController.text = value!,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('email'),
-                  // TODO: use _emailController
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
                   ),
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
+                    if (value == null || value.isEmpty || !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value)) {
+                      return "Please enter a valid email";
+                    }
                     return null;
                   },
+                  onSaved: (value) => _emailController.text = value!,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('password'),
-                  // TODO: use _passwordController
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
                   ),
                   obscureText: true,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
+                    if (value == null || value.isEmpty || value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
                     return null;
                   },
+                  onSaved: (value) => _passwordController.text = value!,
                 ),
                 const SizedBox(height: 32),
                 // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+                ElevatedButton(onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    _submitForm();
+                  }
+                }, child: const Text("Submit")),
               ],
             ),
           ),
