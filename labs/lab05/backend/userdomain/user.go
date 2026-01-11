@@ -2,6 +2,7 @@ package userdomain
 
 import (
 	"errors"
+	"regexp"
 	_ "regexp"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// TODO: Implement NewUser function
 // NewUser creates a new user with validation
 // Requirements:
 // - Email must be valid format
@@ -25,44 +25,78 @@ type User struct {
 // - Password must be at least 8 characters
 // - CreatedAt and UpdatedAt should be set to current time
 func NewUser(email, name, password string) (*User, error) {
-	// TODO: Implement this function
-	// Hint: Use ValidateEmail, ValidateName, ValidatePassword helper functions
-	return nil, errors.New("not implemented")
+	var user = &User{
+		ID:        0,
+		Email:     email,
+		Name:      name,
+		Password:  password,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	err := user.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return user, err
 }
 
-// TODO: Implement Validate method
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Implement validation logic
-	// Check email, name, and password validity
-	return errors.New("not implemented")
+	if err := ValidateName(u.Name); err != nil {
+		return err
+	}
+	if err := ValidateEmail(u.Email); err != nil {
+		return err
+	}
+	if err := ValidatePassword(u.Password); err != nil {
+		return err
+	}
+	return nil
 }
 
-// TODO: Implement ValidateEmail function
 // ValidateEmail checks if email format is valid
 func ValidateEmail(email string) error {
-	// TODO: Implement email validation
-	// Use regex pattern to validate email format
-	// Email should not be empty and should match standard email pattern
-	return errors.New("not implemented")
+	email = strings.TrimSpace(email)
+	email = strings.ToLower(email)
+	isValid, err := regexp.MatchString("^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,4}$", email)
+	if !isValid || email == "" {
+		return errors.New("invalid email")
+	}
+	return err
 }
 
-// TODO: Implement ValidateName function
 // ValidateName checks if name is valid
 func ValidateName(name string) error {
-	// TODO: Implement name validation
-	// Name should be 2-50 characters, trimmed of whitespace
-	// Should not be empty after trimming
-	return errors.New("not implemented")
+	name = strings.TrimSpace(name)
+	if len(name) < 2 || len(name) > 50 {
+		return errors.New("name must be 2-50 characters")
+	}
+	return nil
 }
 
-// TODO: Implement ValidatePassword function
 // ValidatePassword checks if password meets security requirements
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Password should be at least 8 characters
-	// Should contain at least one uppercase, lowercase, and number
-	return errors.New("not implemented")
+	if len(password) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+	uppercase := false
+	lowercase := false
+	number := false
+	for _, ch := range password {
+		if ch >= 65 && ch <= 90 {
+			uppercase = true
+		}
+		if ch >= 97 && ch <= 122 {
+			lowercase = true
+		}
+		if ch >= 48 && ch <= 57 {
+			number = true
+		}
+	}
+	if !uppercase || !lowercase || !number {
+		return errors.New("password contain at least one uppercase, lowercase, and number")
+	}
+	return nil
 }
 
 // UpdateName updates the user's name with validation
