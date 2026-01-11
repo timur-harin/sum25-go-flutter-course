@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"lab04-backend/database"
+	"lab04-backend/models"
 	"lab04-backend/repository"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -16,7 +17,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := database.CloseDB(db); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
 
 	// TODO: Run migrations (using goose-based approach)
 	if err := database.RunMigrations(db); err != nil {
@@ -34,4 +39,52 @@ func main() {
 
 	// TODO: Add some demo data operations here
 	// You can test your CRUD operations
+	newUser := &models.CreateUserRequest{
+		Name:  "John Ultrakill",
+		Email: "gabrielsux@hell.com",
+	}
+
+	if err := newUser.Validate(); err != nil {
+		log.Fatalf("validation failed: %v", err)
+	}
+
+	createdUser, err := userRepo.Create(newUser)
+	if err != nil {
+		log.Fatalf("failed to create user: %v", err)
+	}
+
+	fmt.Printf("Creates user: %+v", createdUser)
+
+	newPost := &models.CreatePostRequest{
+		UserID:    createdUser.ID,
+		Title:     "IM GOING TO ULTRAKILL YOU",
+		Content:   "MAY YOUR L's BE MANY, AND YOUR [redacted] FEW",
+		Published: true,
+	}
+
+	if err := newPost.Validate(); err != nil {
+		log.Fatalf("validation failed: %v", err)
+	}
+
+	createdPost, err := postRepo.Create(newPost)
+	if err != nil {
+		log.Fatalf("failed to create post: %v", err)
+	}
+
+	fmt.Printf("Created post %+v", createdPost)
+
+	count, err := userRepo.Count()
+	if err != nil {
+		log.Fatalf("failed to count users: %v", err)
+	}
+	fmt.Printf("Total users: %d", count)
+
+	users, err := userRepo.GetAll()
+	if err != nil {
+		log.Fatalf("failed to get all users: %v", err)
+	}
+	fmt.Println("All users:")
+	for _, u := range users {
+		fmt.Printf("- %+v\n", u)
+	}
 }

@@ -30,29 +30,49 @@ func DefaultConfig() *Config {
 
 // TODO: Implement InitDB function
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
-	// - Open database connection using sqlite3 driver
-	// - Apply connection pool configuration from DefaultConfig()
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	config := DefaultConfig()
+	return InitDBWithConfig(config)
 }
 
 // TODO: Implement InitDBWithConfig function
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
-	// - Open database connection using the provided config
-	// - Apply all connection pool settings
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+	if config == nil {
+		return nil, fmt.Errorf("database config is nil")
+	}
+
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	db.SetMaxIdleConns(config.MaxIdleConns)
+	db.SetConnMaxLifetime(config.ConnMaxLifetime)
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	return db, nil
+
 }
 
 // TODO: Implement CloseDB function
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
-	// - Check if db is not nil
-	// - Close the database connection
-	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+	if db == nil {
+		return fmt.Errorf("database is nil")
+	}
+	return db.Close()
+}
+
+func cleanup(db *sql.DB) {
+	if _, err := db.Exec("DELETE FROM posts"); err != nil {
+		fmt.Errorf("Failed to clean posts: %v", err)
+	}
+	if _, err := db.Exec("DELETE FROM users"); err != nil {
+		fmt.Errorf("Failed to clean users: %v", err)
+	}
+
+	fmt.Println("Database cleanup complete")
 }

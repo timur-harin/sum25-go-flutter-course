@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/georgysavva/scany/v2 v2.1.4 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
