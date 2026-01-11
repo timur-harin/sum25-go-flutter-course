@@ -17,7 +17,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  json_serializable: ^6.6.0
+  test: ^1.25.15
 
 flutter:
   uses-material-design: true 
