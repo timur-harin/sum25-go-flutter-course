@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/pressly/goose/v3"
@@ -10,11 +11,11 @@ import (
 // RunMigrations runs database migrations using goose
 func RunMigrations(db *sql.DB) error {
 	if db == nil {
-		return fmt.Errorf("database connection cannot be nil")
+		return errors.New("database connection cannot be nil")
 	}
 
 	// Set goose dialect for SQLite
-	if err := goose.SetDialect("sqlite3"); err != nil {
+	if err := goose.SetDialect("sqlite"); err != nil {
 		return fmt.Errorf("failed to set goose dialect: %v", err)
 	}
 
@@ -29,20 +30,44 @@ func RunMigrations(db *sql.DB) error {
 	return nil
 }
 
-// TODO: Implement this function
 // RollbackMigration rolls back the last migration using goose
 func RollbackMigration(db *sql.DB) error {
+	if db == nil {
+		return errors.New("database connection cannot be nil")
+	}
+	if err := goose.SetDialect("sqlite"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+	migrationsDir := "../migrations"
+	if err := goose.Down(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to rollback migration: %v", err)
+	}
 	return nil
 }
 
-// TODO: Implement this function
 // GetMigrationStatus checks migration status using goose
 func GetMigrationStatus(db *sql.DB) error {
+	if db == nil {
+		return errors.New("database connection cannot be nil")
+	}
+	if err := goose.SetDialect("sqlite"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %v", err)
+	}
+	migrationsDir := "../migrations"
+	if err := goose.Status(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to get migration status: %v", err)
+	}
 	return nil
 }
 
-// TODO: Implement this function
 // CreateMigration creates a new migration file
 func CreateMigration(name string) error {
+	if name == "" {
+		return errors.New("migration name cannot be empty")
+	}
+	migrationsDir := "../migrations"
+	if err := goose.Create(nil, migrationsDir, name, "sql"); err != nil {
+		return fmt.Errorf("failed to create migration: %v", err)
+	}
 	return nil
 }

@@ -2,7 +2,19 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"regexp"
 	"time"
+)
+
+var (
+	emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+	ErrEmptyName    = errors.New("empty name")
+	ErrShortName    = errors.New("short name")
+	ErrEmptyEmail   = errors.New("empty email")
+	ErrInvalidEmail = errors.New("invalid email")
 )
 
 // User represents a user in the system
@@ -26,41 +38,95 @@ type UpdateUserRequest struct {
 	Email *string `json:"email,omitempty"`
 }
 
-// TODO: Implement Validate method for User
 func (u *User) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format
-	// Return appropriate errors if validation fails
+	if u.Name == "" {
+		return ErrEmptyName
+	}
+	if len(u.Name) < 2 {
+		return ErrShortName
+	}
+	if u.Email == "" {
+		return ErrEmptyEmail
+	}
+	if !emailRegex.MatchString(u.Email) {
+		return ErrInvalidEmail
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateUserRequest
 func (req *CreateUserRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format and not empty
-	// Return appropriate errors if validation fails
+	if req.Name == "" {
+		return ErrEmptyName
+	}
+	if len(req.Name) < 2 {
+		return ErrShortName
+	}
+	if req.Email == "" {
+		return ErrEmptyEmail
+	}
+	if !emailRegex.MatchString(req.Email) {
+		return ErrInvalidEmail
+	}
 	return nil
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
 func (req *CreateUserRequest) ToUser() *User {
-	// TODO: Convert CreateUserRequest to User
-	// Set timestamps to current time
-	return nil
+	now := time.Now()
+
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
 
-// TODO: Implement ScanRow method for User
 func (u *User) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into User struct
-	// Handle the case where row might be nil
+	if row == nil {
+		return errors.New("ScanRow: nil *sql.Row")
+	}
+
+	err := row.Scan(
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
+		return fmt.Errorf("ScanRow: scan error: %w", err)
+	}
+
 	return nil
 }
 
-// TODO: Implement ScanRows method for User slice
 func ScanUsers(rows *sql.Rows) ([]User, error) {
-	// TODO: Scan multiple database rows into User slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	defer rows.Close()
+
+	var users []User
+
+	for rows.Next() {
+		var u User
+
+		if err := rows.Scan(
+			&u.ID,
+			&u.Name,
+			&u.Email,
+			&u.CreatedAt,
+			&u.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("ScanUsers: scan error: %w", err)
+		}
+
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ScanUsers: rows iteration error: %w", err)
+	}
+
+	return users, nil
 }

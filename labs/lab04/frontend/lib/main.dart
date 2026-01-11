@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'services/preferences_service.dart';
+import 'services/database_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
+  // Initialize services
   try {
-    // TODO: Initialize PreferencesService
+    // Initialize PreferencesService
     await PreferencesService.init();
 
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    // Initialize DatabaseService
+    await DatabaseService.database;
   } catch (e) {
     print('Error initializing services: $e');
   }
@@ -25,9 +26,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lab 04 - Database & Persistence',
+      title: 'User Management App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       home: const HomeScreen(),
