@@ -3,8 +3,9 @@ package security
 import (
 	"errors"
 	_ "regexp"
+	"unicode"
 
-	_ "golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // PasswordService handles password operations
@@ -15,7 +16,7 @@ type PasswordService struct{}
 func NewPasswordService() *PasswordService {
 	// TODO: Implement this function
 	// Return a new PasswordService instance
-	return nil
+	return &PasswordService{}
 }
 
 // TODO: Implement HashPassword method
@@ -27,7 +28,14 @@ func NewPasswordService() *PasswordService {
 func (p *PasswordService) HashPassword(password string) (string, error) {
 	// TODO: Implement password hashing
 	// Use golang.org/x/crypto/bcrypt.GenerateFromPassword
-	return "", errors.New("not implemented")
+	if password == "" {
+		return "", errors.New("password cannot be empty")
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }
 
 // TODO: Implement VerifyPassword method
@@ -40,7 +48,11 @@ func (p *PasswordService) VerifyPassword(password, hash string) bool {
 	// TODO: Implement password verification
 	// Use bcrypt.CompareHashAndPassword
 	// Return true only if passwords match exactly
-	return false
+	if password == "" || hash == "" {
+		return false
+	}
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // TODO: Implement ValidatePassword function
@@ -51,5 +63,23 @@ func (p *PasswordService) VerifyPassword(password, hash string) bool {
 func ValidatePassword(password string) error {
 	// TODO: Implement password validation
 	// Check length and basic complexity requirements
-	return errors.New("not implemented")
+	if len(password) < 6 {
+		return errors.New("password must be at least 6 characters")
+	}
+
+	hasLetter := false
+	hasNumber := false
+	for _, c := range password {
+		if unicode.IsLetter(c) {
+			hasLetter = true
+		} else if unicode.IsNumber(c) {
+			hasNumber = true
+		}
+	}
+
+	if !hasLetter || !hasNumber {
+		return errors.New("password must contain at least one letter and one number")
+	}
+
+	return nil
 }

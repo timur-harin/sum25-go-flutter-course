@@ -1,7 +1,10 @@
 name: Deploy Flutter Web to GitHub Pages
 
 on:
-  # TODO: Add condition
+  push:
+    branches: [ main, master, lab07-sadykov-damir ]
+    paths:
+      - 'labs/lab07/frontend/**'
     
   workflow_dispatch:
 
@@ -11,18 +14,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Flutter
-        run: #TODO: Add command
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.10.0'
 
       - name: Install dependencies
-        run: #TODO: Add command
+        run: flutter pub get
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: #TODO: Add command
+        run: flutter build web --release --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
-        # TODO: add other and setup repository 
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: labs/lab07/frontend/build/web
+          keep_files: false
