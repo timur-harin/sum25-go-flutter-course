@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
+	"regexp"
 	"sync"
 )
 
@@ -17,8 +19,21 @@ type User struct {
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	if u.ID == "" {
+		return errors.New("user ID cannot be empty")
+	}
+	if u.Name == "" {
+		return errors.New("username cannot be empty")
+	}
+	if !isValidEmail(u.Email) {
+		return errors.New("invalid email format")
+	}
 	return nil
+}
+
+func isValidEmail(email string) bool {
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	return re.MatchString(email)
 }
 
 // UserManager manages users
@@ -33,8 +48,8 @@ type UserManager struct {
 
 // NewUserManager creates a new UserManager
 func NewUserManager() *UserManager {
-	// TODO: Initialize UserManager fields
 	return &UserManager{
+		ctx:   context.Background(),
 		users: make(map[string]User),
 	}
 }
@@ -50,18 +65,48 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
-	// TODO: Add user to map, check context
+	select {
+	case <-m.ctx.Done():
+		return errors.New("cannot add user: context cancelled")
+	default:
+	}
+
+	if err := u.Validate(); err != nil {
+		return fmt.Errorf("invalid user: %w", err)
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, exists := m.users[u.ID]; exists {
+		return errors.New("user already exists")
+	}
+
+	m.users[u.ID] = u
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
-	// TODO: Remove user from map
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, exists := m.users[id]; !exists {
+		return errors.New("user not found")
+	}
+
+	delete(m.users, id)
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
-	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	u, exists := m.users[id]
+	if !exists {
+		return User{}, errors.New("user not found")
+	}
+	return u, nil
 }
