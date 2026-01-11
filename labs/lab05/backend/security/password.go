@@ -3,53 +3,60 @@ package security
 import (
 	"errors"
 	_ "regexp"
+	"strings"
+	"unicode"
 
+	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
 )
 
 // PasswordService handles password operations
 type PasswordService struct{}
 
-// TODO: Implement NewPasswordService function
-// NewPasswordService creates a new password service
 func NewPasswordService() *PasswordService {
-	// TODO: Implement this function
-	// Return a new PasswordService instance
-	return nil
+	return &PasswordService{}
 }
 
-// TODO: Implement HashPassword method
-// HashPassword hashes a password using bcrypt
-// Requirements:
-// - password must not be empty
-// - use bcrypt with cost 10
-// - return the hashed password as string
 func (p *PasswordService) HashPassword(password string) (string, error) {
-	// TODO: Implement password hashing
-	// Use golang.org/x/crypto/bcrypt.GenerateFromPassword
-	return "", errors.New("not implemented")
+	if err := ValidatePassword(password); err != nil {
+		return "", err
+	}
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	return string(bytes), err
 }
 
-// TODO: Implement VerifyPassword method
-// VerifyPassword checks if password matches hash
-// Requirements:
-// - password and hash must not be empty
-// - return true if password matches hash
-// - return false if password doesn't match
 func (p *PasswordService) VerifyPassword(password, hash string) bool {
-	// TODO: Implement password verification
-	// Use bcrypt.CompareHashAndPassword
-	// Return true only if passwords match exactly
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func HasLetter(s string) bool { // checks that the string contains at least one letter
+	for _, r := range s {
+		if unicode.IsLetter(r) {
+			return true
+		}
+	}
 	return false
 }
 
-// TODO: Implement ValidatePassword function
-// ValidatePassword checks if password meets basic requirements
-// Requirements:
-// - At least 6 characters
-// - Contains at least one letter and one number
+func HasNumber(s string) bool { // checks that the string contains at least one number
+	for _, r := range s {
+		if unicode.IsNumber(r) {
+			return true
+		}
+	}
+	return false
+}
+
 func ValidatePassword(password string) error {
 	// TODO: Implement password validation
 	// Check length and basic complexity requirements
-	return errors.New("not implemented")
+	trimmed := strings.TrimSpace(password)
+	if len(trimmed) < 6 {
+		return errors.New("password has to contain at least 6 characters")
+	}
+	if !HasNumber(password) || !HasLetter(password) {
+		return errors.New("password has to contain at least one letter and one number")
+	}
+	return nil
 }

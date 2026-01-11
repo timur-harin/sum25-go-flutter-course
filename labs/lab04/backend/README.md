@@ -68,7 +68,7 @@ Migrations are stored in `../migrations/` directory:
 ### 🟡 OPTIONAL Tasks (Advanced Learning)
 4. **Scany Mapping** (`repository/post_repository.go`)
 5. **Squirrel Builder** (`services/search_service.go`)
-6. **GORM ORM** (`repository/category_repository.go`)
+6. **GORM ORM** (`reposiBackendtory/category_repository.go`)
 
 ## 🗄️ Database Schema
 
