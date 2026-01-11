@@ -1,3 +1,3 @@
-module lab07-backend
+module hello-world-go
 
-go 1.21 
+go 1.24.3
