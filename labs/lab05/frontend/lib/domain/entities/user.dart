@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// User represents a user entity in the domain layer
-/// This class follows Clean Architecture principles and implements
-/// value equality through Equatable
+
 class User extends Equatable {
   final int id;
   final String name;
@@ -19,7 +17,6 @@ class User extends Equatable {
   @override
   List<Object> get props => [id, name, email, createdAt];
 
-  /// Creates a copy of this User with optionally updated fields
   User copyWith({
     int? id,
     String? name,
@@ -34,31 +31,34 @@ class User extends Equatable {
     );
   }
 
-  /// Validates email format using regex pattern
   bool isValidEmail() {
+    // Check for empty email
     if (email.isEmpty) return false;
 
-    final emailRegex = RegExp(
+    // Define comprehensive email validation pattern
+    RegExp emailValidationRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
 
-    return emailRegex.hasMatch(email);
+    // Test email against pattern
+    return emailValidationRegex.hasMatch(email);
   }
 
-  /// Validates name is between 2-51 characters and not empty
   bool isValidName() {
-    final trimmedName = name.trim();
-    return trimmedName.isNotEmpty &&
-        trimmedName.length >= 2 &&
-        trimmedName.length <= 51;
+    // Clean name by removing surrounding whitespace
+    String cleanName = name.trim();
+    
+    // Check name constraints
+    return cleanName.isNotEmpty &&
+        cleanName.length >= 2 &&
+        cleanName.length <= 51;
   }
 
-  /// Validates all fields are valid
   bool isValid() {
+    // User is valid if both email and name pass validation
     return isValidEmail() && isValidName();
   }
 
-  /// Provides string representation for debugging
   @override
   String toString() {
     return 'User{id: $id, name: $name, email: $email, createdAt: $createdAt}';

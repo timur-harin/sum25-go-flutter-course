@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lab05_frontend/core/validation/form_validator.dart';
 import 'package:lab05_frontend/domain/entities/user.dart';
 
-// Authentication result enum
+
 enum AuthResult {
   success,
   invalidCredentials,
@@ -11,7 +11,7 @@ enum AuthResult {
   unknown
 }
 
-// Authentication state
+
 class AuthState {
   final bool isAuthenticated;
   final User? currentUser;
@@ -40,46 +40,40 @@ class AuthState {
   }
 }
 
-// Mock JWT service interface for dependency injection
+
 abstract class JWTServiceInterface {
   String generateToken(String userId, String email);
   bool validateToken(String token);
   Map<String, dynamic>? extractClaims(String token);
 }
 
-// Mock user repository interface
+
 abstract class UserRepositoryInterface {
   Future<User?> findByEmail(String email);
   Future<bool> verifyPassword(String email, String password);
 }
 
-// Authentication service implementing clean architecture
+
 class AuthService {
-  final FormValidator _validator;
   final JWTServiceInterface _jwtService;
   final UserRepositoryInterface _userRepository;
 
   AuthState _currentState = const AuthState();
 
-  // Constructor with dependency injection
+
   AuthService({
-    FormValidator? validator,
     JWTServiceInterface? jwtService,
     UserRepositoryInterface? userRepository,
-  })  : _validator = validator ?? FormValidator(),
-        _jwtService = jwtService ?? _MockJWTService(),
+  })  : _jwtService = jwtService ?? _MockJWTService(),
         _userRepository = userRepository ?? _MockUserRepository();
 
-  // Get current authentication state
+
   AuthState get currentState => _currentState;
 
-  // Check if user is currently authenticated
   bool get isAuthenticated => _currentState.isAuthenticated;
 
-  // Get current user
   User? get currentUser => _currentState.currentUser;
 
-  // TODO: Implement login method
   // login authenticates a user with email and password
   // Requirements:
   // - Validate email and password using FormValidator.validateEmail() and FormValidator.validatePassword()
@@ -94,22 +88,53 @@ class AuthService {
   // - Return AuthResult.success on successful authentication
   // - Return AuthResult.networkError if any exception occurs during the process
   Future<AuthResult> login(String email, String password) async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService login not implemented');
+    try {
+      // Perform validation checks for both email and password
+      if (FormValidator.validateEmail(email) != null || FormValidator.validatePassword(password) != null) {
+        return AuthResult.validationError;
+      }
+      
+      // Clean the email input to prevent injection attacks
+      String cleanedEmail = FormValidator.sanitizeText(email);
+      
+      // Attempt to locate user by email address
+      User? foundUser = await _userRepository.findByEmail(cleanedEmail);
+      if (foundUser == null) {
+        return AuthResult.invalidCredentials;
+      }
+      
+      // Verify the provided password matches stored credentials
+      bool isPasswordValid = await _userRepository.verifyPassword(cleanedEmail, password);
+      if (!isPasswordValid) {
+        return AuthResult.invalidCredentials;
+      }
+      
+      // Create authentication token for the validated user
+      String authToken = _jwtService.generateToken(foundUser.id.toString(), foundUser.email);
+      
+      // Update authentication state with user info and token
+      _currentState = _currentState.copyWith(
+        isAuthenticated: true,
+        currentUser: foundUser,
+        token: authToken,
+        loginTime: DateTime.now(),
+      );
+      
+      return AuthResult.success;
+    } catch (error) {
+      return AuthResult.networkError;
+    }
   }
 
-  // TODO: Implement logout method
   // logout clears the current authentication state
   // Requirements:
   // - Reset _currentState to a new empty AuthState()
   // - This should clear isAuthenticated, currentUser, token, and loginTime
   // - Method should complete without throwing exceptions
   Future<void> logout() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService logout not implemented');
+    _currentState = const AuthState();
   }
 
-  // TODO: Implement isSessionValid method
   // isSessionValid checks if the current session is still valid
   // Requirements:
   // - Return false if not authenticated (!_currentState.isAuthenticated)
@@ -118,11 +143,24 @@ class AuthService {
   // - Return true if session duration is less than 24 hours
   // - Return false if session has expired (24+ hours)
   bool isSessionValid() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService isSessionValid not implemented');
+    // Check if user is currently logged in
+    if (!_currentState.isAuthenticated) {
+      return false;
+    }
+    
+    // Verify login timestamp exists
+    DateTime? sessionStart = _currentState.loginTime;
+    if (sessionStart == null) {
+      return false;
+    }
+    
+    // Calculate elapsed time since login
+    Duration sessionDuration = DateTime.now().difference(sessionStart);
+    
+    // Session is valid if less than 24 hours have passed
+    return sessionDuration.inHours < 24;
   }
 
-  // TODO: Implement refreshAuth method
   // refreshAuth validates and refreshes the current authentication status
   // Requirements:
   // - Call isSessionValid() to check session validity
@@ -132,11 +170,31 @@ class AuthService {
   // - Return true if session and token are valid
   // - Handle any exceptions and return false if errors occur
   Future<bool> refreshAuth() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService refreshAuth not implemented');
+    try {
+      // First check if session hasn't expired
+      if (!isSessionValid()) {
+        await logout();
+        return false;
+      }
+      
+      // Retrieve current authentication token
+      String? currentToken = _currentState.token;
+      
+      // Validate token exists and is still valid
+      if (currentToken == null || !_jwtService.validateToken(currentToken)) {
+        await logout();
+        return false;
+      }
+      
+      // Both session and token are valid
+      return true;
+    } catch (exception) {
+      // Clear state on any error and return failure
+      await logout();
+      return false;
+    }
   }
 
-  // TODO: Implement getUserInfo method
   // getUserInfo returns user information if authenticated
   // Requirements:
   // - Return null if not authenticated or currentUser is null
@@ -147,8 +205,20 @@ class AuthService {
   //   - 'loginTime': _currentState.loginTime?.toIso8601String() (convert to string or null)
   //   - 'sessionValid': result of calling isSessionValid()
   Map<String, dynamic>? getUserInfo() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService getUserInfo not implemented');
+    // Return null if not authenticated or no user data
+    if (!_currentState.isAuthenticated || _currentState.currentUser == null) {
+      return null;
+    }
+    
+    // Build user information map
+    User activeUser = _currentState.currentUser!;
+    return {
+      'id': activeUser.id,
+      'name': activeUser.name,
+      'email': activeUser.email,
+      'loginTime': _currentState.loginTime?.toIso8601String(),
+      'sessionValid': isSessionValid(),
+    };
   }
 }
 
@@ -156,47 +226,53 @@ class AuthService {
 class _MockJWTService implements JWTServiceInterface {
   @override
   String generateToken(String userId, String email) {
-    // Mock JWT token generation
-    final payload =
-        'header.payload_${userId}_${email}_${DateTime.now().millisecondsSinceEpoch}.signature';
-    return payload;
+    // Create mock JWT token with timestamp
+    int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
+    String tokenPayload = 'header.payload_${userId}_${email}_$currentTimestamp.signature';
+    return tokenPayload;
   }
 
   @override
   bool validateToken(String token) {
-    // Mock validation - check format and not too old
-    if (!token.contains('header.payload_') || !token.contains('.signature')) {
+    // Check basic token structure
+    if (!token.startsWith('header.payload_') || !token.endsWith('.signature')) {
       return false;
     }
 
     try {
-      final parts = token.split('_');
-      if (parts.length < 3) return false;
+      // Extract timestamp from token
+      List<String> tokenParts = token.split('_');
+      if (tokenParts.length < 3) return false;
 
-      final timestampStr = parts[2].split('.')[0];
-      final timestamp = int.parse(timestampStr);
-      final tokenTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      final age = DateTime.now().difference(tokenTime);
-
-      return age.inHours < 24;
-    } catch (e) {
+      String timestampPart = tokenParts[2].split('.')[0];
+      int tokenTimestamp = int.parse(timestampPart);
+      DateTime tokenCreated = DateTime.fromMillisecondsSinceEpoch(tokenTimestamp);
+      
+      // Check if token is within valid time range
+      Duration tokenAge = DateTime.now().difference(tokenCreated);
+      return tokenAge.inHours < 24;
+    } catch (parseError) {
       return false;
     }
   }
 
   @override
   Map<String, dynamic>? extractClaims(String token) {
+    // Only extract claims from valid tokens
     if (!validateToken(token)) return null;
 
     try {
-      final parts = token.split('_');
+      // Parse token components
+      List<String> tokenComponents = token.split('_');
+      int currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      
       return {
-        'userId': parts[1],
-        'email': parts[2],
-        'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        'exp': (DateTime.now().millisecondsSinceEpoch ~/ 1000) + (24 * 60 * 60),
+        'userId': tokenComponents[1],
+        'email': tokenComponents[2],
+        'iat': currentTime,
+        'exp': currentTime + (24 * 60 * 60), // 24 hours from now
       };
-    } catch (e) {
+    } catch (extractError) {
       return null;
     }
   }
@@ -224,15 +300,17 @@ class _MockUserRepository implements UserRepositoryInterface {
 
   @override
   Future<User?> findByEmail(String email) async {
-    // Simulate network delay
+    // Simulate database lookup delay
     await Future.delayed(const Duration(milliseconds: 100));
 
-    final userData = _users[email];
-    if (userData == null) return null;
+    // Check if user exists in mock database
+    Map<String, String>? userRecord = _users[email];
+    if (userRecord == null) return null;
 
+    // Create User object from stored data
     return User(
-      id: int.parse(userData['id']!),
-      name: userData['name']!,
+      id: int.parse(userRecord['id']!),
+      name: userRecord['name']!,
       email: email,
       createdAt: DateTime.now().subtract(const Duration(days: 30)),
     );
@@ -240,13 +318,14 @@ class _MockUserRepository implements UserRepositoryInterface {
 
   @override
   Future<bool> verifyPassword(String email, String password) async {
-    // Simulate network delay
+    // Simulate password verification delay
     await Future.delayed(const Duration(milliseconds: 100));
 
-    final userData = _users[email];
-    if (userData == null) return false;
+    // Look up user record
+    Map<String, String>? userRecord = _users[email];
+    if (userRecord == null) return false;
 
-    // In real app, would use bcrypt to compare hashed password
-    return userData['password'] == password;
+    // Compare passwords (in real app, would use secure hashing)
+    return userRecord['password'] == password;
   }
 }
