@@ -1,0 +1,43 @@
+#deploy.yml
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - lab07-ramazanov-ilnur
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3 
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2 
+        with:
+          flutter-version: '3.x' 
+          channel: 'stable'
+
+      - name: Enable web
+        run: flutter config --enable-web
+        working-directory: labs/lab07/frontend
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: labs/lab07/frontend
+
+      - name: Build web
+        run: |
+          flutter create . --platforms web
+          flutter build web --release --base-href /sum25-go-flutter-course/
+        working-directory: labs/lab07/frontend
+
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3 
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: labs/lab07/frontend/build/web

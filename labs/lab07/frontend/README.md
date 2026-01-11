@@ -6,7 +6,7 @@ This is a minimal Flutter Hello World app for Lab 07.
 - After deployment, your app will be available at:
 
 ```
-https://<your-github-username>.github.io/<your-repo-name>/...
+https://Kaghorz.github.io/sum25-go-flutter-course/...
 ```
 
 Replace `<your-github-username>` and `<your-repo-name>` with your actual GitHub username and repository name. 
