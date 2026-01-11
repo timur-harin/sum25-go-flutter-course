@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Lab 01 Demo',
       theme: ThemeData(
         // This is the theme of your application.
@@ -63,8 +64,11 @@ class MyHomePage extends StatelessWidget {
             Center(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
+                child: ProfileCard(
+                  name: 'John Doe',
+                  email: 'john.doe@example.com',
+                  age: 30,
+                ),
               ),
             ),
             CounterApp(),
