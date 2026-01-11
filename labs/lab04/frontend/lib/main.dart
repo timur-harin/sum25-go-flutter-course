@@ -7,12 +7,13 @@ void main() async {
 
   // TODO: Initialize services
   try {
-    // TODO: Initialize PreferencesService
-    await PreferencesService.init();
+      await PreferencesService.init();
 
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
-  } catch (e) {
+      await DatabaseService.init();
+
+      await SecureStorageService.init();
+
+    } catch (e) {
     print('Error initializing services: $e');
   }
 
