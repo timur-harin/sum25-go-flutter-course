@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RegistrationForm extends StatefulWidget {
-  const RegistrationForm({Key? key}) : super(key: key);
+  const RegistrationForm({super.key}); // IntelliSense suggestion
 
   @override
   State<RegistrationForm> createState() => _RegistrationFormState();
@@ -13,6 +13,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String _message = "";
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -23,12 +25,10 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() {
+        _message = "Registration successful!";
+      });
+
       _formKey.currentState!.reset();
     }
   }
@@ -36,63 +36,87 @@ class _RegistrationFormState extends State<RegistrationForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Registration Form'),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
+        appBar: AppBar(
+          title: const Text("Registration Form"),
+        ),
+        body: Form(
+          key: _formKey,
+          child: Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Name text field
                 TextFormField(
-                  key: const Key('name'),
-                  // TODO: use _nameController
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    hintText: 'Enter your name',
-                  ),
+                  key: const Key("name"),
+                  controller: _nameController,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
+                    if (value == null || value.isEmpty) {
+                      return "Please enter your name";
+                    }
+
                     return null;
                   },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('email'),
-                  // TODO: use _emailController
                   decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
+                    hintText: "Name",
                   ),
+                ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+                // Email text field
+                TextFormField(
+                  key: const Key("email"),
+                  controller: _emailController,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
+                    if (value == null || value.isEmpty) {
+                      return "Please enter a valid email";
+                    }
+
+                    if (!value.contains('@') || !value.contains('.')) {
+                      return "Please enter a valid email";
+                    }
+
                     return null;
                   },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('password'),
-                  // TODO: use _passwordController
                   decoration: const InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
+                    hintText: "Email",
                   ),
+                ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+                // Password text field
+                TextFormField(
+                  key: const Key("password"),
                   obscureText: true,
+                  controller: _passwordController,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
+                    if (value == null || value.length < 6) {
+                      return "Password must be at least 6 characters";
+                    }
+
                     return null;
                   },
+                  decoration: const InputDecoration(
+                    hintText: "Password",
+                  ),
                 ),
-                const SizedBox(height: 32),
-                // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                    onPressed: _submitForm, child: const Text("Submit")),
+
+                const SizedBox(height: 20),
+
+                Text(_message),
               ],
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }

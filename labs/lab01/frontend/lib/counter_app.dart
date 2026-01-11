@@ -1,58 +1,79 @@
 import 'package:flutter/material.dart';
 
 class CounterApp extends StatefulWidget {
-  const CounterApp({Key? key}) : super(key: key);
+  const CounterApp({super.key});
 
   @override
   State<CounterApp> createState() => _CounterAppState();
 }
 
+// Private implementation of the CounterApp logic
+// Private implementation of the CounterApp logic
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-  void _incrementCounter() {
-    // TODO: Implement this function
+  void _increment() {
+    setState(() {
+      // to redraw the window (widget)
+      _counter++;
+    });
   }
 
-  void _decrementCounter() {
-    // TODO: Implement this function
+  void _decrement() {
+    setState(() {
+      _counter--;
+    });
   }
 
-  void _resetCounter() {
-    // TODO: Implement this function
+  // Sets counter to it's initial value (0)
+  // Sets counter to it's initial value (0)
+  void _reset() {
+    setState(() {
+      _counter = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Home screen
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
-              ],
+        appBar: AppBar(
+          title: const Text("Counter App"),
+          actions: [
+            // Reset button
+            ElevatedButton(
+              onPressed: _reset,
+              child: const Icon(Icons.refresh),
             ),
           ],
         ),
-      ),
-    );
+        body: Center(
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text("$_counter"), // cannot be const
+
+            const SizedBox(height: 20.0), // margin bottom-top
+
+            // Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Decrement button
+                FloatingActionButton(
+                  onPressed: _decrement,
+                  child: const Icon(Icons.remove),
+                ),
+
+                const SizedBox(width: 20.0), // to split buttons
+
+                const SizedBox(width: 20.0),
+
+                FloatingActionButton(
+                  onPressed: _increment,
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            )
+          ]),
+        ));
   }
 }
