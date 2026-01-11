@@ -1,4 +1,4 @@
-# Contributing to Summer 2025 Go + Flutter Course
+   # Contributing to Summer 2025 Go + Flutter Course
 
 This guide explains how to submit lab assignments and participate in the collaborative learning process.
 
