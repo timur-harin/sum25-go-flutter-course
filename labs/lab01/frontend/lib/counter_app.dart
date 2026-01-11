@@ -10,49 +10,47 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-  void _incrementCounter() {
-    // TODO: Implement this function
+  void _increment() {
+    setState(() {
+      _counter++;
+    });
   }
 
-  void _decrementCounter() {
-    // TODO: Implement this function
+  void _decrement() {
+    setState(() {
+      _counter--;
+    });
   }
 
-  void _resetCounter() {
-    // TODO: Implement this function
+  void _reset() {
+    setState(() {
+      _counter = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      children: [
+        const Text("Counter"),
+        Text("$_counter"),
+        Row(
           children: [
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48),
+            IconButton(
+              onPressed: _increment,
+              icon: const Icon(Icons.add),
             ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
-              ],
+            IconButton(
+              onPressed: _decrement,
+              icon: const Icon(Icons.remove),
+            ),
+            IconButton(
+              onPressed: _reset,
+              icon: const Icon(Icons.refresh),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }

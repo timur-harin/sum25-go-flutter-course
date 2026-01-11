@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
-import 'chat_screen.dart';
-import 'user_profile.dart';
 import 'chat_service.dart';
+import 'user_profile.dart';
 import 'user_service.dart';
+import 'chat_screen.dart';
 
 void main() {
-  // TODO: Initialize and run the app
+  final chatService = ChatService();
+  final userService = UserService();
+  runApp(MyApp(
+    chatService: chatService,
+    userService: userService,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  final ChatService chatService;
+  final UserService userService;
 
-  // TODO: Initialize chatService and userService
+  const MyApp({Key? key, required this.chatService, required this.userService})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +38,8 @@ class MyApp extends StatelessWidget {
           ),
           body: TabBarView(
             children: [
-              // TODO: Implement ChatScreen and UserProfile
+              ChatScreen(chatService: chatService),
+              UserProfile(userService: userService),
             ],
           ),
         ),
