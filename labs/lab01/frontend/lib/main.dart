@@ -60,12 +60,12 @@ class MyHomePage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
-              ),
+            const ProfileCard(
+              name: 'Billy Herrington',
+              email: 'dungeon@master.com',
+              age: 48,
+              // avatarUrl: null,
+              avatarUrl: 'https://images.steamusercontent.com/ugc/1496838058102899253/220A052C564C4C5A26CF88D7F9205BF5FB579B82/?imw=637&imh=358&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true',
             ),
             CounterApp(),
             RegistrationForm(),

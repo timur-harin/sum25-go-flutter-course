@@ -14,26 +14,47 @@ class ProfileCard extends StatelessWidget {
     this.avatarUrl,
   });
 
+  Widget _buildAvatar(BuildContext context) {
+    final bool hasAvatar = avatarUrl != null && avatarUrl!.isNotEmpty;
+
+    return CircleAvatar(
+      radius: 40,
+      backgroundColor: Colors.grey[200],
+      backgroundImage: hasAvatar ? NetworkImage(avatarUrl!) : null,
+      onBackgroundImageError: hasAvatar ? (exception, stackTrace) {} : null,
+      child: !hasAvatar
+          ? Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            )
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(16.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
-            const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
-            
+            _buildAvatar(context),
+            SizedBox(height: 10),
+            Text(
+              name,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 5),
+            Text(
+              email,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Age: $age',
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

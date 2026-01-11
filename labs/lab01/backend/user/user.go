@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"regexp"
+	"strconv"
 )
 
 // Predefined errors
@@ -18,18 +20,30 @@ type User struct {
 	Email string
 }
 
-// Validate checks if the user data is valid, returns an error for each invalid field
-func (u *User) Validate() error {
-	if !IsValidName(u.Name) {
-		return ErrInvalidName
+// NewUser creates a new user with validation, returns an error if the user is not valid
+func NewUser(name string, age int, email string) (*User, error) {
+
+	user := &User{
+		Name:  name,
+		Age:   age,
+		Email: email,
 	}
 
-	if !IsValidAge(u.Age) {
+	return user, user.Validate()
+}
+
+// Validate checks if the user data is valid
+func (u *User) Validate() error {
+	if !IsValidEmail(u.Email) {
+		return ErrInvalidEmail
+	}
+
+	if u.Age < 0 || u.Age > 150 {
 		return ErrInvalidAge
 	}
 
-	if !IsValidEmail(u.Email) {
-		return ErrInvalidEmail
+	if u.Name == "" {
+		return ErrInvalidName
 	}
 
 	return nil
@@ -37,27 +51,15 @@ func (u *User) Validate() error {
 
 // String returns a string representation of the user, formatted as "Name: <name>, Age: <age>, Email: <email>"
 func (u *User) String() string {
-	// TODO: Implement this function
-	return ""
-}
-
-// NewUser creates a new user with validation, returns an error if the user is not valid
-func NewUser(name string, age int, email string) (*User, error) {
-	// TODO: Implement this function
-	return nil, nil
+	str := "Name: " + u.Name + ", Age: " + strconv.Itoa(u.Age) + ", Email: " + u.Email
+	return str
 }
 
 // IsValidEmail checks if the email format is valid
 // You can use regexp.MustCompile to compile the email regex
 func IsValidEmail(email string) bool {
-	// TODO: Implement this function
-	return false
-}
-
-// IsValidName checks if the name is valid, returns false if the name is empty or longer than 30 characters
-func IsValidName(name string) bool {
-	// TODO: Implement this function
-	return false
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	return emailRegex.MatchString(email)
 }
 
 // IsValidAge checks if the age is valid, returns false if the age is not between 0 and 150
