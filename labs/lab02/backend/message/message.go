@@ -1,13 +1,10 @@
 package message
 
 import (
-	"errors"
 	"sync"
 )
 
 // Message represents a chat message
-// TODO: Add more fields if needed
-
 type Message struct {
 	Sender    string
 	Content   string
@@ -16,29 +13,52 @@ type Message struct {
 
 // MessageStore stores chat messages
 // Contains a slice of messages and a mutex for concurrency
-
 type MessageStore struct {
 	messages []Message
 	mutex    sync.RWMutex
-	// TODO: Add more fields if needed
 }
 
 // NewMessageStore creates a new MessageStore
 func NewMessageStore() *MessageStore {
-	// TODO: Initialize MessageStore fields
 	return &MessageStore{
 		messages: make([]Message, 0, 100),
 	}
 }
 
-// AddMessage stores a new message
+// AddMessage stores a new message in a thread-safe manner
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.messages = append(s.messages, msg)
 	return nil
 }
 
-// GetMessages retrieves messages (optionally by user)
+// GetMessages retrieves messages, optionally filtered by user
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	// If no user is specified, return all messages.
+	// We create a copy to prevent race conditions if the caller modifies the slice.
+	if user == "" {
+		allMessages := make([]Message, len(s.messages))
+		copy(allMessages, s.messages)
+		return allMessages, nil
+	}
+
+	// Filter messages by the specified user.
+	var userMessages []Message
+	for _, msg := range s.messages {
+		if msg.Sender == user {
+			userMessages = append(userMessages, msg)
+		}
+	}
+
+	if len(userMessages) == 0 {
+		// It's not an error if a user has no messages, just return an empty slice.
+		return []Message{}, nil
+	}
+
+	return userMessages, nil
 }

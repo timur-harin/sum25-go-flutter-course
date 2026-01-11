@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:lab02_chat/user_service.dart';
+import 'user_service.dart';
 
-// UserProfile displays and updates user info
+/// UserProfile displays and allows updating user information.
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final UserService userService;
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -12,21 +11,78 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  late Future<Map<String, String>> _userFuture;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _fetchUser();
+  }
+
+  void _fetchUser() {
+    setState(() {
+      _userFuture = widget.userService.fetchUser();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
+    // FIX: Wrap the content in a Scaffold to provide the necessary Material context.
     return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      body: FutureBuilder<Map<String, String>>(
+        future: _userFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('An error occurred: ${snapshot.error}',
+                        style: const TextStyle(color: Colors.red)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _fetchUser,
+                      child: const Text('Retry'),
+                    )
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            final user = snapshot.data!;
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(
+                children: [
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.person, size: 40),
+                    title: Text(user['name'] ?? 'N/A',
+                        style: Theme.of(context).textTheme.titleLarge),
+                    subtitle: const Text('Name'),
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.email, size: 40),
+                    title: Text(user['email'] ?? 'N/A',
+                        style: Theme.of(context).textTheme.titleLarge),
+                    subtitle: const Text('Email'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const Center(child: Text('No user data available.'));
+        },
+      ),
     );
   }
 }

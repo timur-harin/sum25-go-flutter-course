@@ -2,13 +2,12 @@ package chatcore
 
 import (
 	"context"
+	"log"
 	"sync"
+	"time"
 )
 
 // Message represents a chat message
-// Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
-
 type Message struct {
 	Sender    string
 	Recipient string
@@ -18,20 +17,16 @@ type Message struct {
 }
 
 // Broker handles message routing between users
-// Contains context, input channel, user registry, mutex, done channel
-
 type Broker struct {
 	ctx        context.Context
-	input      chan Message            // Incoming messages
+	input      chan Message            // Fan-in: all messages come here first
 	users      map[string]chan Message // userID -> receiving channel
-	usersMutex sync.RWMutex            // Protects users map
-	done       chan struct{}           // For shutdown
-	// TODO: Add more fields if needed
+	usersMutex sync.RWMutex            // Protects the users map
+	done       chan struct{}           // Signals that the Run loop has terminated
 }
 
 // NewBroker creates a new message broker
 func NewBroker(ctx context.Context) *Broker {
-	// TODO: Initialize broker fields
 	return &Broker{
 		ctx:   ctx,
 		input: make(chan Message, 100),
@@ -40,23 +35,97 @@ func NewBroker(ctx context.Context) *Broker {
 	}
 }
 
-// Run starts the broker event loop (goroutine)
+// Run starts the broker's main event loop in a goroutine
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	defer close(b.done) // Signal shutdown is complete when loop exits
+
+	for {
+		select {
+		case msg := <-b.input:
+			// Set timestamp if not already set
+			if msg.Timestamp == 0 {
+				msg.Timestamp = time.Now().UnixNano()
+			}
+
+			if msg.Broadcast {
+				b.broadcastMessage(msg)
+			} else {
+				b.sendPrivateMessage(msg)
+			}
+
+		case <-b.ctx.Done():
+			// Context was cancelled, shut down the broker
+			log.Println("Broker shutting down...")
+			return
+		}
+	}
 }
 
-// SendMessage sends a message to the broker
+// broadcastMessage sends a message to all registered users
+func (b *Broker) broadcastMessage(msg Message) {
+	b.usersMutex.RLock()
+	defer b.usersMutex.RUnlock()
+
+	for id, userChan := range b.users {
+		// Use a non-blocking send to prevent a slow client
+		// from blocking the entire broker.
+		select {
+		case userChan <- msg:
+		default:
+			log.Printf("User %s's channel is full. Dropping message.", id)
+		}
+	}
+}
+
+// sendPrivateMessage sends a message to a specific recipient
+func (b *Broker) sendPrivateMessage(msg Message) {
+	b.usersMutex.RLock()
+	defer b.usersMutex.RUnlock()
+
+	if userChan, ok := b.users[msg.Recipient]; ok {
+		// Non-blocking send
+		select {
+		case userChan <- msg:
+		default:
+			log.Printf("User %s's channel is full. Dropping private message from %s.", msg.Recipient, msg.Sender)
+		}
+	}
+}
+
+// SendMessage sends a message into the broker's input channel.
+// This is the main entry point for external components.
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+	case b.input <- msg:
+		return nil
+	case <-b.ctx.Done():
+		// Return the context's error (e.g., context.Canceled)
+		return b.ctx.Err()
+	}
 }
 
-// RegisterUser adds a user to the broker
+// RegisterUser adds a user and their channel to the broker's registry
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	b.users[userID] = recv
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+
+	// Closing the channel signals the user's goroutine to stop listening
+	if ch, ok := b.users[userID]; ok {
+		// It's good practice to check if the channel is already closed
+		// to prevent a panic, though in this design it's unlikely.
+		select {
+		case <-ch:
+			// already closed
+		default:
+			close(ch)
+		}
+	}
+	delete(b.users, userID)
 }

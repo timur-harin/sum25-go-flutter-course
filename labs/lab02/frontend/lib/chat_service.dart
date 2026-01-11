@@ -1,30 +1,51 @@
 import 'dart:async';
+import 'dart:io';
 
-// ChatService handles chat logic and backend communication
+/// ChatService handles chat logic and backend communication.
 class ChatService {
-  // TODO: Use a StreamController to simulate incoming messages for tests
-  // TODO: Add simulation flags for connection and send failures
-  // TODO: Replace simulation with real backend logic in the future
-
-  final StreamController<String> _controller =
+  final StreamController<String> _messageController =
       StreamController<String>.broadcast();
+
+  bool failConnection = false;
   bool failSend = false;
 
-  ChatService();
+  Stream<String> get messageStream => _messageController.stream;
 
   Future<void> connect() async {
-    // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+    final bool isTestMode = Platform.environment.containsKey('FLUTTER_TEST');
+
+    // FIX: Only perform the delay if NOT in test mode.
+    if (!isTestMode) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
+    // This logic now runs immediately in test mode.
+    if (failConnection) {
+      throw Exception('Connection error: Could not connect to the server.');
+    }
+    if (!_messageController.isClosed) {
+      _messageController.add("System: Connected to chat!");
+    }
   }
 
   Future<void> sendMessage(String msg) async {
-    // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+    if (msg.isEmpty) return;
+    
+    final bool isTestMode = Platform.environment.containsKey('FLUTTER_TEST');
+
+    if (!isTestMode) {
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+    
+    if (failSend) {
+      throw Exception('Send failed: Could not deliver the message.');
+    }
+    if (!_messageController.isClosed) {
+      _messageController.add(msg);
+    }
   }
 
-  Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
+  void dispose() {
+    _messageController.close();
   }
 }
