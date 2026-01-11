@@ -16,6 +16,7 @@ type Handler struct {
 func NewHandler(storage *storage.MemoryStorage) *Handler {
 	// TODO: Return a new Handler instance with provided storage
 	return nil
+
 }
 
 // SetupRoutes configures all API routes
@@ -66,7 +67,6 @@ func (h *Handler) UpdateMessage(w http.ResponseWriter, r *http.Request) {
 	// Handle validation, parsing, and storage errors appropriately
 }
 
-// DeleteMessage handles DELETE /api/messages/{id}
 func (h *Handler) DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement DeleteMessage handler
 	// Extract ID from URL path variables
@@ -114,6 +114,7 @@ func (h *Handler) writeError(w http.ResponseWriter, status int, message string) 
 	// TODO: Implement writeError helper
 	// Create APIResponse with Success: false and Error: message
 	// Use writeJSON to send the error response
+
 }
 
 // Helper function to parse JSON request body

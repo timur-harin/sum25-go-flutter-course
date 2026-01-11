@@ -160,8 +160,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
 
       final userCount = await DatabaseService.getUserCount();
 
@@ -187,9 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
       final value = await SecureStorageService.getSecureData('test_secure');
 
