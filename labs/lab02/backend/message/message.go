@@ -1,7 +1,6 @@
 package message
 
 import (
-	"errors"
 	"sync"
 )
 
@@ -34,11 +33,26 @@ func NewMessageStore() *MessageStore {
 // AddMessage stores a new message
 func (s *MessageStore) AddMessage(msg Message) error {
 	// TODO: Add message to storage (concurrent safe)
+	s.mutex.RLock()
+	s.messages = append(s.messages, msg)
+	s.mutex.RUnlock()
 	return nil
 }
 
 // GetMessages retrieves messages (optionally by user)
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
 	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	var output []Message
+	if user != "" {
+		for _, msg := range s.messages {
+			if msg.Sender == user{
+				output = append(output, msg)
+			}
+		}
+	}else {
+		output = s.messages
+	}
+	s.mutex.RUnlock()
+	return output, nil
 }

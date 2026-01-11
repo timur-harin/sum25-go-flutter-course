@@ -42,21 +42,64 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
-}
+    defer close(b.done)
+    for {
+        select {
+        case message := <-b.input:
+            if message.Broadcast {
+                b.usersMutex.RLock()
+                chans := make([]chan Message, 0, len(b.users))
+                for _, ch := range b.users {
+                    chans = append(chans, ch)
+                }
+                b.usersMutex.RUnlock()
 
+                for _, ch := range chans {
+                    select {
+                    case ch <- message:
+                    default:
+                    }
+                }
+            } else {
+                b.usersMutex.RLock()
+                ch, ok := b.users[message.Recipient]
+                b.usersMutex.RUnlock()
+                
+                if ok {
+                    select {
+                    case ch <- message:
+                    default:
+                    }
+                }
+            }
+        case <-b.ctx.Done():
+            return
+        }
+    }
+}
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
 	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+		case b.input <- msg:
+			return nil
+		case <-b.ctx.Done():
+			return b.ctx.Err()
+	}
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
+	b.usersMutex.Lock()
+	b.users[userID] = recv
+	b.usersMutex.Unlock()
 	// TODO: Register user and their receiving channel
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
 	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	delete(b.users, userID)
+	b.usersMutex.Unlock()
 }
