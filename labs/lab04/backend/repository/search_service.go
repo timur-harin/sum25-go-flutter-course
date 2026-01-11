@@ -3,14 +3,16 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"strings"
+
+	"github.com/georgysavva/scany/v2/sqlscan"
 
 	"lab04-backend/models"
 
 	"github.com/Masterminds/squirrel"
 )
 
-// SearchService handles dynamic search operations using Squirrel query builder
+// SearchService handles dynamic search operations using Squirrel qbbuilder
 // This service demonstrates SQUIRREL QUERY BUILDER approach for dynamic SQL
 type SearchService struct {
 	db   *sql.DB
@@ -37,69 +39,75 @@ func NewSearchService(db *sql.DB) *SearchService {
 	}
 }
 
-// TODO: Implement SearchPosts method using Squirrel query builder
+// TODO: Implement SearchPosts method using Squirrel qbbuilder
 func (s *SearchService) SearchPosts(ctx context.Context, filters SearchFilters) ([]models.Post, error) {
-	// TODO: Build dynamic query using Squirrel instead of string concatenation
-	//
-	// Start with base query:
-	// query := s.psql.Select("id", "user_id", "title", "content", "published", "created_at", "updated_at").
-	//              From("posts")
-	//
-	// Add WHERE conditions dynamically:
-	// - If filters.Query: add ILIKE conditions for title and content
-	// - If filters.UserID: add user_id = ?
-	// - If filters.Published: add published = ?
-	// - If filters.MinWordCount: add word count condition
-	//
-	// Add ORDER BY dynamically:
-	// - Use OrderBy() and validate sort fields
-	//
-	// Add LIMIT/OFFSET:
-	// - Use Limit() and Offset()
-	//
-	// Build final SQL:
-	// sql, args, err := query.ToSql()
-	//
-	// Execute with scany:
-	// var posts []models.Post
-	// err = sqlscan.Select(ctx, s.db, &posts, sql, args...)
-	//
-	// This demonstrates the power of combining Squirrel (dynamic queries)
-	// with scany (automatic result mapping)
+	qb := s.psql.Select("id", "user_id", "title", "content", "published", "created_at", "updated_at").
+		From("posts")
 
-	return nil, fmt.Errorf("TODO: implement SearchPosts with Squirrel query builder")
+	qb = s.BuildDynamicQuery(qb, filters)
+
+	sqlStr, args, err := qb.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var posts []models.Post
+	if err := sqlscan.Select(ctx, s.db, &posts, sqlStr, args...); err != nil {
+		return nil, err
+	}
+
+	return posts, err
 }
 
 // TODO: Implement SearchUsers method using Squirrel
 func (s *SearchService) SearchUsers(ctx context.Context, nameQuery string, limit int) ([]models.User, error) {
-	// TODO: Build user search query with Squirrel
-	// query := s.psql.Select("id", "name", "email", "created_at", "updated_at").
-	//              From("users").
-	//              Where(squirrel.Like{"name": "%" + nameQuery + "%"}).
-	//              OrderBy("name").
-	//              Limit(uint64(limit))
-	//
-	// sql, args, err := query.ToSql()
-	// var users []models.User
-	// err = sqlscan.Select(ctx, s.db, &users, sql, args...)
+	qb := s.psql.
+		Select("id", "name", "email", "created_at", "updated_at").
+		From("users")
 
-	return nil, fmt.Errorf("TODO: implement SearchUsers with Squirrel")
+	if nameQuery != "" {
+		qb = qb.Where(squirrel.ILike{"name": "%" + nameQuery + "%"})
+	}
+
+	qb = qb.OrderBy("name ASC")
+
+	if limit > 0 {
+		qb = qb.Limit(uint64(limit))
+	}
+
+	sqlStr, args, err := qb.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var users []models.User
+	if err := sqlscan.Select(ctx, s.db, &users, sqlStr, args...); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 // TODO: Implement GetPostStats method using Squirrel with JOINs
 func (s *SearchService) GetPostStats(ctx context.Context) (*PostStats, error) {
-	// TODO: Build complex query with JOINs using Squirrel
-	// query := s.psql.Select(
-	//     "COUNT(p.id) as total_posts",
-	//     "COUNT(CASE WHEN p.published = true THEN 1 END) as published_posts",
-	//     "COUNT(DISTINCT p.user_id) as active_users",
-	//     "AVG(LENGTH(p.content)) as avg_content_length",
-	// ).From("posts p").
-	//   Join("users u ON p.user_id = u.id")
-	//
-	// This shows how Squirrel handles complex queries better than string building
+	// TODO: Build complex qbwith JOINs using Squirrel
+	qb := s.psql.Select(
+		"COUNT(p.id) as total_posts",
+		"COUNT(CASE WHEN p.published = true THEN 1 END) as published_posts",
+		"COUNT(DISTINCT p.user_id) as active_users",
+		"AVG(LENGTH(p.content)) as avg_content_length",
+	).From("posts p").
+		Join("users u ON p.user_id = u.id")
 
-	return nil, fmt.Errorf("TODO: implement GetPostStats with Squirrel JOINs")
+	sqlStr, args, err := qb.ToSql()
+	if err != nil {
+		return nil, err
+	}
+	var stats PostStats
+	if err := sqlscan.Get(ctx, s.db, &stats, sqlStr, args...); err != nil {
+		return nil, err
+	}
+	return &stats, nil
 }
 
 // PostStats represents aggregated post statistics
@@ -113,51 +121,71 @@ type PostStats struct {
 // TODO: Implement BuildDynamicQuery helper method
 func (s *SearchService) BuildDynamicQuery(baseQuery squirrel.SelectBuilder, filters SearchFilters) squirrel.SelectBuilder {
 	// TODO: Demonstrate how to build queries step by step with Squirrel
-	//
-	// query := baseQuery
-	//
-	// if filters.Query != "" {
-	//     searchTerm := "%" + filters.Query + "%"
-	//     query = query.Where(squirrel.Or{
-	//         squirrel.ILike{"title": searchTerm},
-	//         squirrel.ILike{"content": searchTerm},
-	//     })
-	// }
-	//
-	// if filters.UserID != nil {
-	//     query = query.Where(squirrel.Eq{"user_id": *filters.UserID})
-	// }
-	//
-	// if filters.Published != nil {
-	//     query = query.Where(squirrel.Eq{"published": *filters.Published})
-	// }
-	//
-	// This modular approach makes dynamic queries much cleaner
-	// than string concatenation used in manual SQL approaches
+
+	qb := baseQuery
+
+	if filters.Query != "" {
+		searchTerm := "%" + filters.Query + "%"
+		qb = qb.Where(squirrel.Or{
+			squirrel.ILike{"title": searchTerm},
+			squirrel.ILike{"content": searchTerm},
+		})
+	}
+
+	if filters.UserID != nil {
+		qb = qb.Where(squirrel.Eq{"user_id": *filters.UserID})
+	}
+
+	if filters.Published != nil {
+		qb = qb.Where(squirrel.Eq{"published": *filters.Published})
+	}
+
+	if filters.MinWordCount != nil {
+		// word count as count of " " + 1
+		expr := " (LENGTH(content) - LENGTH(REPLACE(content,' ', '')) + 1) >= ? "
+		qb = qb.Where(expr, *filters.MinWordCount)
+	}
+
+	if filters.OrderBy != "" {
+		dir := "ASC"
+		if strings.ToUpper(filters.OrderDir) == "DESC" {
+			dir = "DESC"
+		}
+
+		qb = qb.OrderBy(filters.OrderBy + " " + dir)
+	}
+
+	qb = qb.Limit(uint64(filters.Limit)).Offset(uint64(filters.Offset))
 
 	return baseQuery
 }
 
 // TODO: Implement GetTopUsers method using Squirrel with complex aggregation
 func (s *SearchService) GetTopUsers(ctx context.Context, limit int) ([]UserWithStats, error) {
-	// TODO: Build complex aggregation query with Squirrel
-	// query := s.psql.Select(
-	//     "u.id",
-	//     "u.name",
-	//     "u.email",
-	//     "COUNT(p.id) as post_count",
-	//     "COUNT(CASE WHEN p.published = true THEN 1 END) as published_count",
-	//     "MAX(p.created_at) as last_post_date",
-	// ).From("users u").
-	//   LeftJoin("posts p ON u.id = p.user_id").
-	//   GroupBy("u.id", "u.name", "u.email").
-	//   OrderBy("post_count DESC").
-	//   Limit(uint64(limit))
-	//
-	// Notice how Squirrel makes complex queries more readable
-	// compared to building SQL strings manually
+	qb := s.psql.
+		Select(
+			"u.id",
+			"u.name",
+			"u.email",
+			"COUNT(p.id) AS post_count",
+			"COUNT(CASE WHEN p.published = true THEN 1 END) AS published_count",
+			"MAX(p.created_at) AS last_post_date",
+		).From("users u").
+		LeftJoin("posts p ON u.id = p.user_id").
+		GroupBy("u.id", "u.name", "u.email").
+		OrderBy("post_count DESC").
+		Limit(uint64(limit))
 
-	return nil, fmt.Errorf("TODO: implement GetTopUsers with Squirrel aggregation")
+	sqlStr, args, err := qb.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []UserWithStats
+	if err := sqlscan.Select(ctx, s.db, &res, sqlStr, args...); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // UserWithStats represents a user with post statistics

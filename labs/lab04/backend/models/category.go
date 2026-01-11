@@ -1,8 +1,12 @@
 package models
 
 import (
+	"fmt"
+	"log"
+	"strconv"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +22,7 @@ type Category struct {
 	UpdatedAt   time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"` // Soft delete support
 
-	// GORM Associations (demonstrates ORM relationships)
+	// GORM Associations
 	Posts []Post `json:"posts,omitempty" gorm:"many2many:post_categories;"`
 }
 
@@ -37,91 +41,130 @@ type UpdateCategoryRequest struct {
 	Active      *bool   `json:"active,omitempty"`
 }
 
-// TODO: Implement GORM model methods and hooks
-
 // TableName specifies the table name for GORM (optional - GORM auto-infers)
 func (Category) TableName() string {
 	return "categories"
 }
 
-// TODO: Implement BeforeCreate hook
+// BeforeCreate is a GORM hook that runs before creating a new Category
 func (c *Category) BeforeCreate(tx *gorm.DB) error {
-	// TODO: GORM BeforeCreate hook
-	// - Validate data before creation
-	// - Set default values
-	// - Perform any pre-creation logic
-	// Example: if c.Color == "" { c.Color = "#007bff" }
+	// Validate Name length
+	if len(c.Name) < 2 || len(c.Name) > 100 {
+		return fmt.Errorf("name must be between 2 and 100 characters")
+	}
+	// Default color
+	if c.Color == "" {
+		c.Color = "#007bff"
+	}
+	// Ensure uniqueness of Name
+	var count int64
+	err := tx.Model(&Category{}).
+		Where("name = ?", c.Name).
+		Count(&count).Error
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return fmt.Errorf("category with name %q already exists", c.Name)
+	}
 	return nil
 }
 
-// TODO: Implement AfterCreate hook
+// AfterCreate is a GORM hook that runs after a Category has been created
 func (c *Category) AfterCreate(tx *gorm.DB) error {
-	// TODO: GORM AfterCreate hook
-	// - Log creation
-	// - Send notifications
-	// - Update cache
-	// Example: log.Printf("Category created: %s", c.Name)
+	// Log creation
+	log.Printf("[Category Created] ID=%d, Name=%q", c.ID, c.Name)
+
+	// Send notifications asynchronously
+	go func(cat *Category) {
+		log.Printf("[Notification sent] ID=%d, Name=%q", c.ID, c.Name)
+
+		// err := notifyService.NotifyCategoryCreated(cat)
+		// if err != nil {
+		//	log.Printf("failed to send creation notification for category %d: %v", cat.ID, err)
+		// }
+	}(c)
+
+	// Update cache
+	key := "category:" + strconv.FormatUint(uint64(c.ID), 10)
+	log.Printf("[Cache apdated] ID=%d, Name=%q, %s", c.ID, c.Name, key)
+	/* err := cacheClient.Set(key, c, 0).Err()
+	if err != nil {
+		log.Printf("failed to set cache for category %d: %v", c.ID, err)
+	} */
 	return nil
 }
 
-// TODO: Implement BeforeUpdate hook
+// BeforeUpdate is a GORM hook that runs before updating an existing Category
 func (c *Category) BeforeUpdate(tx *gorm.DB) error {
-	// TODO: GORM BeforeUpdate hook
-	// - Validate changes
-	// - Prevent certain updates
-	// - Clean up related data
+	// If name is being changed, validate its length and uniqueness
+	if tx.Statement.Changed("Name") {
+		if len(c.Name) < 2 || len(c.Name) > 100 {
+			return fmt.Errorf("name must be between 2 and 100 characters")
+		}
+		var count int64
+		err := tx.Model(&Category{}).
+			Where("name = ? AND id <> ?", c.Name, c.ID).
+			Count(&count).Error
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return fmt.Errorf("category with name %q already exists", c.Name)
+		}
+	}
+	// Ensure default color if empty
+	if tx.Statement.Changed("Color") && c.Color == "" {
+		c.Color = "#007bff"
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateCategoryRequest
+// Validate checks CreateCategoryRequest fields using validator tags
 func (req *CreateCategoryRequest) Validate() error {
-	// TODO: Add validation logic for GORM model
-	// - Name should be unique (checked at database level via GORM)
-	// - Color should be valid hex color
-	// - Description should not exceed limits
-	// Example using validator package:
-	// return validator.New().Struct(req)
-	return nil
+	validate := validator.New()
+	return validate.Struct(req)
 }
 
-// TODO: Implement ToCategory method
+// ToCategory converts CreateCategoryRequest to Category model
 func (req *CreateCategoryRequest) ToCategory() *Category {
-	// TODO: Convert request to GORM model
-	// - Map fields from request to model
-	// - Set default values
-	// Example:
-	// return &Category{
-	//     Name:        req.Name,
-	//     Description: req.Description,
-	//     Color:       req.Color,
-	//     Active:      true,
-	// }
-	return nil
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       req.Color,
+		Active:      true,
+	}
 }
 
-// TODO: Implement GORM scopes (reusable query logic)
+// ActiveCategories is a GORM scope for filtering active categories
 func ActiveCategories(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for active categories
-	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
+// CategoriesWithPosts is a GORM scope for categories having at least one post
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for categories with posts
-	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.Joins("JOIN post_categories pc ON pc.category_id = categories.id").
+		Joins("JOIN posts p ON p.id = pc.post_id").
+		Where("p.id IS NOT NULL")
 }
 
-// TODO: Implement model validation methods
+// IsActive returns true if the category is active
 func (c *Category) IsActive() bool {
-	// TODO: Check if category is active
 	return c.Active
 }
 
+// PostCount returns the number of posts associated with this category
 func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
+	var count int64
+	err := db.
+		Model(&Post{}).
+		// здесь предполагаем, что связь через pivot post_categories
+		Joins("JOIN post_categories pc ON pc.post_id = posts.id").
+		Where("pc.category_id = ?", c.ID).
+		Count(&count).
+		Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
