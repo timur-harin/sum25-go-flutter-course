@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'services/preferences_service.dart';
+import 'services/database_service.dart'; // Import your database service if needed
 import 'screens/home_screen.dart';
 
 void main() async {
+  // Ensure Flutter engine and bindings are initialized before any async code
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
+  // Initialize services before running the app
   try {
-    // TODO: Initialize PreferencesService
+    // Initialize SharedPreferences service
     await PreferencesService.init();
 
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    // Initialize Database service (uncomment if needed)
+    // await DatabaseService.database;
+
+    // Initialize other services here if necessary
+    // await SecureStorageService.init();
   } catch (e) {
+    // Print error if initialization fails
     print('Error initializing services: $e');
   }
 
+  // Run the main app widget
   runApp(const MyApp());
 }
 

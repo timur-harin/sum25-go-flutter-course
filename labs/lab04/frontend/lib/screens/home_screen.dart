@@ -96,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds a card section for a storage type
   Widget _buildStorageSection(
       String title, String description, List<Widget> buttons) {
     return Card(
@@ -125,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Tests SharedPreferences functionality
   Future<void> _testSharedPreferences() async {
     setState(() {
       _isLoading = true;
@@ -132,12 +134,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
+      // Save a string to SharedPreferences
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
-      final value = PreferencesService.getString('test_key');
+      // Retrieve the string from SharedPreferences
+      final value = await PreferencesService.getString('test_key');
 
       setState(() {
         _statusMessage = 'SharedPreferences test result: $value';
@@ -153,6 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Tests SQLite database functionality
   Future<void> _testSQLite() async {
     setState(() {
       _isLoading = true;
@@ -160,9 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
+      // Get user count from the database
       final userCount = await DatabaseService.getUserCount();
 
       setState(() {
@@ -180,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Tests Secure Storage functionality
   Future<void> _testSecureStorage() async {
     setState(() {
       _isLoading = true;
@@ -187,10 +188,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
+      // Save data securely
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
+      // Retrieve data securely
       final value = await SecureStorageService.getSecureData('test_secure');
 
       setState(() {
