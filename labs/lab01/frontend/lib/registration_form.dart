@@ -54,10 +54,9 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     labelText: 'Name',
                     hintText: 'Enter your name',
                   ),
-                  validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
-                    return null;
-                  },
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please enter your name'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -68,8 +67,16 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     hintText: 'Enter your email',
                   ),
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a valid email';
+                    }
+                    final regex = RegExp(
+                        r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
+                    if (!regex.hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
                     return null;
+                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
                   },
                 ),
                 const SizedBox(height: 16),
@@ -81,13 +88,15 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     hintText: 'Enter your password',
                   ),
                   obscureText: true,
-                  validator: (value) {
-                    // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
-                    return null;
-                  },
+                  validator: (value) => value == null || value.length < 6
+                      ? 'Password must be at least 6 characters'
+                      : null,
                 ),
                 const SizedBox(height: 32),
-                // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: const Text('Submit'),
+                ),
               ],
             ),
           ),
