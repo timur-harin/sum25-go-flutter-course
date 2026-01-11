@@ -4,98 +4,94 @@ import 'dart:convert';
 class PreferencesService {
   static SharedPreferences? _prefs;
 
-  // TODO: Implement init method
+  // ───────────────────────────────────────────────────────────────────── init
   static Future<void> init() async {
-    // TODO: Initialize SharedPreferences
-    // Store the instance in _prefs variable
-    throw UnimplementedError('TODO: implement init method');
+    _prefs ??= await SharedPreferences.getInstance();
   }
 
-  // TODO: Implement setString method
+  // ───────────────────────────────────────────────────────────── helpers
+  static Future<void> _ensure() async {
+    if (_prefs == null) await init();
+  }
+
+  // ───────────────────────────────────────────────────────────── setters
   static Future<void> setString(String key, String value) async {
-    // TODO: Set string value in SharedPreferences
-    // Make sure _prefs is not null
-    throw UnimplementedError('TODO: implement setString method');
+    await _ensure();
+    await _prefs!.setString(key, value);
   }
 
-  // TODO: Implement getString method
-  static String? getString(String key) {
-    // TODO: Get string value from SharedPreferences
-    // Return null if key doesn't exist
-    throw UnimplementedError('TODO: implement getString method');
-  }
-
-  // TODO: Implement setInt method
   static Future<void> setInt(String key, int value) async {
-    // TODO: Set int value in SharedPreferences
-    throw UnimplementedError('TODO: implement setInt method');
+    await _ensure();
+    await _prefs!.setInt(key, value);
   }
 
-  // TODO: Implement getInt method
-  static int? getInt(String key) {
-    // TODO: Get int value from SharedPreferences
-    throw UnimplementedError('TODO: implement getInt method');
-  }
-
-  // TODO: Implement setBool method
   static Future<void> setBool(String key, bool value) async {
-    // TODO: Set bool value in SharedPreferences
-    throw UnimplementedError('TODO: implement setBool method');
+    await _ensure();
+    await _prefs!.setBool(key, value);
   }
 
-  // TODO: Implement getBool method
-  static bool? getBool(String key) {
-    // TODO: Get bool value from SharedPreferences
-    throw UnimplementedError('TODO: implement getBool method');
-  }
-
-  // TODO: Implement setStringList method
   static Future<void> setStringList(String key, List<String> value) async {
-    // TODO: Set string list in SharedPreferences
-    throw UnimplementedError('TODO: implement setStringList method');
+    await _ensure();
+    await _prefs!.setStringList(key, value);
   }
 
-  // TODO: Implement getStringList method
-  static List<String>? getStringList(String key) {
-    // TODO: Get string list from SharedPreferences
-    throw UnimplementedError('TODO: implement getStringList method');
-  }
-
-  // TODO: Implement setObject method
   static Future<void> setObject(String key, Map<String, dynamic> value) async {
-    // TODO: Set object (as JSON string) in SharedPreferences
-    // Convert object to JSON string first
-    throw UnimplementedError('TODO: implement setObject method');
+    await _ensure();
+    final jsonStr = json.encode(value);
+    await _prefs!.setString(key, jsonStr);
   }
 
-  // TODO: Implement getObject method
+  // ───────────────────────────────────────────────────────────── getters
+  static String? getString(String key) {
+    if (_prefs == null) return null;
+    return _prefs!.getString(key);
+  }
+
+  static int? getInt(String key) {
+    if (_prefs == null) return null;
+    return _prefs!.getInt(key);
+  }
+
+  static bool? getBool(String key) {
+    if (_prefs == null) return null;
+    return _prefs!.getBool(key);
+  }
+
+  static List<String>? getStringList(String key) {
+    if (_prefs == null) return null;
+    return _prefs!.getStringList(key);
+  }
+
   static Map<String, dynamic>? getObject(String key) {
-    // TODO: Get object from SharedPreferences
-    // Parse JSON string back to Map
-    throw UnimplementedError('TODO: implement getObject method');
+    if (_prefs == null) return null;
+    final jsonStr = _prefs!.getString(key);
+    if (jsonStr == null) return null;
+    try {
+      return json.decode(jsonStr) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
   }
 
-  // TODO: Implement remove method
+  // ───────────────────────────────────────────────────────── remove/clear
   static Future<void> remove(String key) async {
-    // TODO: Remove key from SharedPreferences
-    throw UnimplementedError('TODO: implement remove method');
+    await _ensure();
+    await _prefs!.remove(key);
   }
 
-  // TODO: Implement clear method
   static Future<void> clear() async {
-    // TODO: Clear all data from SharedPreferences
-    throw UnimplementedError('TODO: implement clear method');
+    await _ensure();
+    await _prefs!.clear();
   }
 
-  // TODO: Implement containsKey method
+  // ───────────────────────────────────────────────────────── meta
   static bool containsKey(String key) {
-    // TODO: Check if key exists in SharedPreferences
-    throw UnimplementedError('TODO: implement containsKey method');
+    if (_prefs == null) return false;
+    return _prefs!.containsKey(key);
   }
 
-  // TODO: Implement getAllKeys method
   static Set<String> getAllKeys() {
-    // TODO: Get all keys from SharedPreferences
-    throw UnimplementedError('TODO: implement getAllKeys method');
+    if (_prefs == null) return <String>{};
+    return _prefs!.getKeys();
   }
 }

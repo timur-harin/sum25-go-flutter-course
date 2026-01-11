@@ -5,33 +5,54 @@ import (
 	"log"
 
 	"lab04-backend/database"
+	"lab04-backend/models"
 	"lab04-backend/repository"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	// TODO: Initialize database connection
+	// Initialize database connection
 	db, err := database.InitDB()
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
 	defer db.Close()
 
-	// TODO: Run migrations (using goose-based approach)
+	// Run migrations (using goose-based approach)
 	if err := database.RunMigrations(db); err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// TODO: Create repository instances
+	// Create repository instances
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 
-	// Demo operations
-	fmt.Println("Database initialized successfully!")
-	fmt.Printf("User repository: %T\n", userRepo)
-	fmt.Printf("Post repository: %T\n", postRepo)
+	fmt.Println("✅ Database initialized successfully!")
+	fmt.Printf("🧑‍💼 User repository: %T\n", userRepo)
+	fmt.Printf("📝 Post repository: %T\n", postRepo)
 
-	// TODO: Add some demo data operations here
-	// You can test your CRUD operations
+	// Add demo user
+	userReq := &models.CreateUserRequest{
+		Name:  "Alice",
+		Email: "alice@example.com",
+	}
+	user, err := userRepo.Create(userReq)
+	if err != nil {
+		log.Fatal("Failed to create user:", err)
+	}
+	fmt.Printf("👤 Created user: %+v\n", user)
+
+	// Add demo post
+	postReq := &models.CreatePostRequest{
+		UserID:    user.ID,
+		Title:     "My First Post",
+		Content:   "This is a demo post.",
+		Published: true,
+	}
+	post, err := postRepo.Create(postReq)
+	if err != nil {
+		log.Fatal("Failed to create post:", err)
+	}
+	fmt.Printf("📝 Created post: %+v\n", post)
 }

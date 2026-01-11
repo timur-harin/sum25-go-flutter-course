@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
 
-            // SharedPreferences Section
             _buildStorageSection(
               'SharedPreferences',
               'Simple key-value storage for app settings',
@@ -67,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // SQLite Section
             _buildStorageSection(
               'SQLite Database',
               'Local SQL database for structured data',
@@ -79,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // Secure Storage Section
             _buildStorageSection(
               'Secure Storage',
               'Encrypted storage for sensitive data',
@@ -132,11 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
-      await PreferencesService.setString(
-          'test_key', 'Hello from SharedPreferences!');
+      await PreferencesService.setString('test_key', 'Hello from SharedPreferences!');
       final value = PreferencesService.getString('test_key');
 
       setState(() {
@@ -160,14 +153,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
       final userCount = await DatabaseService.getUserCount();
 
       setState(() {
-        _statusMessage =
-            'SQLite test result: Found $userCount users in database';
+        _statusMessage = 'SQLite test result: Found $userCount users in database';
       });
     } catch (e) {
       setState(() {
@@ -187,9 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
       final value = await SecureStorageService.getSecureData('test_secure');
 
