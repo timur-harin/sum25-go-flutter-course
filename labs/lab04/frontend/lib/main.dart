@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:lab04_frontend/services/database_service.dart';
 import 'services/preferences_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
   try {
-    // TODO: Initialize PreferencesService
     await PreferencesService.init();
-
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    await DatabaseService.database;
   } catch (e) {
     print('Error initializing services: $e');
   }

@@ -29,20 +29,40 @@ func RunMigrations(db *sql.DB) error {
 	return nil
 }
 
-// TODO: Implement this function
-// RollbackMigration rolls back the last migration using goose
 func RollbackMigration(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	if err := goose.Down(db, "./migrations"); err != nil {
+		return fmt.Errorf("failed to rollback migration: %w", err)
+	}
 	return nil
 }
 
-// TODO: Implement this function
 // GetMigrationStatus checks migration status using goose
 func GetMigrationStatus(db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	migrationsDir := "../migrations"
+
+	if err := goose.Status(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to get migration status: %v", err)
+	}
 	return nil
 }
 
-// TODO: Implement this function
-// CreateMigration creates a new migration file
 func CreateMigration(name string) error {
+	if name == "" {
+		return fmt.Errorf("migration name cannot be empty")
+	}
+
+	migrationsDir := "../migrations"
+
+	if err := goose.Create(nil, migrationsDir, name, "sql"); err != nil {
+		return fmt.Errorf("failed to create migration: %v", err)
+	}
 	return nil
 }

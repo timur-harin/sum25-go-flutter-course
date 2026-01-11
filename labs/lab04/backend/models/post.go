@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -31,41 +32,57 @@ type UpdatePostRequest struct {
 	Published *bool   `json:"published,omitempty"`
 }
 
-// TODO: Implement Validate method for Post
+// Validate method for Post
 func (p *Post) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - Content should not be empty if published is true
-	// - UserID should be greater than 0
-	// Return appropriate errors if validation fails
+	if p.Title == "" || len(p.Title) < 5 {
+		return errors.New("title is not valid")
+	}
+	if p.Published && p.Content == "" {
+		return errors.New("content cannot be empty for published post")
+	}
+	if p.UserID <= 0 {
+		return errors.New("userId should be greater than 0")
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreatePostRequest
+// Validate method for CreatePostRequest
 func (req *CreatePostRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Title should not be empty and should be at least 5 characters
-	// - UserID should be greater than 0
-	// - Content should not be empty if published is true
-	// Return appropriate errors if validation fails
+	if req.Title == "" || len(req.Title) < 5 {
+		return errors.New("title is not valid")
+	}
+	if req.Published && req.Content == "" {
+		return errors.New("content cannot be empty for published post")
+	}
+	if req.UserID <= 0 {
+		return errors.New("userId should be greater than 0")
+	}
 	return nil
 }
 
-// TODO: Implement ToPost method for CreatePostRequest
+// ToPost method for CreatePostRequest
 func (req *CreatePostRequest) ToPost() *Post {
-	// TODO: Convert CreatePostRequest to Post
-	// Set timestamps to current time
-	return nil
+	return &Post{
+		ID:        0,
+		UserID:    req.UserID,
+		Title:     req.Title,
+		Content:   req.Content,
+		Published: req.Published,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
-// TODO: Implement ScanRow method for Post
+// ScanRow method for Post
 func (p *Post) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into Post struct
-	// Handle the case where row might be nil
-	return nil
+	if row == nil {
+		return errors.New("row is nil")
+	}
+	err := row.Scan(p.ID, p.UserID, p.Title, p.Content, p.Published, p.CreatedAt, p.UpdatedAt)
+	return err
 }
 
-// TODO: Implement ScanRows method for Post slice
+// ScanRows method for Post slice
 func ScanPosts(rows *sql.Rows) ([]Post, error) {
 	// TODO: Scan multiple database rows into Post slice
 	// Make sure to close rows and handle errors properly
