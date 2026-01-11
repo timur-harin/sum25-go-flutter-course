@@ -2,6 +2,7 @@ package chatcore
 
 import (
 	"context"
+	"errors"
 	"sync"
 )
 
@@ -42,21 +43,52 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
+	go func() {
+		select {
+		case <-b.ctx.Done():
+			return
+		default:
+			for msg := range b.input {
+				if msg.Broadcast {
+					for _, user := range b.users {
+						user <- msg
+					}
+				} else {
+					if ch, ok := b.users[msg.Recipient]; ok {
+						ch <- msg
+					}
+				}
+			}
+		}
+	}()
 	// TODO: Implement event loop (fan-in/fan-out pattern)
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+	case <-b.ctx.Done():
+		return errors.New("context is cancelled")
+	default:
+		b.input <- msg
+		return nil
+
+	}
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	b.users[userID] = recv
 	// TODO: Register user and their receiving channel
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+	close(b.users[userID])
+	delete(b.users, userID)
 	// TODO: Remove user from registry
 }

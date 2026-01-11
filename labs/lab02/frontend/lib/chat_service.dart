@@ -10,21 +10,27 @@ class ChatService {
       StreamController<String>.broadcast();
   bool failSend = false;
 
-  ChatService();
+  ChatService() {
+    Timer.periodic(const Duration(microseconds: 5), (timer) {
+      _controller.add("Incoming message at ${DateTime.now()}");
+    });
+  }
 
   Future<void> connect() async {
     // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+    await Future.delayed(const Duration(milliseconds: 5));
   }
 
   Future<void> sendMessage(String msg) async {
     // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+    if (failSend) {
+      throw Exception("Fake failure");
+    }
+    await Future.delayed(const Duration(milliseconds: 5));
+    _controller.add(msg);
   }
 
   Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
+    return _controller.stream;
   }
 }

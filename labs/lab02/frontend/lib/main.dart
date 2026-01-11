@@ -11,7 +11,7 @@ void main() {
 class MyApp extends StatelessWidget {
   MyApp({Key? key}) : super(key: key);
 
-  // TODO: Initialize chatService and userService
+  final chatService = ChatService();
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
           ),
           body: TabBarView(
             children: [
+              ChatScreen(chatService: chatService)
               // TODO: Implement ChatScreen and UserProfile
             ],
           ),
