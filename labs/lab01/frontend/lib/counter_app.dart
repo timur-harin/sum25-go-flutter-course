@@ -8,50 +8,54 @@ class CounterApp extends StatefulWidget {
 }
 
 class _CounterAppState extends State<CounterApp> {
-  int _counter = 0;
+  int _count = 0;
 
-  void _incrementCounter() {
-    // TODO: Implement this function
+  void _changeCount(int delta) {
+    setState(() {
+      _count = (_count + delta).clamp(0, 99999);
+    });
   }
 
-  void _decrementCounter() {
-    // TODO: Implement this function
-  }
-
-  void _resetCounter() {
-    // TODO: Implement this function
+  void _reset() {
+    setState(() {
+      _count = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Current Count', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text('$_count', style: theme.textTheme.displayMedium),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FloatingActionButton(
+                heroTag: 'increment',
+                onPressed: () => _changeCount(1),
+                child: const Icon(Icons.add),
+              ),
+              const SizedBox(width: 16),
+              FloatingActionButton(
+                heroTag: 'decrement',
+                onPressed: () => _changeCount(-1),
+                child: const Icon(Icons.remove),
+              ),
+              const SizedBox(width: 16),
+              OutlinedButton(
+                onPressed: _reset,
+                child: const Text('Reset'),
+              ),
+            ],
+          ),
         ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

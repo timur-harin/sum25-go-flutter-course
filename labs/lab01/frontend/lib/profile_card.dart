@@ -2,40 +2,71 @@ import 'package:flutter/material.dart';
 
 class ProfileCard extends StatelessWidget {
   final String name;
-  final String email;
   final int age;
-  final String? avatarUrl;
+  final String email;
 
   const ProfileCard({
-    super.key,
+    Key? key,
     required this.name,
-    required this.email,
     required this.age,
-    this.avatarUrl,
-  });
+    required this.email,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.all(16.0),
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
-            const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
-            
-          ],
+        padding: const EdgeInsets.all(20),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            bool isWide = constraints.maxWidth > 350;
+            return isWide
+                ? Row(
+              children: [
+                _avatar(theme),
+                const SizedBox(width: 20),
+                _info(theme),
+              ],
+            )
+                : Column(
+              children: [
+                _avatar(theme),
+                const SizedBox(height: 20),
+                _info(theme),
+              ],
+            );
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _avatar(ThemeData theme) {
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: theme.colorScheme.primaryContainer,
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: theme.textTheme.headlineLarge,
+      ),
+    );
+  }
+
+  Widget _info(ThemeData theme) {
+    final textStyle = theme.textTheme.bodyLarge;
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Name: \$name', style: textStyle),
+          const SizedBox(height: 8),
+          Text('Age: \$age', style: textStyle),
+          const SizedBox(height: 8),
+          Text('Email: \$email', style: textStyle),
+        ],
       ),
     );
   }
