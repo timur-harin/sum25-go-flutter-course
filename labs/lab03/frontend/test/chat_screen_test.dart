@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'package:lab03_frontend/screens/chat_screen.dart';
 import 'package:lab03_frontend/services/api_service.dart';
 import 'package:lab03_frontend/main.dart';
-import 'package:lab03_frontend/models/message.dart';
+// import 'package:lab03_frontend/models/message.dart';
 
 void main() {
   group('ChatScreen Widget Tests', () {
