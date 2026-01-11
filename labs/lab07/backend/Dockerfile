@@ -1,5 +1,7 @@
-# Build stage
-# TODO: Add build stage
+FROM golang:latest
 
-# Final image
-# TODO: Add final image instructions
+WORKDIR /magomedgadzhi
+
+COPY ./ ./
+
+CMD ["go", "run", "main.go"]
