@@ -5,17 +5,20 @@ import 'chat_service.dart';
 import 'user_service.dart';
 
 void main() {
-  // TODO: Initialize and run the app
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   MyApp({Key? key}) : super(key: key);
 
   // TODO: Initialize chatService and userService
+  final ChatService chatService = ChatService();
+  final UserService userService = UserService();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Lab 02 Chat',
       home: DefaultTabController(
         length: 2,
@@ -32,6 +35,8 @@ class MyApp extends StatelessWidget {
           body: TabBarView(
             children: [
               // TODO: Implement ChatScreen and UserProfile
+              ChatScreen(chatService: chatService),
+              UserProfile(userService: userService),
             ],
           ),
         ),
