@@ -5,7 +5,8 @@ import 'chat_service.dart';
 import 'user_service.dart';
 
 void main() {
-  // TODO: Initialize and run the app
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -31,7 +32,8 @@ class MyApp extends StatelessWidget {
           ),
           body: TabBarView(
             children: [
-              // TODO: Implement ChatScreen and UserProfile
+              ChatScreen(chatService: ChatService()),
+              UserProfile(userService: UserService())
             ],
           ),
         ),
