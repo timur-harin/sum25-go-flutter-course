@@ -3,79 +3,108 @@ package storage
 import (
 	"errors"
 	"lab03-backend/models"
+	"sync"
 )
 
 // MemoryStorage implements in-memory storage for messages
 type MemoryStorage struct {
-	// TODO: Add mutex field for thread safety (sync.RWMutex)
-	// TODO: Add messages field as map[int]*models.Message
-	// TODO: Add nextID field of type int for auto-incrementing IDs
+	Mutex    sync.RWMutex
+	Messages map[int]*models.Message
+	NextID   int
 }
 
 // NewMemoryStorage creates a new in-memory storage instance
 func NewMemoryStorage() *MemoryStorage {
-	// TODO: Return a new MemoryStorage instance with initialized fields
-	// Initialize messages as empty map
-	// Set nextID to 1
-	return nil
+	return &MemoryStorage{
+		Messages: make(map[int]*models.Message),
+		NextID:   1,
+	}
 }
 
 // GetAll returns all messages
 func (ms *MemoryStorage) GetAll() []*models.Message {
-	// TODO: Implement GetAll method
-	// Use read lock for thread safety
-	// Convert map values to slice
-	// Return slice of all messages
-	return nil
+	ms.Mutex.Lock()
+	defer ms.Mutex.Unlock()
+
+	var messages []*models.Message
+	for _, message := range ms.Messages {
+		messages = append(messages, message)
+	}
+
+	return messages
 }
 
 // GetByID returns a message by its ID
 func (ms *MemoryStorage) GetByID(id int) (*models.Message, error) {
-	// TODO: Implement GetByID method
-	// Use read lock for thread safety
-	// Check if message exists in map
-	// Return message or error if not found
-	return nil, nil
+	ms.Mutex.Lock()
+	defer ms.Mutex.Unlock()
+
+	if id < 1 {
+		return nil, ErrInvalidID
+	}
+
+	if _, ok := ms.Messages[id]; !ok {
+		return nil, ErrMessageNotFound
+	}
+
+	return ms.Messages[id], nil
 }
 
 // Create adds a new message to storage
 func (ms *MemoryStorage) Create(username, content string) (*models.Message, error) {
-	// TODO: Implement Create method
-	// Use write lock for thread safety
-	// Get next available ID
-	// Create new message using models.NewMessage
-	// Add message to map
-	// Increment nextID
-	// Return created message
-	return nil, nil
+	ms.Mutex.Lock()
+	defer ms.Mutex.Unlock()
+
+	next := ms.NextID
+	message := models.NewMessage(next, username, content)
+	ms.Messages[next] = message
+	ms.NextID += 1
+
+	return message, nil
 }
 
 // Update modifies an existing message
 func (ms *MemoryStorage) Update(id int, content string) (*models.Message, error) {
-	// TODO: Implement Update method
-	// Use write lock for thread safety
-	// Check if message exists
-	// Update the content field
-	// Return updated message or error if not found
-	return nil, nil
+	ms.Mutex.Lock()
+	defer ms.Mutex.Unlock()
+
+	if id < 1 {
+		return nil, ErrInvalidID
+	}
+
+	if _, ok := ms.Messages[id]; !ok {
+		return nil, ErrMessageNotFound
+	}
+
+	ms.Messages[id].Content = content
+
+	return ms.Messages[id], nil
 }
 
 // Delete removes a message from storage
 func (ms *MemoryStorage) Delete(id int) error {
-	// TODO: Implement Delete method
-	// Use write lock for thread safety
-	// Check if message exists
-	// Delete from map
-	// Return error if message not found
+	ms.Mutex.Lock()
+	defer ms.Mutex.Unlock()
+
+	if id < 1 {
+		return ErrInvalidID
+	}
+
+	if _, ok := ms.Messages[id]; !ok {
+		return ErrMessageNotFound
+	}
+
+	delete(ms.Messages, id)
+
 	return nil
 }
 
 // Count returns the total number of messages
 func (ms *MemoryStorage) Count() int {
-	// TODO: Implement Count method
-	// Use read lock for thread safety
-	// Return length of messages map
-	return 0
+	ms.Mutex.Lock()
+	defer ms.Mutex.Unlock()
+
+	return len(ms.Messages)
 }
 
 // Common errors
