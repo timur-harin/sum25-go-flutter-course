@@ -3,6 +3,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lab04_frontend/services/secure_storage_service.dart';
 
 void main() {
+  setUpAll(() {
+    FlutterSecureStorage.setMockInitialValues({});
+  });
+  setUp(() async {
+    await SecureStorageService.clearAll();
+  });
   // Initialize Flutter bindings for platform channels
   TestWidgetsFlutterBinding.ensureInitialized(); 
 
@@ -18,12 +24,10 @@ void main() {
     });
 
     test('should save and get auth token', () async {
-      const token = 'test_auth_token_12345';
-
+      const token = 'test_token_123';
       await SecureStorageService.saveAuthToken(token);
       final retrievedToken = await SecureStorageService.getAuthToken();
-
-      expect(retrievedToken, equals(token));
+      expect(retrievedToken, token);
     });
 
     test('should return null for non-existent auth token', () async {

@@ -8,7 +8,7 @@ import (
 	"lab04-backend/models"
 )
 
-func setupTestDB(t *testing.T) (*UserRepository, func()) {
+func setupUserRepoTestDB(t *testing.T) (*UserRepository, func()) {
 	// Create test database
 	testDB := "./test_user_repo.db"
 	config := &database.Config{
@@ -31,7 +31,6 @@ func setupTestDB(t *testing.T) (*UserRepository, func()) {
 
 	repo := NewUserRepository(db)
 
-	// Return cleanup function
 	cleanup := func() {
 		database.CloseDB(db)
 		os.Remove(testDB)
@@ -41,7 +40,7 @@ func setupTestDB(t *testing.T) (*UserRepository, func()) {
 }
 
 func TestUserRepository_Create(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	req := &models.CreateUserRequest{
@@ -80,7 +79,7 @@ func TestUserRepository_Create(t *testing.T) {
 }
 
 func TestUserRepository_GetByID(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	// Create a user first
@@ -124,7 +123,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 }
 
 func TestUserRepository_GetByEmail(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	// Create a user first
@@ -160,7 +159,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 }
 
 func TestUserRepository_GetAll(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	// Test empty database
@@ -199,7 +198,7 @@ func TestUserRepository_GetAll(t *testing.T) {
 }
 
 func TestUserRepository_Update(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	// Create a user first
@@ -250,7 +249,7 @@ func TestUserRepository_Update(t *testing.T) {
 }
 
 func TestUserRepository_Delete(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	// Create a user first
@@ -284,7 +283,7 @@ func TestUserRepository_Delete(t *testing.T) {
 }
 
 func TestUserRepository_Count(t *testing.T) {
-	repo, cleanup := setupTestDB(t)
+	repo, cleanup := setupUserRepoTestDB(t)
 	defer cleanup()
 
 	// Test count with empty database

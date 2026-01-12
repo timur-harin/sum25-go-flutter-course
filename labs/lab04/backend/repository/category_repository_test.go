@@ -1,271 +1,241 @@
 package repository
 
 import (
+	"lab04-backend/models"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-// TestCategoryRepository tests the GORM ORM approach
+func setupCategoryRepoTestDB(t *testing.T) (*gorm.DB, *CategoryRepository) {
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	require.NoError(t, err, "Failed to connect to database")
+
+	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Category{})
+	require.NoError(t, err, "Failed to migrate database")
+
+	categoryRepo := NewCategoryRepository(db)
+
+	return db, categoryRepo
+}
+
 func TestCategoryRepository(t *testing.T) {
-	// TODO: Setup GORM database for testing
-	// db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	// if err != nil {
-	//     t.Fatalf("Failed to connect to database: %v", err)
-	// }
+	db, categoryRepo := setupCategoryRepoTestDB(t)
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
 
-	// TODO: Auto-migrate models
-	// err = db.AutoMigrate(&models.Category{}, &models.Post{})
-	// if err != nil {
-	//     t.Fatalf("Failed to migrate database: %v", err)
-	// }
+	var createdCategory *models.Category
 
-	// Create repository instance
-	// categoryRepo := NewCategoryRepository(db)
-
-	// TODO: Test Create method with GORM
 	t.Run("Create category with GORM", func(t *testing.T) {
-		// TODO: Test GORM Create functionality
-		// - Create a category using GORM
-		// - Verify ID is auto-generated
-		// - Verify timestamps are set automatically
-		// - Test validation via GORM hooks
-		//
-		// Example:
-		// category := &models.Category{
-		//     Name: "Technology",
-		//     Description: "Tech-related posts",
-		//     Color: "#007bff",
-		// }
-		// err := categoryRepo.Create(category)
-		// assert.NoError(t, err)
-		// assert.NotZero(t, category.ID)
-		// assert.NotZero(t, category.CreatedAt)
-
-		t.Skip("TODO: implement GORM Create test")
+		category := &models.Category{
+			Name:        "Technology",
+			Description: "Tech-related posts",
+			Color:       "#007bff",
+		}
+		err := categoryRepo.Create(category)
+		assert.NoError(t, err)
+		assert.NotZero(t, category.ID)
+		assert.NotZero(t, category.CreatedAt)
+		assert.Equal(t, "Technology", category.Name)
+		createdCategory = category
 	})
 
-	// TODO: Test GetByID method with GORM
 	t.Run("GetByID with GORM", func(t *testing.T) {
-		// TODO: Test GORM First functionality
-		// - Create test category
-		// - Retrieve by ID using GORM
-		// - Test record not found handling
-		//
-		// Example:
-		// category, err := categoryRepo.GetByID(1)
-		// assert.NoError(t, err)
-		// assert.Equal(t, "Technology", category.Name)
-		//
-		// // Test not found
-		// _, err = categoryRepo.GetByID(999)
-		// assert.Error(t, err)
-		// assert.Equal(t, gorm.ErrRecordNotFound, err)
+		retrieved, err := categoryRepo.GetByID(createdCategory.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, createdCategory.Name, retrieved.Name)
+		assert.Equal(t, createdCategory.ID, retrieved.ID)
 
-		t.Skip("TODO: implement GORM GetByID test")
+		_, err = categoryRepo.GetByID(999)
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	})
 
-	// TODO: Test GetAll method with GORM
 	t.Run("GetAll with GORM", func(t *testing.T) {
-		// TODO: Test GORM Find functionality
-		// - Create multiple categories
-		// - Retrieve all using GORM
-		// - Test ordering
-		//
-		// Example:
-		// categories, err := categoryRepo.GetAll()
-		// assert.NoError(t, err)
-		// assert.Len(t, categories, 3)
-		// // Verify ordering by name
-		// assert.Equal(t, "Category A", categories[0].Name)
+		_ = categoryRepo.Create(&models.Category{Name: "Sports"})
+		_ = categoryRepo.Create(&models.Category{Name: "Finance"})
 
-		t.Skip("TODO: implement GORM GetAll test")
+		categories, err := categoryRepo.GetAll()
+		assert.NoError(t, err)
+		assert.Len(t, categories, 3)
+		assert.Equal(t, "Finance", categories[0].Name)
+		assert.Equal(t, "Sports", categories[1].Name)
+		assert.Equal(t, "Technology", categories[2].Name)
 	})
 
-	// TODO: Test Update method with GORM
 	t.Run("Update with GORM", func(t *testing.T) {
-		// TODO: Test GORM Save/Updates functionality
-		// - Create category
-		// - Update using GORM
-		// - Verify updated_at is automatically set
-		// - Test partial updates
-		//
-		// Example:
-		// category.Name = "Updated Technology"
-		// err := categoryRepo.Update(category)
-		// assert.NoError(t, err)
-		// assert.Equal(t, "Updated Technology", category.Name)
-		// assert.True(t, category.UpdatedAt.After(originalUpdatedAt))
+		originalUpdatedAt := createdCategory.UpdatedAt
+		createdCategory.Name = "Updated Technology"
+		time.Sleep(10 * time.Millisecond)
 
-		t.Skip("TODO: implement GORM Update test")
+		err := categoryRepo.Update(createdCategory)
+		assert.NoError(t, err)
+
+		retrieved, _ := categoryRepo.GetByID(createdCategory.ID)
+		assert.Equal(t, "Updated Technology", retrieved.Name)
+		assert.True(t, retrieved.UpdatedAt.After(originalUpdatedAt))
 	})
 
-	// TODO: Test Delete method with GORM
-	t.Run("Delete with GORM", func(t *testing.T) {
-		// TODO: Test GORM Delete functionality
-		// - Test soft delete (if DeletedAt field exists)
-		// - Test hard delete (with Unscoped)
-		// - Verify cascade behavior
-		//
-		// Example:
-		// err := categoryRepo.Delete(category.ID)
-		// assert.NoError(t, err)
-		//
-		// // Verify soft delete
-		// _, err = categoryRepo.GetByID(category.ID)
-		// assert.Error(t, err)
-		// assert.Equal(t, gorm.ErrRecordNotFound, err)
-
-		t.Skip("TODO: implement GORM Delete test")
-	})
-
-	// TODO: Test FindByName method with GORM
 	t.Run("FindByName with GORM", func(t *testing.T) {
-		// TODO: Test GORM Where functionality
-		// - Test exact matches
-		// - Test case sensitivity
-		// - Test not found scenarios
-		//
-		// Example:
-		// category, err := categoryRepo.FindByName("Technology")
-		// assert.NoError(t, err)
-		// assert.Equal(t, "Technology", category.Name)
+		retrieved, err := categoryRepo.FindByName("Updated Technology")
+		assert.NoError(t, err)
+		assert.Equal(t, "Updated Technology", retrieved.Name)
 
-		t.Skip("TODO: implement GORM FindByName test")
+		_, err = categoryRepo.FindByName("Non-existent")
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	})
 
-	// TODO: Test SearchCategories method with GORM
 	t.Run("SearchCategories with GORM", func(t *testing.T) {
-		// TODO: Test GORM LIKE functionality
-		// - Test partial name matches
-		// - Test limit functionality
-		// - Test ordering
-		//
-		// Example:
-		// categories, err := categoryRepo.SearchCategories("Tech", 10)
-		// assert.NoError(t, err)
-		// assert.True(t, len(categories) <= 10)
+		_ = categoryRepo.Create(&models.Category{Name: "Tech News"})
 
-		t.Skip("TODO: implement GORM SearchCategories test")
+		categories, err := categoryRepo.SearchCategories("Tech", 10)
+		assert.NoError(t, err)
+		assert.Len(t, categories, 2)
+		assert.Equal(t, "Tech News", categories[0].Name)
+		assert.Equal(t, "Updated Technology", categories[1].Name)
 	})
 
-	// TODO: Test GetCategoriesWithPosts method with GORM Preload
-	t.Run("GetCategoriesWithPosts with GORM Preload", func(t *testing.T) {
-		// TODO: Test GORM Preload functionality
-		// - Create categories and posts
-		// - Test eager loading with Preload
-		// - Verify associations are loaded
-		//
-		// Example:
-		// categories, err := categoryRepo.GetCategoriesWithPosts()
-		// assert.NoError(t, err)
-		// for _, category := range categories {
-		//     assert.NotNil(t, category.Posts) // Posts should be loaded
-		// }
-
-		t.Skip("TODO: implement GORM Preload test")
-	})
-
-	// TODO: Test Count method with GORM
 	t.Run("Count with GORM", func(t *testing.T) {
-		// TODO: Test GORM Count functionality
-		// - Test count with no records
-		// - Test count with multiple records
-		// - Test count with soft deleted records
-		//
-		// Example:
-		// count, err := categoryRepo.Count()
-		// assert.NoError(t, err)
-		// assert.Equal(t, int64(3), count)
-
-		t.Skip("TODO: implement GORM Count test")
+		count, err := categoryRepo.Count()
+		assert.NoError(t, err)
+		assert.Equal(t, int64(4), count)
 	})
 
-	// TODO: Test Transaction method with GORM
+	t.Run("Delete with GORM (Soft Delete)", func(t *testing.T) {
+		err := categoryRepo.Delete(createdCategory.ID)
+		assert.NoError(t, err)
+
+		_, err = categoryRepo.GetByID(createdCategory.ID)
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+
+		var deletedCat models.Category
+		result := db.Unscoped().First(&deletedCat, createdCategory.ID)
+		assert.NoError(t, result.Error)
+		assert.NotNil(t, deletedCat.DeletedAt)
+
+		count, err := categoryRepo.Count()
+		assert.NoError(t, err)
+		assert.Equal(t, int64(3), count)
+	})
+
 	t.Run("Transaction with GORM", func(t *testing.T) {
-		// TODO: Test GORM Transaction functionality
-		// - Test successful transaction
-		// - Test transaction rollback on error
-		// - Verify atomicity
-		//
-		// Example:
-		// categories := []models.Category{
-		//     {Name: "Cat1"}, {Name: "Cat2"}, {Name: "Cat3"},
-		// }
-		// err := categoryRepo.CreateWithTransaction(categories)
-		// assert.NoError(t, err)
+		catsToCreate := []*models.Category{
+			{Name: "Cat A"}, {Name: "Cat B"},
+		}
+		err := categoryRepo.CreateWithTransaction(catsToCreate)
+		assert.NoError(t, err)
 
-		t.Skip("TODO: implement GORM Transaction test")
+		count, _ := categoryRepo.Count()
+		assert.Equal(t, int64(5), count)
+
+		catsToFail := []*models.Category{
+			{Name: "Cat C"}, {Name: "Cat A"},
+		}
+		err = categoryRepo.CreateWithTransaction(catsToFail)
+		assert.Error(t, err)
+
+		_, findErr := categoryRepo.FindByName("Cat C")
+		assert.ErrorIs(t, findErr, gorm.ErrRecordNotFound)
+
+		countAfterFail, _ := categoryRepo.Count()
+		assert.Equal(t, int64(5), countAfterFail)
+	})
+
+	t.Run("GetCategoriesWithPosts with GORM Preload", func(t *testing.T) {
+		user := models.User{Name: "GORM User", Email: "gorm@test.com"}
+		db.Create(&user)
+		catWithPost := models.Category{Name: "Category With Posts"}
+		db.Create(&catWithPost)
+		post := models.Post{UserID: user.ID, Title: "My GORM Post", Content: "..."}
+		db.Create(&post)
+
+		db.Model(&catWithPost).Association("Posts").Append(&post)
+
+		categories, err := categoryRepo.GetCategoriesWithPosts()
+		assert.NoError(t, err)
+
+		found := false
+		for _, category := range categories {
+			if category.Name == "Category With Posts" {
+				found = true
+				require.NotEmpty(t, category.Posts)
+				assert.Equal(t, "My GORM Post", category.Posts[0].Title)
+			} else {
+				assert.Empty(t, category.Posts)
+			}
+		}
+		assert.True(t, found, "Category with post was not found in the results")
 	})
 }
 
-// TestGORMModelHooks tests GORM model hooks and lifecycle
 func TestGORMModelHooks(t *testing.T) {
-	// TODO: Test GORM hooks
-	t.Run("BeforeCreate hook", func(t *testing.T) {
-		// TODO: Test BeforeCreate hook functionality
-		// - Verify hook is called
-		// - Test data validation in hook
-		// - Test default value setting
+	_, categoryRepo := setupCategoryRepoTestDB(t)
+	sqlDB, _ := categoryRepo.db.DB()
+	defer sqlDB.Close()
 
-		t.Skip("TODO: implement GORM BeforeCreate hook test")
+	t.Run("BeforeCreate hook sets default color", func(t *testing.T) {
+		category := &models.Category{Name: "Hook Test Category"}
+		err := categoryRepo.Create(category)
+		require.NoError(t, err)
+		assert.Equal(t, "#CCCCCC", category.Color)
 	})
 
-	t.Run("AfterCreate hook", func(t *testing.T) {
-		// TODO: Test AfterCreate hook functionality
-		// - Verify hook is called after creation
-		// - Test side effects (logging, notifications)
-
-		t.Skip("TODO: implement GORM AfterCreate hook test")
-	})
-
-	t.Run("Validation methods", func(t *testing.T) {
-		// TODO: Test model validation methods
-		// - Test IsActive method
-		// - Test validation constraints
-
-		t.Skip("TODO: implement GORM validation tests")
+	t.Run("BeforeUpdate hook prevents empty name", func(t *testing.T) {
+		category := &models.Category{Name: "Updatable"}
+		require.NoError(t, categoryRepo.Create(category))
+		err := categoryRepo.db.Model(category).Updates(map[string]interface{}{"name": ""}).Error
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "category name cannot be updated to an empty string")
 	})
 }
 
-// TestGORMScopes tests GORM scopes functionality
-func TestGORMScopes(t *testing.T) {
-	// TODO: Test GORM scopes
-	t.Run("ActiveCategories scope", func(t *testing.T) {
-		// TODO: Test ActiveCategories scope
-		// - Create active and inactive categories
-		// - Test scope filters correctly
+func boolPitr(b bool) *bool {
+	return &b
+}
 
-		t.Skip("TODO: implement GORM ActiveCategories scope test")
+func TestGORMScopes(t *testing.T) {
+	db, _ := setupCategoryRepoTestDB(t)
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	catActive := models.Category{Name: "Active Category", Active: boolPitr(true)}
+	catInactive := models.Category{Name: "Inactive Category", Active: boolPitr(false)}
+	catWithPost := models.Category{Name: "A Category With Post", Active: boolPitr(true)}
+	catWithoutPost := models.Category{Name: "A Category Without Post", Active: boolPitr(true)}
+	user := models.User{Name: "Scope User", Email: "scope@test.com"}
+
+	require.NoError(t, db.Create(&catActive).Error)
+	require.NoError(t, db.Create(&catInactive).Error)
+	require.NoError(t, db.Create(&catWithPost).Error)
+	require.NoError(t, db.Create(&catWithoutPost).Error)
+	require.NoError(t, db.Create(&user).Error)
+
+	post := models.Post{UserID: user.ID, Title: "A Post for Scopes", Content: "..."}
+	require.NoError(t, db.Create(&post).Error)
+	require.NoError(t, db.Model(&catWithPost).Association("Posts").Append(&post))
+
+	t.Run("ActiveCategories scope", func(t *testing.T) {
+		var activeCategories []models.Category
+		err := db.Scopes(models.ActiveCategories).Find(&activeCategories).Error
+		assert.NoError(t, err)
+		assert.Len(t, activeCategories, 3)
+		for _, cat := range activeCategories {
+			assert.NotNil(t, cat.Active)
+			assert.True(t, *cat.Active)
+		}
 	})
 
 	t.Run("CategoriesWithPosts scope", func(t *testing.T) {
-		// TODO: Test CategoriesWithPosts scope
-		// - Create categories with and without posts
-		// - Test scope filters correctly
-
-		t.Skip("TODO: implement GORM CategoriesWithPosts scope test")
-	})
-}
-
-// BenchmarkGORMVsSQL benchmarks GORM vs raw SQL performance
-func BenchmarkGORMVsSQL(b *testing.B) {
-	// TODO: Compare GORM vs raw SQL performance
-	b.Run("GORM Create", func(b *testing.B) {
-		// TODO: Benchmark GORM Create operations
-		b.Skip("TODO: implement GORM Create benchmark")
-	})
-
-	b.Run("Raw SQL Create", func(b *testing.B) {
-		// TODO: Benchmark raw SQL Create operations
-		b.Skip("TODO: implement raw SQL Create benchmark")
-	})
-
-	b.Run("GORM Query", func(b *testing.B) {
-		// TODO: Benchmark GORM Query operations
-		b.Skip("TODO: implement GORM Query benchmark")
-	})
-
-	b.Run("Raw SQL Query", func(b *testing.B) {
-		// TODO: Benchmark raw SQL Query operations
-		b.Skip("TODO: implement raw SQL Query benchmark")
+		var categoriesWithPosts []models.Category
+		err := db.Scopes(models.CategoriesWithPosts).Find(&categoriesWithPosts).Error
+		assert.NoError(t, err)
+		require.Len(t, categoriesWithPosts, 1)
+		assert.Equal(t, "A Category With Post", categoriesWithPosts[0].Name)
 	})
 }

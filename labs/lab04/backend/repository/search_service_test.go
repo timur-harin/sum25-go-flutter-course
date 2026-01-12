@@ -1,155 +1,162 @@
 package repository
 
 import (
+	"context"
+	"database/sql"
+	"os"
 	"testing"
+	"time"
 
 	"lab04-backend/database"
+	"lab04-backend/models"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// TestSearchService tests the Squirrel query builder approach
-func TestSearchService(t *testing.T) {
-	// Initialize database for testing
-	db, err := database.InitDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize database: %v", err)
-	}
-	defer database.CloseDB(db)
+// setupSearchTestDB creates a fresh DB for search tests
+func setupSearchTestDB(t *testing.T) (*sql.DB, *SearchService) {
+	dbPath := "./test_search.db"
+	_ = os.Remove(dbPath)
 
-	// Run migrations
-	if err := database.RunMigrations(db); err != nil {
-		t.Fatalf("Failed to run migrations: %v", err)
-	}
+	config := database.DefaultConfig()
+	config.DatabasePath = dbPath
+	db, err := database.InitDBWithConfig(config)
+	require.NoError(t, err, "Failed to initialize database")
 
-	// Create service instance
+	err = database.RunMigrations(db)
+	require.NoError(t, err, "Failed to run migrations")
+
 	searchService := NewSearchService(db)
 
-	// TODO: Test SearchPosts with various filters
-	t.Run("SearchPosts with filters", func(t *testing.T) {
-		// TODO: Test dynamic query building with Squirrel
-		// - Test empty filters (should return all posts)
-		// - Test search by query string
-		// - Test filter by user ID
-		// - Test filter by published status
-		// - Test pagination (limit/offset)
-		// - Test sorting (order by different fields)
-		//
-		// Example test structure:
-		// filters := SearchFilters{
-		//     Query: "golang",
-		//     Published: &[]bool{true}[0],
-		//     Limit: 10,
-		//     OrderBy: "created_at",
-		//     OrderDir: "DESC",
-		// }
-		// posts, err := searchService.SearchPosts(context.Background(), filters)
-		// assert.NoError(t, err)
-		// assert.LessOrEqual(t, len(posts), 10)
+	return db, searchService
+}
 
-		// Use searchService to avoid "declared and not used" error
-		_ = searchService
-		t.Skip("TODO: implement SearchPosts test with Squirrel filters")
+func seedData(t *testing.T, db *sql.DB) (*models.User, *models.User) {
+	userRepo := NewUserRepository(db)
+
+	user1Req := &models.CreateUserRequest{Name: "Alice", Email: "alice@example.com"}
+	user1, err := userRepo.Create(user1Req)
+	require.NoError(t, err)
+
+	user2Req := &models.CreateUserRequest{Name: "Bob", Email: "bob@example.com"}
+	user2, err := userRepo.Create(user2Req)
+	require.NoError(t, err)
+
+	postRepo := NewPostRepository(db)
+	_, _ = postRepo.Create(&models.CreatePostRequest{UserID: user1.ID, Title: "Intro to Golang", Content: "Golang is fun.", Published: true})
+	time.Sleep(10 * time.Millisecond)
+	_, _ = postRepo.Create(&models.CreatePostRequest{UserID: user1.ID, Title: "Advanced Golang", Content: "Concurrency in Go.", Published: true})
+	time.Sleep(10 * time.Millisecond)
+	_, _ = postRepo.Create(&models.CreatePostRequest{UserID: user2.ID, Title: "Python for Beginners", Content: "Learn Python basics.", Published: true})
+	time.Sleep(10 * time.Millisecond)
+	_, _ = postRepo.Create(&models.CreatePostRequest{UserID: user2.ID, Title: "Python vs. Golang", Content: "A comparison.", Published: false})
+
+	return user1, user2
+}
+
+func TestSearchService(t *testing.T) {
+	db, searchService := setupSearchTestDB(t)
+	defer db.Close()
+	defer os.Remove("./test_search.db")
+
+	user1, _ := seedData(t, db)
+
+	t.Run("SearchPosts", func(t *testing.T) {
+		ctx := context.Background()
+
+		// Test no filters
+		posts, err := searchService.SearchPosts(ctx, SearchFilters{})
+		assert.NoError(t, err)
+		assert.Len(t, posts, 4)
+
+		// Test search by query
+		posts, err = searchService.SearchPosts(ctx, SearchFilters{Query: "golang"})
+		assert.NoError(t, err)
+		assert.Len(t, posts, 3)
+
+		// Test search by query and published status
+		posts, err = searchService.SearchPosts(ctx, SearchFilters{Query: "golang", Published: boolPtr(true)})
+		assert.NoError(t, err)
+		assert.Len(t, posts, 2)
+
+		// Test filter by user ID
+		posts, err = searchService.SearchPosts(ctx, SearchFilters{UserID: &user1.ID})
+		assert.NoError(t, err)
+		assert.Len(t, posts, 2)
+		assert.Equal(t, "Advanced Golang", posts[0].Title)
+
+		// Test pagination
+		posts, err = searchService.SearchPosts(ctx, SearchFilters{Limit: 1, Offset: 1})
+		assert.NoError(t, err)
+		assert.Len(t, posts, 1)
+		assert.Equal(t, "Python for Beginners", posts[0].Title) // Ordered by created_at DESC
+
+		// Test ordering
+		posts, err = searchService.SearchPosts(ctx, SearchFilters{OrderBy: "title", OrderDir: "ASC"})
+		assert.NoError(t, err)
+		assert.Len(t, posts, 4)
+		assert.Equal(t, "Advanced Golang", posts[0].Title)
 	})
 
-	// TODO: Test SearchUsers functionality
 	t.Run("SearchUsers", func(t *testing.T) {
-		// TODO: Test user search with Squirrel
-		// - Test exact name matches
-		// - Test partial name matches with LIKE
-		// - Test case insensitive search
-		// - Test limit functionality
-
-		_ = searchService
-		t.Skip("TODO: implement SearchUsers test with Squirrel")
+		ctx := context.Background()
+		users, err := searchService.SearchUsers(ctx, "ali", 10)
+		assert.NoError(t, err)
+		assert.Len(t, users, 1)
+		assert.Equal(t, "Alice", users[0].Name)
 	})
 
-	// TODO: Test GetPostStats with complex aggregation
 	t.Run("GetPostStats", func(t *testing.T) {
-		// TODO: Test complex aggregation query
-		// - Insert test data (users and posts)
-		// - Test aggregation calculations
-		// - Verify JOIN functionality
-		// - Test with no data (empty tables)
+		ctx := context.Background()
+		stats, err := searchService.GetPostStats(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, 4, stats.TotalPosts)
+		assert.Equal(t, 3, stats.PublishedPosts)
+		assert.Equal(t, 2, stats.ActiveUsers)
+		assert.True(t, stats.AvgContentLength > 0)
 
-		_ = searchService
-		t.Skip("TODO: implement GetPostStats test with Squirrel JOINs")
+		// Test with no data
+		_, _ = db.Exec("DELETE FROM posts")
+		stats, err = searchService.GetPostStats(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, 0, stats.TotalPosts)
 	})
 
-	// TODO: Test GetTopUsers with aggregation and sorting
 	t.Run("GetTopUsers", func(t *testing.T) {
-		// TODO: Test user ranking with post statistics
-		// - Insert users with different post counts
-		// - Test ordering by post count
-		// - Test LEFT JOIN behavior (users with no posts)
-		// - Test limit functionality
+		_, _ = db.Exec("DELETE FROM posts")
+		_, _ = db.Exec("DELETE FROM users")
+		user1, user2 := seedData(t, db)
+		userRepo := NewUserRepository(db)
+		user3, _ := userRepo.Create(&models.CreateUserRequest{Name: "Charlie", Email: "charlie@example.com"})
+		ctx := context.Background()
+		topUsers, err := searchService.GetTopUsers(ctx, 10)
+		assert.NoError(t, err)
+		require.Len(t, topUsers, 3)
+		foundAlice := false
+		foundBob := false
 
-		_ = searchService
-		t.Skip("TODO: implement GetTopUsers test with Squirrel aggregation")
-	})
+		for _, topUser := range topUsers {
+			if topUser.Name == user1.Name { // Alice
+				foundAlice = true
+				assert.Equal(t, 2, topUser.PostCount)
+				assert.Equal(t, 2, topUser.PublishedCount)
+			}
+			if topUser.Name == user2.Name { // Bob
+				foundBob = true
+				assert.Equal(t, 2, topUser.PostCount)
+				assert.Equal(t, 1, topUser.PublishedCount)
+			}
+		}
+		assert.True(t, foundAlice, "Alice should be in top users")
+		assert.True(t, foundBob, "Bob should be in top users")
 
-	// TODO: Test BuildDynamicQuery helper
-	t.Run("BuildDynamicQuery", func(t *testing.T) {
-		// TODO: Test query building step by step
-		// - Test with different filter combinations
-		// - Verify generated SQL syntax
-		// - Test parameter binding
-		//
-		// Example:
-		// baseQuery := searchService.psql.Select("*").From("posts")
-		// filters := SearchFilters{Query: "test", Published: &[]bool{true}[0]}
-		// query := searchService.BuildDynamicQuery(baseQuery, filters)
-		// sql, args, err := query.ToSql()
-		// assert.NoError(t, err)
-		// assert.Contains(t, sql, "WHERE")
-		// assert.Contains(t, sql, "published")
-
-		_ = searchService
-		t.Skip("TODO: implement BuildDynamicQuery test")
-	})
-}
-
-// TestSquirrelQueryBuilder tests Squirrel query building functionality
-func TestSquirrelQueryBuilder(t *testing.T) {
-	// TODO: Test Squirrel query builder patterns
-	t.Run("Basic Query Building", func(t *testing.T) {
-		// TODO: Test basic Squirrel functionality
-		// - Test SELECT with WHERE conditions
-		// - Test dynamic WHERE building
-		// - Test ORDER BY, LIMIT, OFFSET
-		// - Test parameter placeholder generation
-		//
-		// Example:
-		// psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-		// query := psql.Select("id", "name").From("users").Where(squirrel.Eq{"active": true})
-		// sql, args, err := query.ToSql()
-		// assert.NoError(t, err)
-		// assert.Equal(t, "SELECT id, name FROM users WHERE active = $1", sql)
-		// assert.Equal(t, []interface{}{true}, args)
-
-		t.Skip("TODO: implement basic Squirrel query building tests")
-	})
-
-	t.Run("Complex Query Building", func(t *testing.T) {
-		// TODO: Test complex Squirrel features
-		// - Test JOINs
-		// - Test subqueries
-		// - Test complex WHERE conditions (OR, AND, IN)
-		// - Test aggregation functions
-		// - Test GROUP BY and HAVING
-
-		t.Skip("TODO: implement complex Squirrel query tests")
+		assert.Equal(t, user3.Name, topUsers[2].Name)
+		assert.Equal(t, 0, topUsers[2].PostCount)
+		assert.False(t, topUsers[2].LastPostDate.Valid)
 	})
 }
 
-// BenchmarkSquirrelVsManualSQL benchmarks Squirrel vs manual SQL building
-func BenchmarkSquirrelVsManualSQL(b *testing.B) {
-	// TODO: Compare performance of Squirrel vs manual string building
-	b.Run("Squirrel", func(b *testing.B) {
-		// TODO: Benchmark Squirrel query building
-		b.Skip("TODO: implement Squirrel benchmark")
-	})
-
-	b.Run("Manual SQL", func(b *testing.B) {
-		// TODO: Benchmark manual string building
-		b.Skip("TODO: implement manual SQL benchmark")
-	})
+func boolPtr(b bool) *bool {
+	return &b
 }
