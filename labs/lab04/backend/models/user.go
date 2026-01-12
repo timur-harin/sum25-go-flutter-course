@@ -2,65 +2,106 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"regexp"
+	"strings"
 	"time"
 )
 
-// User represents a user in the system
 type User struct {
-	ID        int       `json:"id" db:"id"`
-	Name      string    `json:"name" db:"name"`
-	Email     string    `json:"email" db:"email"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID           int        `json:"id" db:"id"`
+	Name         string     `json:"name" db:"name"`
+	Email        string     `json:"email" db:"email"`
+	PasswordHash *string    `json:"password_hash" db:"password_hash"` // ← вот тут
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
+	DeletedAt    *time.Time `json:"deleted_at,omitempty" db:"deleted_at"` // nullable
 }
 
-// CreateUserRequest represents the payload for creating a user
 type CreateUserRequest struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"password_hash"`
 }
 
-// UpdateUserRequest represents the payload for updating a user
 type UpdateUserRequest struct {
-	Name  *string `json:"name,omitempty"`
-	Email *string `json:"email,omitempty"`
+	Name         *string `json:"name"`
+	Email        *string `json:"email"`
+	PasswordHash *string `json:"password_hash"`
 }
 
-// TODO: Implement Validate method for User
 func (u *User) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format
-	// Return appropriate errors if validation fails
+	if len(strings.TrimSpace(u.Name)) < 2 {
+		return errors.New("name must be at least 2 characters")
+	}
+	if !isValidEmail(u.Email) {
+		return errors.New("invalid email format")
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateUserRequest
 func (req *CreateUserRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format and not empty
-	// Return appropriate errors if validation fails
+	if len(strings.TrimSpace(req.Name)) < 2 {
+		return errors.New("name must be at least 2 characters")
+	}
+	if !isValidEmail(req.Email) {
+		return errors.New("invalid email format")
+	}
 	return nil
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
 func (req *CreateUserRequest) ToUser() *User {
-	// TODO: Convert CreateUserRequest to User
-	// Set timestamps to current time
-	return nil
+	now := time.Now()
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
 
-// TODO: Implement ScanRow method for User
 func (u *User) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into User struct
-	// Handle the case where row might be nil
+	return row.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+}
+
+func ScanUsers(rows *sql.Rows) ([]User, error) {
+	var users []User
+	for rows.Next() {
+		var u User
+		err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+// isValidEmail checks if the email has a valid format using a simple regex.
+func isValidEmail(email string) bool {
+	pattern := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
+	re := regexp.MustCompile(pattern)
+	return re.MatchString(email)
+}
+
+func (r *UpdateUserRequest) Validate() error {
+	if r.Name == nil || len(strings.TrimSpace(*r.Name)) < 2 {
+		return errors.New("name must be at least 2 characters")
+	}
+	if r.Email == nil || len(strings.TrimSpace(*r.Email)) < 5 || !containsAt(*r.Email) {
+		return errors.New("invalid email")
+	}
+	if r.PasswordHash != nil && len(strings.TrimSpace(*r.PasswordHash)) < 8 {
+		return errors.New("password hash too short")
+	}
 	return nil
 }
 
-// TODO: Implement ScanRows method for User slice
-func ScanUsers(rows *sql.Rows) ([]User, error) {
-	// TODO: Scan multiple database rows into User slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+func containsAt(email string) bool {
+	for _, c := range email {
+		if c == '@' {
+			return true
+		}
+	}
+	return false
 }

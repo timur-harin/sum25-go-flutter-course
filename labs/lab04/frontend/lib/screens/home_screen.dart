@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/preferences_service.dart';
 import '../services/database_service.dart';
-import '../services/secure_storage_service.dart';
+import '../services/secure_storage_service.dart' as secure;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
 
-            // SharedPreferences Section
             _buildStorageSection(
               'SharedPreferences',
               'Simple key-value storage for app settings',
@@ -67,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // SQLite Section
             _buildStorageSection(
               'SQLite Database',
               'Local SQL database for structured data',
@@ -79,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
 
-            // Secure Storage Section
             _buildStorageSection(
               'Secure Storage',
               'Encrypted storage for sensitive data',
@@ -132,9 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
       final value = PreferencesService.getString('test_key');
@@ -160,9 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
       final userCount = await DatabaseService.getUserCount();
 
       setState(() {
@@ -187,11 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
-      await SecureStorageService.saveSecureData('test_secure', 'Secret data');
-      final value = await SecureStorageService.getSecureData('test_secure');
+      await secure.SecureStorageService.saveSecureData('test_secure', 'Secret data');
+      final value = await secure.SecureStorageService.getSecureData('test_secure');
 
       setState(() {
         _statusMessage = 'Secure Storage test result: $value';

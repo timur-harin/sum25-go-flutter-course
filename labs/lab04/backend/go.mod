@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/pressly/goose/v3 v3.24.3
+	golang.org/x/crypto v0.38.0
 	gorm.io/gorm v1.25.12
 )
 

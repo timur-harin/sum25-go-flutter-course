@@ -66,14 +66,14 @@ func (r *PostRepository) GetAll() ([]models.Post, error) {
 }
 
 // TODO: Implement Update method using scany
-func (r *PostRepository) Update(id int, req *models.UpdatePostRequest) (*models.Post, error) {
-	// TODO: Update post in database using scany
-	// - Build dynamic UPDATE query based on non-nil fields in req
-	// - Update updated_at timestamp
-	// - Use sqlscan.Get() with RETURNING clause to get updated post
-	// This avoids a separate SELECT query after UPDATE
-	return nil, fmt.Errorf("TODO: implement Update method with scany")
-}
+//func (r *PostRepository) Update(id int, req *models.UpdatePostRequest) (*models.Post, error) {
+// TODO: Update post in database using scany
+// - Build dynamic UPDATE query based on non-nil fields in req
+// - Update updated_at timestamp
+// - Use sqlscan.Get() with RETURNING clause to get updated post
+// This avoids a separate SELECT query after UPDATE
+//	return nil, fmt.Errorf("TODO: implement Update method with scany")
+//}
 
 // TODO: Implement Delete method (standard SQL)
 func (r *PostRepository) Delete(id int) error {

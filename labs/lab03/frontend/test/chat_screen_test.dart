@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'package:lab03_frontend/screens/chat_screen.dart';
 import 'package:lab03_frontend/services/api_service.dart';
 import 'package:lab03_frontend/main.dart';
-import 'package:lab03_frontend/models/message.dart';
 
 void main() {
   group('ChatScreen Widget Tests', () {
@@ -23,7 +22,7 @@ void main() {
     });
 
     // Helper function to create mock client
-    MockClient _createMockClient() {
+    MockClient createMockClient() {
       return MockClient((request) async {
         if (request.url.toString() == 'http://localhost:8080/api/messages' &&
             request.method == 'GET') {
@@ -87,7 +86,7 @@ void main() {
           MultiProvider(
             providers: [
               Provider<ApiService>(
-                create: (_) => ApiService(client: _createMockClient()),
+                create: (_) => ApiService(client: createMockClient()),
                 dispose: (_, apiService) => apiService.dispose(),
               ),
               ChangeNotifierProxyProvider<ApiService, ChatProvider>(
@@ -137,7 +136,7 @@ void main() {
           MultiProvider(
             providers: [
               Provider<ApiService>(
-                create: (_) => ApiService(client: _createMockClient()),
+                create: (_) => ApiService(client: createMockClient()),
                 dispose: (_, apiService) => apiService.dispose(),
               ),
               ChangeNotifierProxyProvider<ApiService, ChatProvider>(
@@ -182,7 +181,7 @@ void main() {
           MultiProvider(
             providers: [
               Provider<ApiService>(
-                create: (_) => ApiService(client: _createMockClient()),
+                create: (_) => ApiService(client: createMockClient()),
                 dispose: (_, apiService) => apiService.dispose(),
               ),
               ChangeNotifierProxyProvider<ApiService, ChatProvider>(
