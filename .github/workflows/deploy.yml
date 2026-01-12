@@ -1,0 +1,44 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [lab07-khripunkov-nikita]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.19.0'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: labs/lab07/frontend
+
+      - name: Build web
+        run: flutter build web --release --base-href "/flutter_hello/"
+        working-directory: labs/lab07/frontend
+        env:
+          CI: true
+
+      - name: Create .nojekyll
+        run: touch .nojekyll
+        working-directory: labs/lab07/frontend/build/web
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: labs/lab07/frontend/build/web
+          keep_files: false
+          force_orphan: true

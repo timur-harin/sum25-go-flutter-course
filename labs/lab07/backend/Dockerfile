@@ -1,5 +1,11 @@
-# Build stage
-# TODO: Add build stage
+FROM golang:latest
 
-# Final image
-# TODO: Add final image instructions
+WORKDIR /app
+
+COPY . .
+
+RUN go mod download
+
+RUN go build -o my-hello-world-app .
+
+CMD ["/app/my-hello-world-app"]
