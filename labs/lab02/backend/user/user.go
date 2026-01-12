@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 )
 
@@ -18,6 +19,15 @@ type User struct {
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
 	// TODO: Validate name, email, id
+	if strings.TrimSpace(u.Name) == "" {
+		return errors.New("invalid name")
+	}
+	if strings.TrimSpace(u.Email) == "" || !strings.Contains(u.Email, "@") || !strings.Contains(u.Email, ".") {
+		return errors.New("invalid email")
+	}
+	if strings.TrimSpace(u.ID) == "" {
+		return errors.New("invalid id")
+	}
 	return nil
 }
 
@@ -51,17 +61,40 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
 	// TODO: Add user to map, check context
+	if m.ctx != nil {
+		select {
+		case <-m.ctx.Done():
+			return m.ctx.Err()
+		default:
+		}
+	}
+	// Validate user data
+	if err := u.Validate(); err != nil {
+		return err
+	}
+	// Add to map safely
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.users[u.ID] = u
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
 	// TODO: Remove user from map
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	delete(m.users, id)
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
 	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if u, ok := m.users[id]; ok {
+		return u, nil
+	}
+	return User{}, errors.New("user not found")
 }

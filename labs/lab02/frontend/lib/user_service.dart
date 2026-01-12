@@ -3,6 +3,7 @@ class UserService {
     // TODO: Simulate fetching user data for tests
     // await Future.delayed(...)
     // return {'name': ..., 'email': ...}
-    throw UnimplementedError();
+    await Future.delayed(Duration(milliseconds: 300));
+    return {'name': 'Alice', 'email': 'alice@example.com'};
   }
 }
