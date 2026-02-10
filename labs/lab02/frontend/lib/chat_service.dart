@@ -1,30 +1,36 @@
 import 'dart:async';
 
-// ChatService handles chat logic and backend communication
-class ChatService {
-  // TODO: Use a StreamController to simulate incoming messages for tests
-  // TODO: Add simulation flags for connection and send failures
-  // TODO: Replace simulation with real backend logic in the future
+/// Abstract chat service definition
+abstract class ChatService {
+  Stream<String> get messageStream;
+  Future<void> connect();
+  Future<void> sendMessage(String msg);
+}
 
-  final StreamController<String> _controller =
-      StreamController<String>.broadcast();
+/// Mock implementation simulating backend interaction
+class MockChatService extends ChatService {
+  final StreamController<String> _controller = StreamController<String>.broadcast();
   bool failSend = false;
 
-  ChatService();
+  @override
+  Stream<String> get messageStream => _controller.stream;
 
+  @override
   Future<void> connect() async {
-    // TODO: Simulate connection (for tests)
-    // await Future.delayed(...)
+    // Simulate some delay if needed
+    await Future.delayed(const Duration(milliseconds: 100));
   }
 
+  @override
   Future<void> sendMessage(String msg) async {
-    // TODO: Simulate sending a message (for tests)
-    // await Future.delayed(...)
-    // _controller.add(msg)
+    if (failSend) {
+      throw Exception('Send failed');
+    }
+    _controller.add(msg);
   }
 
-  Stream<String> get messageStream {
-    // TODO: Return stream of incoming messages (for tests)
-    throw UnimplementedError();
+  /// Dispose method for cleanup (optional, but good practice)
+  void dispose() {
+    _controller.close();
   }
 }
