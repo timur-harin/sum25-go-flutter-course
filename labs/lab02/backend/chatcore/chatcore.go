@@ -2,6 +2,7 @@ package chatcore
 
 import (
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -42,21 +43,97 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	for {
+		select {
+		case <-b.ctx.Done():
+			close(b.done)
+			return
+
+		case msg := <-b.input:
+			b.usersMutex.RLock()
+			if msg.Broadcast {
+				for _, ch := range b.users {
+					select {
+					case ch <- msg:
+					default:
+						fmt.Println("default")
+					}
+				}
+			} else {
+				if ch, ok := b.users[msg.Recipient]; ok {
+					select {
+					case ch <- msg:
+					default:
+						// Optional: drop or log if channel is full
+					}
+				}
+			}
+			b.usersMutex.RUnlock()
+		}
+
+	}
+
 }
+
+// TODO: Implement event loop (fan-in/fan-out pattern)
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	b.usersMutex.RLock()
+	defer b.usersMutex.RUnlock()
+
+	if b.ctx != nil {
+		select {
+		case <- b.ctx.Done():
+			return fmt.Errorf("some context error")
+		default:
+			
+		}
+	}
+
+	if msg.Broadcast {
+		for id, ch := range b.users {
+			select {
+			case ch <- msg:
+			default:
+				return fmt.Errorf("user %s channel full during broadcast", id)
+			}
+		}
+		return nil
+	}
+
+	ch, ok := b.users[msg.Recipient]
+	if !ok {
+		return fmt.Errorf("recipient %s not registered", msg.Recipient)
+	}
+
+	select {
+	case ch <- msg:
+		return nil
+	default:
+		return fmt.Errorf("recipient %s channel is full or not ready", msg.Recipient)
+	}
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
 	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+
+	b.users[userID] = recv
+
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	defer b.usersMutex.Unlock()
+
+	ch, ok := b.users[userID]
+	if ok {
+		close(ch)               // close channel to signal termination
+		delete(b.users, userID) // actually remove user
+	}
+	b.usersMutex.Unlock()
 }
