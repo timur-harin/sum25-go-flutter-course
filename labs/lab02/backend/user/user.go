@@ -3,65 +3,101 @@ package user
 import (
 	"context"
 	"errors"
+	"regexp"
 	"sync"
 )
 
-// User represents a chat user
-// TODO: Add more fields if needed
-
+// User represents a user in the system
 type User struct {
 	Name  string
 	Email string
 	ID    string
 }
 
-// Validate checks if the user data is valid
+// Validate checks if the user fields are valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	if u.ID == "" {
+		return errors.New("user ID cannot be empty")
+	}
+	if u.Name == "" {
+		return errors.New("user name cannot be empty")
+	}
+	if !isValidEmail(u.Email) {
+		return errors.New("invalid email format")
+	}
 	return nil
 }
 
-// UserManager manages users
-// Contains a map of users, a mutex, and a context
+// isValidEmail validates the email format using regex
+func isValidEmail(email string) bool {
+	// Simple regex for demonstration purposes
+	re := regexp.MustCompile(`^[^@]+@[^@]+\.[^@]+$`)
+	return re.MatchString(email)
+}
 
+// UserManager manages users in memory
 type UserManager struct {
-	ctx   context.Context
-	users map[string]User // userID -> User
-	mutex sync.RWMutex    // Protects users map
-	// TODO: Add more fields if needed
+	mutex  sync.RWMutex
+	users  map[string]User
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
-// NewUserManager creates a new UserManager
+// NewUserManager creates a UserManager with background context
 func NewUserManager() *UserManager {
-	// TODO: Initialize UserManager fields
+	ctx, cancel := context.WithCancel(context.Background())
 	return &UserManager{
-		users: make(map[string]User),
+		users:  make(map[string]User),
+		ctx:    ctx,
+		cancel: cancel,
 	}
 }
 
-// NewUserManagerWithContext creates a new UserManager with context
+// NewUserManagerWithContext creates a UserManager with a given context
 func NewUserManagerWithContext(ctx context.Context) *UserManager {
-	// TODO: Initialize UserManager with context
+	// Provide a no-op cancel if not needed
+	ctx, cancel := context.WithCancel(ctx)
 	return &UserManager{
-		ctx:   ctx,
-		users: make(map[string]User),
+		users:  make(map[string]User),
+		ctx:    ctx,
+		cancel: cancel,
 	}
 }
 
-// AddUser adds a user
-func (m *UserManager) AddUser(u User) error {
-	// TODO: Add user to map, check context
-	return nil
+// AddUser adds a user if context is not canceled and user is valid
+func (m *UserManager) AddUser(user User) error {
+	if err := user.Validate(); err != nil {
+		return err
+	}
+	select {
+	case <-m.ctx.Done():
+		return errors.New("context canceled, cannot add user")
+	default:
+		m.mutex.Lock()
+		defer m.mutex.Unlock()
+		m.users[user.ID] = user
+		return nil
+	}
 }
 
-// RemoveUser removes a user
-func (m *UserManager) RemoveUser(id string) error {
-	// TODO: Remove user from map
-	return nil
-}
-
-// GetUser retrieves a user by id
+// GetUser retrieves a user by ID
 func (m *UserManager) GetUser(id string) (User, error) {
-	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	user, ok := m.users[id]
+	if !ok {
+		return User{}, errors.New("user not found")
+	}
+	return user, nil
+}
+
+// RemoveUser removes a user by ID
+func (m *UserManager) RemoveUser(id string) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	if _, ok := m.users[id]; !ok {
+		return errors.New("user not found")
+	}
+	delete(m.users, id)
+	return nil
 }
