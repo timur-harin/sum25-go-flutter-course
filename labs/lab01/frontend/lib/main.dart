@@ -3,12 +3,27 @@ import 'package:frontend/counter_app.dart';
 import 'package:frontend/profile_card.dart';
 import 'package:frontend/registration_form.dart';
 
+
 void main() {
   runApp(const MyApp());
 }
 
+class CounterAppDisplay extends StatelessWidget { // Is a full screen widget that wraps the CounterApp into a standard screen layout with app bar and center positioning.
+  const CounterAppDisplay({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Counter App Display')),
+      body: const Center(child: CounterApp()),
+    );
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+
 
   // This widget is the root of your application.
   @override
@@ -31,7 +46,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 204, 27, 27)),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -44,7 +59,7 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
+    return DefaultTabController( 
       length: 3,
       child: Scaffold(
         appBar: AppBar(
@@ -64,7 +79,7 @@ class MyHomePage extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16.0),
                 // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
+                child: ProfileCard(name: "", email: "damir07.kazan@gmail.com", age: 18, avatarUrl: null,)
               ),
             ),
             CounterApp(),
