@@ -6,8 +6,6 @@ import (
 )
 
 // Message represents a chat message
-// TODO: Add more fields if needed
-
 type Message struct {
 	Sender    string
 	Content   string
@@ -16,16 +14,13 @@ type Message struct {
 
 // MessageStore stores chat messages
 // Contains a slice of messages and a mutex for concurrency
-
 type MessageStore struct {
 	messages []Message
 	mutex    sync.RWMutex
-	// TODO: Add more fields if needed
 }
 
 // NewMessageStore creates a new MessageStore
 func NewMessageStore() *MessageStore {
-	// TODO: Initialize MessageStore fields
 	return &MessageStore{
 		messages: make([]Message, 0, 100),
 	}
@@ -33,12 +28,50 @@ func NewMessageStore() *MessageStore {
 
 // AddMessage stores a new message
 func (s *MessageStore) AddMessage(msg Message) error {
-	// TODO: Add message to storage (concurrent safe)
+	// Locking editing
+	s.mutex.Lock()
+	// Unlocking editing after exit from function
+	defer s.mutex.Unlock()
+
+	// Validation
+	if msg.Sender == "" || msg.Content == "" {
+		return errors.New("check sender and content of the message")
+	}
+
+	// Adding message
+	s.messages = append(s.messages, msg)
 	return nil
 }
 
 // GetMessages retrieves messages (optionally by user)
 func (s *MessageStore) GetMessages(user string) ([]Message, error) {
-	// TODO: Retrieve messages (all or by user)
-	return nil, errors.New("not implemented")
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	// Check if channel is empty
+	if len(s.messages) == 0 {
+		return nil, errors.New("no messages available")
+	}
+
+	// No filtering by user
+	if user == "" {
+		result := make([]Message, len(s.messages))
+		copy(result, s.messages)
+		return result, nil
+	}
+
+	// Filtering by user-sender
+	var filtered []Message
+	for _, msg := range s.messages {
+		if msg.Sender == user {
+			filtered = append(filtered, msg)
+		}
+	}
+
+	// Check if there are some results of filtering
+	if len(filtered) == 0 {
+		return nil, errors.New("no messages")
+	}
+
+	return filtered, nil
 }
