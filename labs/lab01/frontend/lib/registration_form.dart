@@ -23,75 +23,116 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
+     ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Registration successful!'),
           backgroundColor: Colors.green,
         ),
       );
       _formKey.currentState!.reset();
+      _nameController.clear();
+      _emailController.clear();
+      _passwordController.clear();
     }
   }
 
+  Color darkBlue = const Color.fromARGB(105, 127, 159, 192);
+
   @override
   Widget build(BuildContext context) {
+    InputDecoration inputDecoration = InputDecoration(
+      hint: const Text("Input name"),
+      errorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 1, color: Colors.transparent),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      errorStyle:
+          Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.red),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 2, color: Colors.blue),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      errorMaxLines: 2,
+      fillColor: darkBlue,
+      filled: true,
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 1, color: Colors.transparent),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(width: 1, color: Colors.blue),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      contentPadding: const EdgeInsets.only(left: 16),
+    );
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registration Form'),
+        title: Text("Registration Form"),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  key: const Key('name'),
-                  // TODO: use _nameController
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    hintText: 'Enter your name',
+      body: Column(
+        children: [
+          Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    key: const Key('name'),
+                    decoration: inputDecoration,
+                    controller: _nameController,
+                    validator: (value) {
+                      if (value == "") {
+                        return "Please enter your name";
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('email'),
-                  // TODO: use _emailController
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
+                  TextFormField(
+                    key: const Key('email'),
+                    decoration: inputDecoration,
+                    controller: _emailController,
+                    validator: (value) {
+                      final emailRegex = RegExp(
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+
+                      if (value == null) {
+                        return "Please enter a valid email";
+                      } else if (!emailRegex.hasMatch(value)) {
+                        return "Please enter a valid email";
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: const Key('password'),
-                  // TODO: use _passwordController
-                  decoration: const InputDecoration(
+                  TextFormField(
+                    key: const Key('password'),
+                    decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
                   ),
-                  obscureText: true,
-                  validator: (value) {
-                    // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-                // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
-              ],
-            ),
+                    controller: _passwordController,
+                    obscureText: true,
+                    
+                    validator: (value) {
+                      if (value == null) {
+                        return "Password must be at least 6 characters";
+                      } else if (value.length <= 6) {
+                        return "Password must be at least 6 characters";
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              )),
+          ElevatedButton(
+            onPressed: () => _submitForm(),
+            child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.blue),
+                child: const Text("Submit")),
           ),
-        ),
+        ],
       ),
     );
   }
