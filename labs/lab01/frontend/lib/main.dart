@@ -44,30 +44,45 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: const Text('Lab 01 Demo'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Profile'),
-              Tab(text: 'Counter'),
-              Tab(text: 'Register'),
-            ],
-          ),
-        ),
-        body: const TabBarView(
+    return Scaffold(
+      appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: const Text('Lab 01 Demo'),
+      ),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
-              ),
+            Text(
+              'Profile Card Example',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            SizedBox(height: 8),
+            ProfileCard(
+              name: 'John Doe',
+              email: 'john@example.com',
+              age: 30,
+              avatarUrl: 'https://example.com/avatar.jpg',
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Counter App Example',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
             CounterApp(),
+            SizedBox(height: 24),
+            Text(
+              'Registration Form Example',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
             RegistrationForm(),
           ],
         ),
