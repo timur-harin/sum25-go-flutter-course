@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lab03_frontend/models/message.dart';
 import 'package:provider/provider.dart';
 import 'screens/chat_screen.dart';
 import 'services/api_service.dart';
@@ -8,61 +9,106 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Wrap MaterialApp with MultiProvider or Provider
-    // Provide ApiService instance to the widget tree
-    // This allows any widget to access the API service
-    return MaterialApp(
-      title: 'Lab 03 REST API Chat',
-      theme: ThemeData(
-        // TODO: Customize theme colors
-        // Set primary color to blue
-        // Set accent color to orange (for HTTP cat theme)
-        // Configure app bar theme
-        // Configure elevated button theme
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
+    final _apiService = ApiService();
+    return MultiProvider(
+      providers: [
+        Provider<ChatProvider>(
+          create: (_) => ChatProvider(_apiService),
+          dispose: (_, apiService) => apiService.dispose()
+        )
+      ],
+      child: MaterialApp(
+        title: 'Lab 03 REST API Chat',
+        theme: ThemeData(
+          primaryColor: Colors.blue,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+          appBarTheme: const AppBarTheme(
+            color: Colors.purple
+          ),
+          elevatedButtonTheme: const ElevatedButtonThemeData(
+            style: ButtonStyle(
+              backgroundColor: WidgetStatePropertyAll(Colors.green)
+            )
+          ),
+          primarySwatch: Colors.blue,
+          useMaterial3: true,
+        ),
+        home: const ChatScreen(),
       ),
-      home: const ChatScreen(),
-      // TODO: Add error handling for navigation
-      // TODO: Consider adding splash screen or loading widget
     );
   }
 }
 
-// TODO: Create Provider class for managing app state
 class ChatProvider extends ChangeNotifier {
-  // TODO: Add final ApiService _apiService;
-  // TODO: Add List<Message> _messages = [];
-  // TODO: Add bool _isLoading = false;
-  // TODO: Add String? _error;
+  final ApiService _apiService;
+  List<Message> _messages = [];
+  bool _isLoading = false;
+  String? _error;
 
-  // TODO: Add constructor that takes ApiService
-  // ChatProvider(this._apiService);
+  ChatProvider(this._apiService);
 
-  // TODO: Add getters for all private fields
-  // List<Message> get messages => _messages;
-  // bool get isLoading => _isLoading;
-  // String? get error => _error;
+  List<Message> get messages => _messages;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
 
-  // TODO: Add loadMessages() method
-  // Set loading state, call API, update messages, handle errors
+  void loadMessages() async {
+    try {
+      _isLoading = true;
+      _messages = await _apiService.getMessages();
+      _isLoading = false;
+    }
+    catch(e) {}
+  }
 
-  // TODO: Add createMessage(CreateMessageRequest request) method
-  // Call API to create message, add to local list
+  void createMessage(CreateMessageRequest request) async {
+    try {
+      _isLoading = true;
+      Message newMessage = await _apiService.createMessage(request);
+      _isLoading = false;
+      messages.add(newMessage);
+      refreshMessages();
+    }
+    catch(e) {}
+  }
 
-  // TODO: Add updateMessage(int id, UpdateMessageRequest request) method
-  // Call API to update message, update in local list
+  void updateMessage(int id, UpdateMessageRequest request) async {
+    try {
+      _isLoading = true;
+      Message updatedMessage = await _apiService.updateMessage(id, request);
+      _isLoading = false;
+      int index = _messages.indexWhere((msg) => msg.id == id);
+      _messages[index] = updatedMessage;
+      refreshMessages();
+    }
+    catch(e) {}
+  }
 
-  // TODO: Add deleteMessage(int id) method
-  // Call API to delete message, remove from local list
+  void deleteMessage(int id) async {
+    try {
+      _isLoading = true;
+      await _apiService.deleteMessage(id);
+      _isLoading = false;
+      int index = _messages.indexWhere((msg) => msg.id == id);
+      messages.removeAt(index);
+      refreshMessages();
+    }
+    catch(e) {}
+  }
 
-  // TODO: Add refreshMessages() method
-  // Clear current messages and reload from API
+  void refreshMessages() async {
+    _messages.clear();
+    notifyListeners();
 
-  // TODO: Add clearError() method
-  // Set _error = null and call notifyListeners()
+    _messages = await _apiService.getMessages();
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
 }
