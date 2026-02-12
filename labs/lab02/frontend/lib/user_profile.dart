@@ -3,8 +3,7 @@ import 'package:lab02_chat/user_service.dart';
 
 // UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final UserService userService; // Accepts a user service for fetching user info
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -12,21 +11,66 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  late Future<Map<String, String>> _userFuture;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _userFuture = widget.userService.fetchUser();
+  }
+
+  // Optionally, you can add a method to refresh user info:
+  Future<void> _refreshUser() async {
+    setState(() {
+      _userFuture = widget.userService.fetchUser();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
     return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+      appBar: AppBar(
+        title: const Text('User Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshUser,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: FutureBuilder<Map<String, String>>(
+        future: _userFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error loading user info',
+                style: TextStyle(color: Colors.red, fontSize: 18),
+              ),
+            );
+          } else if (snapshot.hasData) {
+            final user = snapshot.data!;
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Name: ${user['name'] ?? 'N/A'}',
+                      style: const TextStyle(fontSize: 20)),
+                  const SizedBox(height: 10),
+                  Text('Email: ${user['email'] ?? 'N/A'}',
+                      style: const TextStyle(fontSize: 18)),
+                ],
+              ),
+            );
+          } else {
+            return const Center(child: Text('No user data'));
+          }
+        },
+      ),
     );
   }
 }
