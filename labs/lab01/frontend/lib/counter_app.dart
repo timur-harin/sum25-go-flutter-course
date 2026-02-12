@@ -10,46 +10,59 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-  void _incrementCounter() {
-    // TODO: Implement this function
+  void _increment() {
+    _counter++;
   }
 
-  void _decrementCounter() {
-    // TODO: Implement this function
+  void _decrement() {
+    _counter--;
   }
 
-  void _resetCounter() {
-    // TODO: Implement this function
+  void _reset() {
+    _counter = 0;
   }
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Implement counter UI
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
-        ],
-      ),
-      body: Center(
+      appBar: AppBar(),
+      body: Container(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text("Counter App"),
             Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48),
+              _counter.toString(),
+              style: TextStyle(
+                  fontSize: 20
+              ),
             ),
-            const SizedBox(height: 32),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
+                FloatingActionButton(onPressed: () {
+                  setState(() {
+                    _increment();
+                  });
+                },
+                    child: const Icon(Icons.add)
+                ),
+                FloatingActionButton(onPressed: () {
+                  setState(() {
+                    _decrement();
+                  });
+                },
+                    child: const Icon(Icons.remove)
+                ),
+                TextButton(onPressed: () {
+                  setState(() {
+                    _reset();
+                  });
+                },
+                    child: const Icon(Icons.refresh)
+                )
               ],
-            ),
+            )
           ],
         ),
       ),

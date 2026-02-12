@@ -7,36 +7,39 @@ class ProfileCard extends StatelessWidget {
   final String? avatarUrl;
 
   const ProfileCard({
-    super.key,
+    Key? key,
     required this.name,
     required this.email,
     required this.age,
     this.avatarUrl,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(16.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
-            const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
-            const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
-            
-          ],
-        ),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("?"),
+        Text("J"),
+        Container(
+          child: Card(
+            child: ListTile(
+              leading: avatarUrl != null
+                  ? CircleAvatar(
+                backgroundImage: NetworkImage(avatarUrl!),
+                onBackgroundImageError: (error, stackTrace) {
+                  return;
+                },
+                child: null,
+              )
+                  : const CircleAvatar(child: Icon(Icons.person)),
+              title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 24),),
+              subtitle: Text(email, style: TextStyle(color: Colors.grey),),
+              trailing: Text("Age: $age"),
+            ),
+          ),
+        )
+      ],
     );
   }
 }
