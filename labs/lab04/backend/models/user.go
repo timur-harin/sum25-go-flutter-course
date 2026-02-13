@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 )
 
@@ -26,41 +28,153 @@ type UpdateUserRequest struct {
 	Email *string `json:"email,omitempty"`
 }
 
-// TODO: Implement Validate method for User
+// Validates an email
+func validateEmail(email string) error {
+	const usernameCheck int = 0
+	const mailServCheck int = 1
+	const domainCheck int = 2
+	const completed int = 3
+
+	var currentStage int = usernameCheck
+	var atSymbolPos int = 0 // Specifies the position of the '@' symbol
+	var atSymbolCnt int = 0 // Specifies the number of the '@' symbols met
+	for i, ch := range email {
+		// Increase the '@' symbol counter
+		if ch == '@' {
+			atSymbolCnt++
+		}
+
+		switch currentStage {
+		// Check the username
+		case usernameCheck:
+			if ch == '@' {
+				atSymbolPos = i
+
+				// Check if the username is empty
+				if i == 0 {
+					return errors.New("empty username")
+				}
+
+				// OK -> go to the next stage
+				currentStage = mailServCheck
+			}
+
+		// Check the mail server
+		case mailServCheck:
+			if ch == '.' {
+				// Check if the mail server is empty
+				if atSymbolPos == i-1 { // Previous symbol
+					return errors.New("empty mail server")
+				}
+
+				// OK -> go to the next stage
+				currentStage = domainCheck
+			}
+
+		// Check the domain
+		case domainCheck:
+			// OK -> check is completed
+			currentStage = completed
+
+		// Check for miscelleneous errors
+		case completed:
+			if ch == '.' {
+				return errors.New("multiple domains provided")
+			}
+		}
+	}
+
+	// '@' symbol is met more than once
+	if atSymbolCnt != 1 {
+		return errors.New("'@' symbol is met more than once")
+	}
+
+	// The email has invalid structure
+	if currentStage != completed {
+		return errors.New("incomplete email")
+	}
+
+	return nil // OK, no error
+}
+
+// Validates user info
+func defaultUserInfoValidate(
+	name string,
+	email string) error {
+
+	// Default value for a validation
+	const minNameLength int = 2
+
+	// Check the name
+	if len(name) < minNameLength {
+		return fmt.Errorf("invalid name: %s", name)
+	}
+
+	// Check the email
+	return validateEmail(email)
+}
+
+// Validates the User
 func (u *User) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format
-	// Return appropriate errors if validation fails
-	return nil
+	return defaultUserInfoValidate(u.Name, u.Email)
 }
 
-// TODO: Implement Validate method for CreateUserRequest
+// Validates the CreateUserRequest
 func (req *CreateUserRequest) Validate() error {
-	// TODO: Add validation logic
-	// - Name should not be empty and should be at least 2 characters
-	// - Email should be valid format and not empty
-	// Return appropriate errors if validation fails
-	return nil
+	return defaultUserInfoValidate(req.Name, req.Email)
 }
 
-// TODO: Implement ToUser method for CreateUserRequest
+// Transforms the CreateUserRequest to a new User
 func (req *CreateUserRequest) ToUser() *User {
-	// TODO: Convert CreateUserRequest to User
-	// Set timestamps to current time
-	return nil
+	now := time.Now()
+	return &User{
+		Name:      req.Name,
+		Email:     req.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
 
-// TODO: Implement ScanRow method for User
+// Scans a sql.Row to the User
 func (u *User) ScanRow(row *sql.Row) error {
-	// TODO: Scan database row into User struct
-	// Handle the case where row might be nil
-	return nil
+	// Check the row
+	if row == nil {
+		return errors.New("invalid row: nil")
+	}
+
+	return row.Scan(
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.CreatedAt,
+		&u.UpdatedAt)
 }
 
-// TODO: Implement ScanRows method for User slice
+// Scans a sql.Rows to a User slice
 func ScanUsers(rows *sql.Rows) ([]User, error) {
-	// TODO: Scan multiple database rows into User slice
-	// Make sure to close rows and handle errors properly
-	return nil, nil
+	// Check the rows
+	if rows == nil {
+		return nil, errors.New("invalid rows: nil")
+	}
+
+	defer rows.Close()
+
+	// Scan the rows
+	var res []User
+	for rows.Next() {
+		var user User
+
+		// Scan to the user
+		rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt)
+
+		// Add to the result slice
+		res = append(res, user)
+	}
+
+	return res, rows.Err()
 }

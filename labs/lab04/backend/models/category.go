@@ -44,13 +44,32 @@ func (Category) TableName() string {
 	return "categories"
 }
 
-// TODO: Implement BeforeCreate hook
+// Sets the default values of a category
 func (c *Category) BeforeCreate(tx *gorm.DB) error {
-	// TODO: GORM BeforeCreate hook
-	// - Validate data before creation
-	// - Set default values
-	// - Perform any pre-creation logic
-	// Example: if c.Color == "" { c.Color = "#007bff" }
+	var defaultColor string = "#dc143c" // Crimson Red
+	var defaultName string = "categories"
+	var defaultDescription string = "Lorem ipsum"
+
+	// Set the default color
+	if len(c.Color) == 0 {
+		c.Color = defaultColor
+	}
+
+	// Set the default name
+	if len(c.Name) == 0 {
+		c.Name = defaultName
+	}
+
+	// Set the default description
+	if len(c.Description) == 0 {
+		c.Description = defaultDescription
+	}
+
+	// Set the current timestamp
+	if c.CreatedAt.IsZero() {
+		c.CreatedAt = time.Now()
+	}
+
 	return nil
 }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'chat_service.dart';
-import 'dart:async';
 
 // ChatScreen displays the chat UI
 class ChatScreen extends StatefulWidget {
@@ -12,34 +11,89 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add TextEditingController for input
-  // TODO: Add state for messages, loading, and error
-  // TODO: Subscribe to chatService.messageStream
-  // TODO: Implement UI for sending and displaying messages
-  // TODO: Simulate chat logic for tests (current implementation is a simulation)
+  final TextEditingController _textCtrl = TextEditingController();
+  String _lastErr = ""; // last error met
+  bool errMet = false; // specifies if the error was met
+  Stream<String>? _msgsStream;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service and set up listeners
+    connectToChatService();
+  }
+
+  // Connects to a chat service
+  void connectToChatService() async {
+    try {
+      await widget.chatService.connect();
+      _msgsStream = widget.chatService.messageStream;
+      setState(() {
+        errMet = false; // no error
+      });
+    } catch (err) {
+      setState(() {
+        _lastErr = "Connection error"; // Failed connection
+        errMet = true;
+      });
+    }
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and subscriptions
     super.dispose();
   }
 
-  void _sendMessage() async {
-    // TODO: Send message using chatService
+  // Imitates sending a message
+  void _sendMessage() {
+    // Send the message storred in the text controller
+    try {
+      setState(() {
+        widget.chatService.sendMessage(_textCtrl.text);
+        _textCtrl.clear();
+        errMet = false; // no error
+      });
+    } catch (sendErr) {
+      setState(() {
+        _lastErr = sendErr.toString(); // will render an error
+        errMet = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
       appBar: AppBar(title: const Text('Chat')),
-      body: const Center(child: Text('TODO: Implement chat UI')),
+      body: Center(
+          child: Column(
+        // Message board and a button under it
+        children: [
+          TextField(
+            controller: _textCtrl,
+          ),
+          // To split the text field and the button
+          SizedBox(
+            height: 20,
+          ),
+          ElevatedButton(onPressed: _sendMessage, child: Icon(Icons.send)),
+          SizedBox(
+            height: 20,
+          ),
+          StreamBuilder(
+              stream: _msgsStream,
+              builder: (context, snapshot) {
+                if (errMet) {
+                  return Text(_lastErr); // Render the last error met
+                }
+
+                if (snapshot.hasData) {
+                  return Text(snapshot.data!); // Render the last sent message
+                }
+
+                return Text(_lastErr); // should be empty
+              }),
+        ],
+      )),
     );
   }
 }
