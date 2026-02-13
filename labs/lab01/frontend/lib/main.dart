@@ -60,13 +60,7 @@ class MyHomePage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16.0),
-                // TODO: change to ProfileCard
-                child: SizedBox.shrink(),
-              ),
-            ),
+            ProfileCard(name: 'Alex', email: 'achegaev06@gmail.com', age: 18),
             CounterApp(),
             RegistrationForm(),
           ],
