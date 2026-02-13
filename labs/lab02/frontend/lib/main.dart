@@ -1,39 +1,49 @@
 import 'package:flutter/material.dart';
 import 'chat_screen.dart';
 import 'user_profile.dart';
-import 'chat_service.dart';
-import 'user_service.dart';
 
 void main() {
-  // TODO: Initialize and run the app
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
-
-  // TODO: Initialize chatService and userService
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lab 02 Chat',
-      home: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Lab 02 Chat'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Chat', icon: Icon(Icons.chat)),
-                Tab(text: 'Profile', icon: Icon(Icons.person)),
-              ],
+      title: 'GoChat Demo',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const HomeScreen(),
+      routes: {
+        '/chat': (_) => const ChatScreen(),
+        '/profile': (_) => const UserProfileScreen(),
+      },
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('GoChat Demo')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/chat'),
+              child: const Text('Open Chat'),
             ),
-          ),
-          body: TabBarView(
-            children: [
-              // TODO: Implement ChatScreen and UserProfile
-            ],
-          ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/profile'),
+              child: const Text('Profile'),
+            ),
+          ],
         ),
       ),
     );
