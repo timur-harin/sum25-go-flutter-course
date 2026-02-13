@@ -5,18 +5,24 @@ import 'chat_service.dart';
 import 'user_service.dart';
 
 void main() {
-  // TODO: Initialize and run the app
+  runApp(MyApp()); // Запускаем приложение
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  final ChatService chatService = ChatService(); // Инициализация сервиса чата
+  final UserService userService =
+      UserService(); // Инициализация сервиса пользователя
 
-  // TODO: Initialize chatService and userService
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lab 02 Chat',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
       home: DefaultTabController(
         length: 2,
         child: Scaffold(
@@ -31,7 +37,8 @@ class MyApp extends StatelessWidget {
           ),
           body: TabBarView(
             children: [
-              // TODO: Implement ChatScreen and UserProfile
+              ChatScreen(chatService: chatService), // Экран чата
+              UserProfile(userService: userService), // Профиль пользователя
             ],
           ),
         ),
