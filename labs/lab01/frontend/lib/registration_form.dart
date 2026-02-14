@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RegistrationForm extends StatefulWidget {
-  const RegistrationForm({Key? key}) : super(key: key);
+  const RegistrationForm({super.key});
 
   @override
   State<RegistrationForm> createState() => _RegistrationFormState();
@@ -13,6 +13,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  String _message = "";
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -21,7 +23,14 @@ class _RegistrationFormState extends State<RegistrationForm> {
     super.dispose();
   }
 
-  void _submitForm() {
+  bool isEmailValid(String email) {
+    if (email.contains(".") && email.contains("@")) {
+      return true;
+    }
+    return false;
+  }
+
+ void _submitForm() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -49,45 +58,56 @@ class _RegistrationFormState extends State<RegistrationForm> {
               children: [
                 TextFormField(
                   key: const Key('name'),
-                  // TODO: use _nameController
+                  controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Name',
                     hintText: 'Enter your name',
                   ),
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
-                    return null;
+                    if (value != null && value.isNotEmpty) {
+                      return null;
+                    }
+                    return "Please enter your name";
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('email'),
-                  // TODO: use _emailController
+                  controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
                   ),
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
-                    return null;
+                    if (value != null && value.isNotEmpty && isEmailValid(value)) {
+                      return null;
+                    }
+                    return "Please enter a valid email";
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   key: const Key('password'),
-                  // TODO: use _passwordController
+                  controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
                   ),
                   obscureText: true,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
-                    return null;
+                    if (value != null && value.isNotEmpty && value.length >= 6) {
+                      return null;
+                    }
+                    return "Password must be at least 6 characters";
                   },
                 ),
                 const SizedBox(height: 32),
-                // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  child: const Text(
+                    "Submit"
+                  )
+                ),
               ],
             ),
           ),
