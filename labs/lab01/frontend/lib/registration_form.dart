@@ -12,6 +12,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -26,11 +27,26 @@ class _RegistrationFormState extends State<RegistrationForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Registration successful!'),
-          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
         ),
       );
-      _formKey.currentState!.reset();
+      // Сброс полей
+      _nameController.clear();
+      _emailController.clear();
+      _passwordController.clear();
+      setState(() {
+        // чтобы обновить UI
+      });
     }
+  }
+
+  InputDecoration _inputDecoration(String label, {Widget? suffix}) {
+    return InputDecoration(
+      labelText: label,
+      border: const UnderlineInputBorder(),
+      suffixIcon: suffix,
+      isDense: true,
+    );
   }
 
   @override
@@ -39,55 +55,82 @@ class _RegistrationFormState extends State<RegistrationForm> {
       appBar: AppBar(
         title: const Text('Registration Form'),
       ),
-      body: SingleChildScrollView(
+      body: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        margin: const EdgeInsets.all(16),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12),
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
                   key: const Key('name'),
-                  // TODO: use _nameController
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    hintText: 'Enter your name',
-                  ),
-                  validator: (value) {
-                    // TODO: validate if value is not null or empty and return 'Please enter your name'
-                    return null;
-                  },
+                  controller: _nameController,
+                  decoration: _inputDecoration('Name'),
+                  validator: (value) =>
+                  (value == null || value.isEmpty) ? 'Please enter your name' : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 TextFormField(
                   key: const Key('email'),
-                  // TODO: use _emailController
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                  ),
+                  controller: _emailController,
+                  decoration: _inputDecoration('Email'),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it match word@word.word, return 'Please enter a valid email'
+                    if (value == null || !RegExp(r'^.+@.+\..+$').hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 TextFormField(
                   key: const Key('password'),
-                  // TODO: use _passwordController
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
+                  controller: _passwordController,
+                  decoration: _inputDecoration(
+                    'Password',
+                    suffix: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   validator: (value) {
-                    // TODO: validate if value is not null or empty and it has at least 6 characters, return 'Password must be at least 6 characters'
+                    if (value == null || value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
                     return null;
                   },
                 ),
-                const SizedBox(height: 32),
-                // TODO: add a ElevatedButton with onPressed: _submitForm and child: Text('Submit')
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    key: const Key('submitButton'),
+                    onPressed: _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                    ),
+                    child: const Text('Submit'),
+                  ),
+                ),
               ],
             ),
           ),

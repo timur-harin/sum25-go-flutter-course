@@ -10,47 +10,104 @@ class CounterApp extends StatefulWidget {
 class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
-  void _incrementCounter() {
-    // TODO: Implement this function
+  void _increment() {
+    setState(() {
+      _counter++;
+    });
   }
 
-  void _decrementCounter() {
-    // TODO: Implement this function
+  void _decrement() {
+    setState(() {
+      _counter--;
+    });
   }
 
-  void _resetCounter() {
-    // TODO: Implement this function
+  void _reset() {
+    setState(() {
+      _counter = 0;
+    });
   }
+
+  final resetButtonKey = Key('reset_button');
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter App'),
-        actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48),
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Counter App'),
+        ),
+        body: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF2196F3), Color(0xFF21CBF3)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey,
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
+                const SizedBox(height: 12),
+                Text(
+                  'Counter',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$_counter',
+                  style: const TextStyle(
+                    fontSize: 40,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FloatingActionButton(
+                      key: const Key('decrement'),
+                      onPressed: _decrement,
+                      mini: true,
+                      heroTag: 'decrement',
+                      child: const Icon(Icons.remove),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton(
+                      key: resetButtonKey,
+                      icon: const Icon(Icons.refresh, color: Colors.black),
+                      onPressed: _reset,
+                      padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 14),
+                    ),
+                    const SizedBox(width: 16),
+                    FloatingActionButton(
+                      key: const Key('increment'),
+                      onPressed: _increment,
+                      mini: true,
+                      heroTag: 'increment',
+                      child: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
