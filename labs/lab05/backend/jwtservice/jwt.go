@@ -1,8 +1,10 @@
 package jwtservice
 
 import (
-	"errors"
-	_ "github.com/golang-jwt/jwt/v4"
+	"fmt"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // JWTService handles JWT token operations
@@ -17,7 +19,13 @@ type JWTService struct {
 func NewJWTService(secretKey string) (*JWTService, error) {
 	// TODO: Implement this function
 	// Validate secretKey and create service instance
-	return nil, errors.New("not implemented")
+	if secretKey == "" {
+		return nil, NewValidationError("secretKey", "must not be empty")
+	}
+	jwtservice_ := &JWTService{
+		secretKey: secretKey,
+	}
+	return jwtservice_, nil
 }
 
 // TODO: Implement GenerateToken method
@@ -31,7 +39,25 @@ func (j *JWTService) GenerateToken(userID int, email string) (string, error) {
 	// TODO: Implement token generation
 	// Create claims with userID, email, and expiration
 	// Sign token with secret key
-	return "", errors.New("not implemented")
+	if userID <= 0 {
+		return "", NewValidationError("userID", "must be positive")
+	}
+	if email == "" {
+		return "", NewValidationError("email", "must not be empty")
+	}
+	claims := &Claims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %w", err)
+	}
+	return tokenString, nil
 }
 
 // TODO: Implement ValidateToken method
@@ -44,5 +70,29 @@ func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 	// TODO: Implement token validation
 	// Parse token and verify signature
 	// Return claims if valid
-	return nil, errors.New("not implemented")
+	if tokenString == "" {
+		return nil, ErrEmptyToken
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, NewInvalidSigningMethodError(token.Header["alg"])
+		}
+		return []byte(j.secretKey), nil
+	})
+
+	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				return nil, ErrTokenExpired
+			}
+		}
+		return nil, fmt.Errorf("%w: %v", ErrInvalidToken, err)
+	}
+
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, ErrInvalidToken
 }
