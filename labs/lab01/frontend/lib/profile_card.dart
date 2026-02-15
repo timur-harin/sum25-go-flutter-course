@@ -7,33 +7,70 @@ class ProfileCard extends StatelessWidget {
   final String? avatarUrl;
 
   const ProfileCard({
-    super.key,
+    Key? key,
     required this.name,
     required this.email,
     required this.age,
     this.avatarUrl,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(16.0),
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // TODO: add a CircleAvatar with radius 50 and backgroundImage NetworkImage(avatarUrl!) if url is not null and text name[0].toUpperCase() if url is null
-            
+            CircleAvatar(
+              radius: 40,
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              backgroundColor: Colors.grey.shade200,
+              child: avatarUrl == null
+                  ? Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: const TextStyle(fontSize: 24, color: Colors.grey),
+                    )
+                  : null,
+            ),
             const SizedBox(height: 16),
-            // TODO: add a Text with name and style fontSize: 24, fontWeight: FontWeight.bold
-           
+            Text(
+              name,
+              style: const TextStyle(
+                fontSize: 24, 
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
             const SizedBox(height: 8),
-            // TODO: add a Text with Age: $age and style fontSize: 16
-           
+            Text(
+              email,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey, 
+              ),
+            ),
             const SizedBox(height: 8),
-            // TODO: add a Text with email and style fontSize: 16, color: Colors.grey
-            
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Age: $age',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.blue[800],
+                ),
+              ),
+            ),
           ],
         ),
       ),
