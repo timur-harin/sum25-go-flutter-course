@@ -1,7 +1,11 @@
 package main
 
 import (
+	"lab03-backend/api"
+	"lab03-backend/storage"
 	"log"
+	"net/http"
+	"time"
 )
 
 func main() {
@@ -16,6 +20,17 @@ func main() {
 	//   - IdleTimeout: 60 seconds
 	// TODO: Add logging to show server is starting
 	// TODO: Start the server and handle any errors
-
-	log.Println("TODO: Implement main function")
+	memoryStorage := storage.NewMemoryStorage()
+	apiHandler := api.NewHandler(memoryStorage)
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      apiHandler.SetupRoutes(),
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+	log.Println("starting server on 8080")
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Server failed: %v\n", err)
+	}
 }
