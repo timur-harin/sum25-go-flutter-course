@@ -1,8 +1,9 @@
 name: Deploy Flutter Web to GitHub Pages
 
 on:
-  # TODO: Add condition
-    
+  push:
+    branches:
+      - lab07-aminov-amir
   workflow_dispatch:
 
 jobs:
@@ -22,7 +23,9 @@ jobs:
         working-directory: labs/lab07/frontend
 
       - name: Build web
-        run: flutter build web
+        run: |
+          flutter create . --platforms web
+          flutter build web --release --base-href /sum25-go-flutter-course/
         working-directory: labs/lab07/frontend
 
       - name: Deploy to GitHub Pages
