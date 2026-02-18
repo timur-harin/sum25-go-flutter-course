@@ -1,5 +1,18 @@
-# Build stage
-# TODO: Add build stage
+FROM golang:1.21-alpine AS builder
 
-# Final image
-# TODO: Add final image instructions
+WORKDIR /app
+
+COPY go.mod ./
+RUN go mod tidy
+RUN go mod download
+
+COPY . .
+RUN go build -o hello-app main.go
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/hello-app .
+
+CMD ["./hello-app"]
