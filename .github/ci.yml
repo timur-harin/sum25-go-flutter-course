@@ -6,13 +6,13 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
-      - '.github/workflows/ci.yml'
+      - 'ci.yml'
   workflow_dispatch:
   pull_request:
     paths:
       - 'backend/**'
       - 'frontend/**'
-      - '.github/workflows/ci.yml'
+      - 'ci.yml'
 
 env:
   GO_VERSION: '1.24'
