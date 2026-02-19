@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+	"time"
 
 	"lab04-backend/models"
 )
@@ -18,65 +20,145 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-// TODO: Implement Create method
+// Create inserts a new user into the database and returns it with ID/timestamps populated.
 func (r *UserRepository) Create(req *models.CreateUserRequest) (*models.User, error) {
-	// TODO: Create a new user in the database
-	// - Validate the request
-	// - Insert into users table
-	// - Return the created user with ID and timestamps
-	// Use RETURNING clause to get the generated ID and timestamps
-	return nil, fmt.Errorf("TODO: implement Create method")
+	// validate input
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	// build User
+	u := req.ToUser()
+
+	// insert and RETURNING generated fields
+	row := r.db.QueryRow(
+		`INSERT INTO users (name, email, created_at, updated_at)
+		 VALUES (?, ?, ?, ?)
+		 RETURNING id, name, email, created_at, updated_at`,
+		u.Name, u.Email, u.CreatedAt, u.UpdatedAt,
+	)
+
+	// scan into u
+	if err := u.ScanRow(row); err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
-// TODO: Implement GetByID method
+// GetByID retrieves a single user by its ID (only non-deleted).
 func (r *UserRepository) GetByID(id int) (*models.User, error) {
-	// TODO: Get user by ID from database
-	// - Query users table by ID
-	// - Return user or sql.ErrNoRows if not found
-	// - Handle scanning properly
-	return nil, fmt.Errorf("TODO: implement GetByID method")
+	u := &models.User{}
+	row := r.db.QueryRow(
+		`SELECT id, name, email, created_at, updated_at
+		   FROM users
+		  WHERE id = ? AND deleted_at IS NULL`,
+		id,
+	)
+	if err := u.ScanRow(row); err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
-// TODO: Implement GetByEmail method
+// GetByEmail retrieves a single user by email (only non-deleted).
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
-	// TODO: Get user by email from database
-	// - Query users table by email
-	// - Return user or sql.ErrNoRows if not found
-	// - Handle scanning properly
-	return nil, fmt.Errorf("TODO: implement GetByEmail method")
+	u := &models.User{}
+	row := r.db.QueryRow(
+		`SELECT id, name, email, created_at, updated_at
+		   FROM users
+		  WHERE email = ? AND deleted_at IS NULL`,
+		email,
+	)
+	if err := u.ScanRow(row); err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
-// TODO: Implement GetAll method
+// GetAll returns all non-deleted users ordered by creation time.
 func (r *UserRepository) GetAll() ([]models.User, error) {
-	// TODO: Get all users from database
-	// - Query all users ordered by created_at
-	// - Return slice of users
-	// - Handle empty result properly
-	return nil, fmt.Errorf("TODO: implement GetAll method")
+	rows, err := r.db.Query(
+		`SELECT id, name, email, created_at, updated_at
+		   FROM users
+		  WHERE deleted_at IS NULL
+	   ORDER BY created_at`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return models.ScanUsers(rows)
 }
 
-// TODO: Implement Update method
+// Update modifies the fields of an existing user and returns the updated record.
 func (r *UserRepository) Update(id int, req *models.UpdateUserRequest) (*models.User, error) {
-	// TODO: Update user in database
-	// - Build dynamic UPDATE query based on non-nil fields in req
-	// - Update updated_at timestamp
-	// - Return updated user
-	// - Handle case where user doesn't exist
-	return nil, fmt.Errorf("TODO: implement Update method")
+	// build dynamic SET clauses
+	sets := []string{}
+	args := []interface{}{}
+	if req.Name != nil {
+		sets = append(sets, "name = ?")
+		args = append(args, *req.Name)
+	}
+	if req.Email != nil {
+		sets = append(sets, "email = ?")
+		args = append(args, *req.Email)
+	}
+	// nothing to update?
+	if len(sets) == 0 {
+		return r.GetByID(id)
+	}
+
+	// always update the updated_at timestamp
+	now := time.Now()
+	sets = append(sets, "updated_at = ?")
+	args = append(args, now)
+
+	// build and execute query
+	query := fmt.Sprintf(
+		`UPDATE users
+		    SET %s
+		  WHERE id = ? AND deleted_at IS NULL
+		RETURNING id, name, email, created_at, updated_at`,
+		strings.Join(sets, ", "),
+	)
+	args = append(args, id)
+
+	u := &models.User{}
+	row := r.db.QueryRow(query, args...)
+	if err := u.ScanRow(row); err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
-// TODO: Implement Delete method
+// Delete performs a soft-delete by setting deleted_at; returns sql.ErrNoRows if none affected.
 func (r *UserRepository) Delete(id int) error {
-	// TODO: Delete user from database
-	// - Delete from users table by ID
-	// - Return error if user doesn't exist
-	// - Consider cascading deletes for posts
-	return fmt.Errorf("TODO: implement Delete method")
+	res, err := r.db.Exec(
+		`UPDATE users
+		    SET deleted_at = ?
+		  WHERE id = ? AND deleted_at IS NULL`,
+		time.Now(), id,
+	)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
-// TODO: Implement Count method
+// Count returns the total number of non-deleted users.
 func (r *UserRepository) Count() (int, error) {
-	// TODO: Count total number of users
-	// - Return count of users in database
-	return 0, fmt.Errorf("TODO: implement Count method")
+	var cnt int
+	row := r.db.QueryRow(
+		`SELECT COUNT(*) FROM users WHERE deleted_at IS NULL`,
+	)
+	if err := row.Scan(&cnt); err != nil {
+		return 0, err
+	}
+	return cnt, nil
 }
