@@ -1,53 +1,110 @@
 // Simple form validation with basic security checks
 
 class FormValidator {
-  // TODO: Implement validateEmail method
   // validateEmail checks if an email is valid
-  // Requirements:
-  // - return null for valid emails
-  // - return error message for invalid emails
-  // - check basic email format (contains @ and .)
-  // - check reasonable length (max 100 characters)
   static String? validateEmail(String? email) {
-    // TODO: Implement email validation
-    // Check for null/empty, basic format, and length
-    throw UnimplementedError('FormValidator validateEmail not implemented');
+    // Check for email being null
+    if (email == null || email.length == 0) {
+      return "required";
+    }
+
+    // Check the email length
+    int maxEmailLength = 100;
+    if (email.length > maxEmailLength) {
+      return "too long email";
+    }
+
+    // Check the format
+    if (!email.contains("@", 0) || !email.contains('.')) {
+      return "invalid email format";
+    }
+
+    // OK, valid email
+    return null;
   }
 
-  // TODO: Implement validatePassword method
   // validatePassword checks if a password meets basic requirements
-  // Requirements:
-  // - return null for valid passwords
-  // - return error message for invalid passwords
-  // - minimum 6 characters
-  // - contains at least one letter and one number
   static String? validatePassword(String? password) {
-    // TODO: Implement password validation
-    // Check length and basic complexity
-    throw UnimplementedError('FormValidator validatePassword not implemented');
+    // Check the password for being null
+    if (password == null || password.length == 0) {
+      return "required";
+    }
+
+    // Check the length of the password
+    int minPasswordLength = 6;
+    if (password.length < minPasswordLength) {
+      return "password should be at least 6 characters in length";
+    }
+
+    // Check for the needed symbols in the password
+    String digits = "1234567890";
+    String letters = "qwertyuiopasdfghjklzxcvbnmQWRTYUIOPASDFGHJKLXCVBNM";
+
+    bool containsDigit = false;
+    bool containsLetter = false;
+    for (int i = 0; i < password.length; ++i) {
+      // Check the password for containing a letter
+      for (int let = 0; let < letters.length; ++let) {
+        containsLetter |= (password[i] == letters[let]);
+      }
+
+      // Check the password for containing a digit
+      for (int dig = 0; dig < digits.length; ++dig) {
+        containsDigit |= (password[i] == digits[dig]);
+      }
+    }
+
+    // Final check
+    if (!containsLetter || !containsDigit) {
+      return "password should contain a letter and number";
+    }
+
+    // OK, password is valid
+    return null;
   }
 
-  // TODO: Implement sanitizeText method
   // sanitizeText removes basic dangerous characters
-  // Requirements:
-  // - remove < and > characters
-  // - trim whitespace
-  // - return cleaned text
   static String sanitizeText(String? text) {
-    // TODO: Implement text sanitization
-    // Clean basic dangerous characters
-    throw UnimplementedError('FormValidator sanitizeText not implemented');
+    if (text == null) {
+      // Nothing to do -> return empty text
+      return "";
+    }
+
+    // Remove dangerous symbols
+    // Author: Magomedgadzhi Ibragimov
+    text = text.trim();
+    String sanitizedText = "";
+    bool foundBadCharacter = false;
+    for (int i = 0; i < text.length; i++) {
+      String symbol = text[i];
+      if (symbol == "<") {
+        foundBadCharacter = true;
+      } else if (symbol == ">") {
+        foundBadCharacter = false;
+      } else {
+        if (!foundBadCharacter) {
+          sanitizedText += symbol;
+        }
+      }
+    }
+
+    return sanitizedText;
   }
 
-  // TODO: Implement isValidLength method
   // isValidLength checks if text is within length limits
-  // Requirements:
-  // - return true if text length is between min and max
-  // - handle null text gracefully
   static bool isValidLength(String? text,
       {int minLength = 1, int maxLength = 100}) {
-    // TODO: Implement length validation
-    // Check text length bounds
-    throw UnimplementedError('FormValidator isValidLength not implemented');
+    // Check for the text being null
+    if (text == null) {
+      return false;
+    }
+
+    // Check for the text length being valid
+    if (text.length < minLength || text.length > maxLength) {
+      return false;
+    }
+
+    // OK, valid text
+    return true;
   }
 }
