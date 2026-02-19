@@ -1,6 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
+/// Service for managing encrypted secure storage
+/// Perfect for storing sensitive data like tokens, passwords, and personal information
+/// Uses platform-specific secure storage (Keychain on iOS, Keystore on Android)
 class SecureStorageService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
@@ -11,120 +14,124 @@ class SecureStorageService {
     ),
   );
 
-  // TODO: Implement saveAuthToken method
+  /// Saves authentication token securely
+  /// Use this for storing JWT tokens or API keys
   static Future<void> saveAuthToken(String token) async {
-    // TODO: Save authentication token securely
-    // Use key 'auth_token'
-    throw UnimplementedError('TODO: implement saveAuthToken method');
+    await _storage.write(key: 'auth_token', value: token);
   }
 
-  // TODO: Implement getAuthToken method
+  /// Retrieves the stored authentication token
+  /// Returns null if no token is stored
   static Future<String?> getAuthToken() async {
-    // TODO: Get authentication token from secure storage
-    // Return null if not found
-    throw UnimplementedError('TODO: implement getAuthToken method');
+    return await _storage.read(key: 'auth_token');
   }
 
-  // TODO: Implement deleteAuthToken method
+  /// Removes the authentication token from secure storage
+  /// Call this when user logs out
   static Future<void> deleteAuthToken() async {
-    // TODO: Delete authentication token from secure storage
-    throw UnimplementedError('TODO: implement deleteAuthToken method');
+    await _storage.delete(key: 'auth_token');
   }
 
-  // TODO: Implement saveUserCredentials method
+  /// Saves user login credentials securely
+  /// Stores username and password separately for better security
   static Future<void> saveUserCredentials(
       String username, String password) async {
-    // TODO: Save user credentials securely
-    // Save username with key 'username' and password with key 'password'
-    throw UnimplementedError('TODO: implement saveUserCredentials method');
+    await _storage.write(key: 'username', value: username);
+    await _storage.write(key: 'password', value: password);
   }
 
-  // TODO: Implement getUserCredentials method
+  /// Retrieves stored user credentials
+  /// Returns a map with username and password keys (values may be null)
   static Future<Map<String, String?>> getUserCredentials() async {
-    // TODO: Get user credentials from secure storage
-    // Return map with 'username' and 'password' keys
-    throw UnimplementedError('TODO: implement getUserCredentials method');
+    final username = await _storage.read(key: 'username');
+    final password = await _storage.read(key: 'password');
+    return {
+      'username': username,
+      'password': password,
+    };
   }
 
-  // TODO: Implement deleteUserCredentials method
+  /// Removes stored user credentials
+  /// Deletes both username and password
   static Future<void> deleteUserCredentials() async {
-    // TODO: Delete user credentials from secure storage
-    // Delete both username and password
-    throw UnimplementedError('TODO: implement deleteUserCredentials method');
+    await _storage.delete(key: 'username');
+    await _storage.delete(key: 'password');
   }
 
-  // TODO: Implement saveBiometricEnabled method
+  /// Saves biometric authentication preference
+  /// Stores whether user has enabled biometric login
   static Future<void> saveBiometricEnabled(bool enabled) async {
-    // TODO: Save biometric setting securely
-    // Convert bool to string for storage
-    throw UnimplementedError('TODO: implement saveBiometricEnabled method');
+    await _storage.write(key: 'biometric_enabled', value: enabled.toString());
   }
 
-  // TODO: Implement isBiometricEnabled method
+  /// Checks if biometric authentication is enabled
+  /// Returns false by default if no setting is stored
   static Future<bool> isBiometricEnabled() async {
-    // TODO: Get biometric setting from secure storage
-    // Return false as default if not found
-    throw UnimplementedError('TODO: implement isBiometricEnabled method');
+    final value = await _storage.read(key: 'biometric_enabled');
+    return value == 'true';
   }
 
-  // TODO: Implement saveSecureData method
+  /// Saves any secure data with a custom key
+  /// Generic method for storing sensitive string data
   static Future<void> saveSecureData(String key, String value) async {
-    // TODO: Save any secure data with custom key
-    throw UnimplementedError('TODO: implement saveSecureData method');
+    await _storage.write(key: key, value: value);
   }
 
-  // TODO: Implement getSecureData method
+  /// Retrieves secure data by key
+  /// Returns null if key doesn't exist
   static Future<String?> getSecureData(String key) async {
-    // TODO: Get secure data by key
-    throw UnimplementedError('TODO: implement getSecureData method');
+    return await _storage.read(key: key);
   }
 
-  // TODO: Implement deleteSecureData method
+  /// Removes secure data by key
+  /// Permanently deletes the specified key-value pair
   static Future<void> deleteSecureData(String key) async {
-    // TODO: Delete secure data by key
-    throw UnimplementedError('TODO: implement deleteSecureData method');
+    await _storage.delete(key: key);
   }
 
-  // TODO: Implement saveObject method
+  /// Saves a complex object as encrypted JSON
+  /// The object must be serializable to JSON
   static Future<void> saveObject(
       String key, Map<String, dynamic> object) async {
-    // TODO: Save object as JSON string in secure storage
-    // Convert object to JSON string first
-    throw UnimplementedError('TODO: implement saveObject method');
+    final jsonString = jsonEncode(object);
+    await _storage.write(key: key, value: jsonString);
   }
 
-  // TODO: Implement getObject method
+  /// Retrieves a complex object from encrypted JSON
+  /// Returns null if key doesn't exist or JSON parsing fails
   static Future<Map<String, dynamic>?> getObject(String key) async {
-    // TODO: Get object from secure storage
-    // Parse JSON string back to Map
-    throw UnimplementedError('TODO: implement getObject method');
+    final jsonString = await _storage.read(key: key);
+    if (jsonString == null) return null;
+    try {
+      return jsonDecode(jsonString) as Map<String, dynamic>;
+    } catch (e) {
+      return null;
+    }
   }
 
-  // TODO: Implement containsKey method
+  /// Checks if a key exists in secure storage
+  /// Returns true if the key exists, false otherwise
   static Future<bool> containsKey(String key) async {
-    // TODO: Check if key exists in secure storage
-    throw UnimplementedError('TODO: implement containsKey method');
+    return await _storage.containsKey(key: key);
   }
 
-  // TODO: Implement getAllKeys method
+  /// Returns all keys currently stored in secure storage
+  /// Useful for debugging and data management
   static Future<List<String>> getAllKeys() async {
-    // TODO: Get all keys from secure storage
-    // Return list of all stored keys
-    throw UnimplementedError('TODO: implement getAllKeys method');
+    final allData = await _storage.readAll();
+    return allData.keys.toList();
   }
 
-  // TODO: Implement clearAll method
+  /// Removes all data from secure storage
+  /// Use with extreme caution - this will delete all stored data
   static Future<void> clearAll() async {
-    // TODO: Clear all data from secure storage
-    // Use deleteAll method from FlutterSecureStorage
-    throw UnimplementedError('TODO: implement clearAll method');
+    await _storage.deleteAll();
   }
 
-  // TODO: Implement exportData method
+  /// Exports all data for backup purposes
+  /// WARNING: This defeats the purpose of secure storage
+  /// Only use for debugging or authorized data export
   static Future<Map<String, String>> exportData() async {
-    // TODO: Export all data (for backup purposes)
-    // Return all key-value pairs
-    // NOTE: This defeats the purpose of secure storage, use carefully
-    throw UnimplementedError('TODO: implement exportData method');
+    return await _storage.readAll();
   }
 }
