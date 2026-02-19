@@ -1,6 +1,11 @@
 package models
 
 import (
+	"fmt"
+	"log"
+	"regexp"
+	"strings"
+
 	"time"
 
 	"gorm.io/gorm"
@@ -37,91 +42,122 @@ type UpdateCategoryRequest struct {
 	Active      *bool   `json:"active,omitempty"`
 }
 
-// TODO: Implement GORM model methods and hooks
-
 // TableName specifies the table name for GORM (optional - GORM auto-infers)
 func (Category) TableName() string {
 	return "categories"
 }
 
-// TODO: Implement BeforeCreate hook
+// BeforeCreate hook - GORM BeforeCreate hook
 func (c *Category) BeforeCreate(tx *gorm.DB) error {
-	// TODO: GORM BeforeCreate hook
-	// - Validate data before creation
-	// - Set default values
-	// - Perform any pre-creation logic
-	// Example: if c.Color == "" { c.Color = "#007bff" }
+	// Validate data before creation
+	if strings.TrimSpace(c.Name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if len(strings.TrimSpace(c.Name)) < 2 {
+		return fmt.Errorf("name must be at least 2 characters long")
+	}
+	if len(strings.TrimSpace(c.Name)) > 100 {
+		return fmt.Errorf("name cannot exceed 100 characters")
+	}
+	if len(strings.TrimSpace(c.Description)) > 500 {
+		return fmt.Errorf("description cannot exceed 500 characters")
+	}
+	// Set default color if not provided
+	if c.Color == "" {
+		c.Color = "#007bff"
+	}
+	// Validate hex color format
+	if c.Color != "" {
+		hexRegex := regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+		if !hexRegex.MatchString(c.Color) {
+			return fmt.Errorf("invalid hex color format")
+		}
+	}
 	return nil
 }
 
-// TODO: Implement AfterCreate hook
+// AfterCreate hook - GORM AfterCreate hook
 func (c *Category) AfterCreate(tx *gorm.DB) error {
-	// TODO: GORM AfterCreate hook
-	// - Log creation
-	// - Send notifications
-	// - Update cache
-	// Example: log.Printf("Category created: %s", c.Name)
+	// Log creation
+	log.Printf("Category created: %s (ID: %d)", c.Name, c.ID)
 	return nil
 }
 
-// TODO: Implement BeforeUpdate hook
+// BeforeUpdate hook - GORM BeforeUpdate hook
 func (c *Category) BeforeUpdate(tx *gorm.DB) error {
-	// TODO: GORM BeforeUpdate hook
-	// - Validate changes
-	// - Prevent certain updates
-	// - Clean up related data
+	// Validate changes
+	if strings.TrimSpace(c.Name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if len(strings.TrimSpace(c.Name)) < 2 {
+		return fmt.Errorf("name must be at least 2 characters long")
+	}
+	if len(strings.TrimSpace(c.Name)) > 100 {
+		return fmt.Errorf("name cannot exceed 100 characters")
+	}
+	if len(strings.TrimSpace(c.Description)) > 500 {
+		return fmt.Errorf("description cannot exceed 500 characters")
+	}
+	// Validate hex color format
+	if c.Color != "" {
+		hexRegex := regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+		if !hexRegex.MatchString(c.Color) {
+			return fmt.Errorf("invalid hex color format")
+		}
+	}
 	return nil
 }
 
-// TODO: Implement Validate method for CreateCategoryRequest
+// Validate validates CreateCategoryRequest fields
 func (req *CreateCategoryRequest) Validate() error {
-	// TODO: Add validation logic for GORM model
-	// - Name should be unique (checked at database level via GORM)
-	// - Color should be valid hex color
-	// - Description should not exceed limits
-	// Example using validator package:
-	// return validator.New().Struct(req)
+	if strings.TrimSpace(req.Name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if len(strings.TrimSpace(req.Name)) < 2 {
+		return fmt.Errorf("name must be at least 2 characters long")
+	}
+	if len(strings.TrimSpace(req.Name)) > 100 {
+		return fmt.Errorf("name cannot exceed 100 characters")
+	}
+	if len(strings.TrimSpace(req.Description)) > 500 {
+		return fmt.Errorf("description cannot exceed 500 characters")
+	}
+	if req.Color != "" {
+		hexRegex := regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+		if !hexRegex.MatchString(req.Color) {
+			return fmt.Errorf("invalid hex color format")
+		}
+	}
 	return nil
 }
 
-// TODO: Implement ToCategory method
+// ToCategory converts request to GORM model
 func (req *CreateCategoryRequest) ToCategory() *Category {
-	// TODO: Convert request to GORM model
-	// - Map fields from request to model
-	// - Set default values
-	// Example:
-	// return &Category{
-	//     Name:        req.Name,
-	//     Description: req.Description,
-	//     Color:       req.Color,
-	//     Active:      true,
-	// }
-	return nil
+	return &Category{
+		Name:        req.Name,
+		Description: req.Description,
+		Color:       req.Color,
+		Active:      true,
+	}
 }
 
-// TODO: Implement GORM scopes (reusable query logic)
+// ActiveCategories - GORM scope for active categories
 func ActiveCategories(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for active categories
-	// return db.Where("active = ?", true)
-	return db
+	return db.Where("active = ?", true)
 }
 
+// CategoriesWithPosts - GORM scope for categories with posts
 func CategoriesWithPosts(db *gorm.DB) *gorm.DB {
-	// TODO: GORM scope for categories with posts
-	// return db.Joins("Posts").Where("posts.id IS NOT NULL")
-	return db
+	return db.Preload("Posts")
 }
 
-// TODO: Implement model validation methods
+// IsActive checks if category is active
 func (c *Category) IsActive() bool {
-	// TODO: Check if category is active
 	return c.Active
 }
 
+// PostCount gets post count for this category using GORM association
 func (c *Category) PostCount(db *gorm.DB) (int64, error) {
-	// TODO: Get post count for this category using GORM association
-	// var count int64
-	// err := db.Model(c).Association("Posts").Count(&count)
-	// return count, err
-	return 0, nil
+	count := db.Model(c).Association("Posts").Count()
+	return int64(count), nil
 }
