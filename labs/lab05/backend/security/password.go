@@ -2,54 +2,63 @@ package security
 
 import (
 	"errors"
-	_ "regexp"
+	"regexp"
 
-	_ "golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // PasswordService handles password operations
 type PasswordService struct{}
 
-// TODO: Implement NewPasswordService function
-// NewPasswordService creates a new password service
+// NewPasswordService создает новый экземпляр PasswordService
 func NewPasswordService() *PasswordService {
-	// TODO: Implement this function
-	// Return a new PasswordService instance
-	return nil
+	return &PasswordService{}
 }
 
-// TODO: Implement HashPassword method
-// HashPassword hashes a password using bcrypt
-// Requirements:
-// - password must not be empty
-// - use bcrypt with cost 10
-// - return the hashed password as string
+// HashPassword хеширует пароль с помощью bcrypt
+// Требования:
+// - пароль не должен быть пустым
+// - использовать bcrypt с cost 10
+// - возвращать хешированный пароль как строку
 func (p *PasswordService) HashPassword(password string) (string, error) {
-	// TODO: Implement password hashing
-	// Use golang.org/x/crypto/bcrypt.GenerateFromPassword
-	return "", errors.New("not implemented")
+	if password == "" {
+		return "", errors.New("пароль не должен быть пустым")
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }
 
-// TODO: Implement VerifyPassword method
-// VerifyPassword checks if password matches hash
-// Requirements:
-// - password and hash must not be empty
-// - return true if password matches hash
-// - return false if password doesn't match
+// VerifyPassword проверяет, совпадает ли пароль с хешем
+// Требования:
+// - пароль и хеш не должны быть пустыми
+// - возвращает true, если пароль совпадает с хешем
+// - возвращает false, если пароль не совпадает
 func (p *PasswordService) VerifyPassword(password, hash string) bool {
-	// TODO: Implement password verification
-	// Use bcrypt.CompareHashAndPassword
-	// Return true only if passwords match exactly
-	return false
+	if password == "" || hash == "" {
+		return false
+	}
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
-// TODO: Implement ValidatePassword function
-// ValidatePassword checks if password meets basic requirements
-// Requirements:
-// - At least 6 characters
-// - Contains at least one letter and one number
+// ValidatePassword проверяет, соответствует ли пароль базовым требованиям
+// Требования:
+// - не менее 6 символов
+// - содержит хотя бы одну букву и одну цифру
 func ValidatePassword(password string) error {
-	// TODO: Implement password validation
-	// Check length and basic complexity requirements
-	return errors.New("not implemented")
+	if len(password) < 6 {
+		return errors.New("пароль должен содержать не менее 6 символов")
+	}
+	letterRegexp := regexp.MustCompile(`[A-Za-z]`)
+	numberRegexp := regexp.MustCompile(`[0-9]`)
+	if !letterRegexp.MatchString(password) {
+		return errors.New("пароль должен содержать хотя бы одну букву")
+	}
+	if !numberRegexp.MatchString(password) {
+		return errors.New("пароль должен содержать хотя бы одну цифру")
+	}
+	return nil
 }

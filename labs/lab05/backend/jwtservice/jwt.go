@@ -2,47 +2,92 @@ package jwtservice
 
 import (
 	"errors"
-	_ "github.com/golang-jwt/jwt/v4"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
-// JWTService handles JWT token operations
+// CustomClaims определяет пользовательские данные для токена
+type CustomClaims struct {
+	UserID int    `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
+}
+
+// JWTService обрабатывает операции с JWT токенами
 type JWTService struct {
 	secretKey string
 }
 
-// TODO: Implement NewJWTService function
-// NewJWTService creates a new JWT service
-// Requirements:
-// - secretKey must not be empty
+// NewJWTService создает новый сервис JWT
+// Требования:
+// - secretKey не должен быть пустым
 func NewJWTService(secretKey string) (*JWTService, error) {
-	// TODO: Implement this function
-	// Validate secretKey and create service instance
-	return nil, errors.New("not implemented")
+	if secretKey == "" {
+		return nil, errors.New("secretKey не должен быть пустым")
+	}
+	return &JWTService{secretKey: secretKey}, nil
 }
 
-// TODO: Implement GenerateToken method
-// GenerateToken creates a new JWT token with user claims
-// Requirements:
-// - userID must be positive
-// - email must not be empty
-// - Token expires in 24 hours
-// - Use HS256 signing method
+// GenerateToken создает новый JWT токен с пользовательскими claims
+// Требования:
+// - userID должен быть положительным
+// - email не должен быть пустым
+// - Токен истекает через 24 часа
+// - Использовать метод подписи HS256
 func (j *JWTService) GenerateToken(userID int, email string) (string, error) {
-	// TODO: Implement token generation
-	// Create claims with userID, email, and expiration
-	// Sign token with secret key
-	return "", errors.New("not implemented")
+	if userID <= 0 {
+		return "", errors.New("userID должен быть положительным")
+	}
+	if email == "" {
+		return "", errors.New("email не должен быть пустым")
+	}
+
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &CustomClaims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
 
-// TODO: Implement ValidateToken method
-// ValidateToken parses and validates a JWT token
-// Requirements:
-// - Check token signature with secret key
-// - Verify token is not expired
-// - Return parsed claims on success
-func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
-	// TODO: Implement token validation
-	// Parse token and verify signature
-	// Return claims if valid
-	return nil, errors.New("not implemented")
+// ValidateToken парсит и валидирует JWT токен
+// Требования:
+// - Проверить подпись токена с помощью secret key
+// - Проверить, что токен не истек
+// - Вернуть claims при успехе
+func (j *JWTService) ValidateToken(tokenString string) (*CustomClaims, error) {
+	claims := &CustomClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// Проверяем, что используется метод подписи HS256
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("неверный метод подписи")
+		}
+		return []byte(j.secretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("недействительный токен")
+	}
+
+	// Проверяем, что токен не истек
+	if claims.ExpiresAt == nil || claims.ExpiresAt.Time.Before(time.Now()) {
+		return nil, errors.New("токен истек")
+	}
+
+	return claims, nil
 }
