@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'services/preferences_service.dart';
+import 'services/database_service.dart';
+import 'services/secure_storage_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Initialize services
+  // Инициализировать все необходимые сервисы
   try {
-    // TODO: Initialize PreferencesService
+    // Инициализировать PreferencesService
     await PreferencesService.init();
 
-    // TODO: Add any other service initialization here
-    // For example: await DatabaseService.database;
+    // Инициализировать DatabaseService (создаст базу данных, если нужно)
+    await DatabaseService.database;
+
+    // Инициализировать SecureStorageService (не требует явной инициализации, но можно проверить доступность)
+    // await SecureStorageService.saveSecureData('init_check', 'ok');
   } catch (e) {
-    print('Error initializing services: $e');
+    print('Ошибка инициализации сервисов: $e');
   }
 
   runApp(const MyApp());

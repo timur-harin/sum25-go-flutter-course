@@ -4,98 +4,127 @@ import 'dart:convert';
 class PreferencesService {
   static SharedPreferences? _prefs;
 
-  // TODO: Implement init method
+  // Инициализация SharedPreferences
   static Future<void> init() async {
-    // TODO: Initialize SharedPreferences
-    // Store the instance in _prefs variable
-    throw UnimplementedError('TODO: implement init method');
+    _prefs = await SharedPreferences.getInstance();
   }
 
-  // TODO: Implement setString method
+  // Сохранить строку
   static Future<void> setString(String key, String value) async {
-    // TODO: Set string value in SharedPreferences
-    // Make sure _prefs is not null
-    throw UnimplementedError('TODO: implement setString method');
+    if (_prefs == null) {
+      await init();
+    }
+    await _prefs!.setString(key, value);
   }
 
-  // TODO: Implement getString method
+  // Получить строку
   static String? getString(String key) {
-    // TODO: Get string value from SharedPreferences
-    // Return null if key doesn't exist
-    throw UnimplementedError('TODO: implement getString method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    return _prefs!.getString(key);
   }
 
-  // TODO: Implement setInt method
+  // Сохранить int
   static Future<void> setInt(String key, int value) async {
-    // TODO: Set int value in SharedPreferences
-    throw UnimplementedError('TODO: implement setInt method');
+    if (_prefs == null) {
+      await init();
+    }
+    await _prefs!.setInt(key, value);
   }
 
-  // TODO: Implement getInt method
+  // Получить int
   static int? getInt(String key) {
-    // TODO: Get int value from SharedPreferences
-    throw UnimplementedError('TODO: implement getInt method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    return _prefs!.getInt(key);
   }
 
-  // TODO: Implement setBool method
+  // Сохранить bool
   static Future<void> setBool(String key, bool value) async {
-    // TODO: Set bool value in SharedPreferences
-    throw UnimplementedError('TODO: implement setBool method');
+    if (_prefs == null) {
+      await init();
+    }
+    await _prefs!.setBool(key, value);
   }
 
-  // TODO: Implement getBool method
+  // Получить bool
   static bool? getBool(String key) {
-    // TODO: Get bool value from SharedPreferences
-    throw UnimplementedError('TODO: implement getBool method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    return _prefs!.getBool(key);
   }
 
-  // TODO: Implement setStringList method
+  // Сохранить список строк
   static Future<void> setStringList(String key, List<String> value) async {
-    // TODO: Set string list in SharedPreferences
-    throw UnimplementedError('TODO: implement setStringList method');
+    if (_prefs == null) {
+      await init();
+    }
+    await _prefs!.setStringList(key, value);
   }
 
-  // TODO: Implement getStringList method
+  // Получить список строк
   static List<String>? getStringList(String key) {
-    // TODO: Get string list from SharedPreferences
-    throw UnimplementedError('TODO: implement getStringList method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    return _prefs!.getStringList(key);
   }
 
-  // TODO: Implement setObject method
+  // Сохранить объект (как JSON строку)
   static Future<void> setObject(String key, Map<String, dynamic> value) async {
-    // TODO: Set object (as JSON string) in SharedPreferences
-    // Convert object to JSON string first
-    throw UnimplementedError('TODO: implement setObject method');
+    if (_prefs == null) {
+      await init();
+    }
+    String jsonString = jsonEncode(value);
+    await _prefs!.setString(key, jsonString);
   }
 
-  // TODO: Implement getObject method
+  // Получить объект (Map) из JSON строки
   static Map<String, dynamic>? getObject(String key) {
-    // TODO: Get object from SharedPreferences
-    // Parse JSON string back to Map
-    throw UnimplementedError('TODO: implement getObject method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    String? jsonString = _prefs!.getString(key);
+    if (jsonString == null) return null;
+    try {
+      return jsonDecode(jsonString) as Map<String, dynamic>;
+    } catch (e) {
+      return null;
+    }
   }
 
-  // TODO: Implement remove method
+  // Удалить ключ
   static Future<void> remove(String key) async {
-    // TODO: Remove key from SharedPreferences
-    throw UnimplementedError('TODO: implement remove method');
+    if (_prefs == null) {
+      await init();
+    }
+    await _prefs!.remove(key);
   }
 
-  // TODO: Implement clear method
+  // Очистить все данные
   static Future<void> clear() async {
-    // TODO: Clear all data from SharedPreferences
-    throw UnimplementedError('TODO: implement clear method');
+    if (_prefs == null) {
+      await init();
+    }
+    await _prefs!.clear();
   }
 
-  // TODO: Implement containsKey method
+  // Проверить наличие ключа
   static bool containsKey(String key) {
-    // TODO: Check if key exists in SharedPreferences
-    throw UnimplementedError('TODO: implement containsKey method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    return _prefs!.containsKey(key);
   }
 
-  // TODO: Implement getAllKeys method
+  // Получить все ключи
   static Set<String> getAllKeys() {
-    // TODO: Get all keys from SharedPreferences
-    throw UnimplementedError('TODO: implement getAllKeys method');
+    if (_prefs == null) {
+      throw Exception('SharedPreferences не инициализирован');
+    }
+    return _prefs!.getKeys();
   }
 }

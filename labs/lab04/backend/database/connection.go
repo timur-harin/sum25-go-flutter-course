@@ -28,31 +28,41 @@ func DefaultConfig() *Config {
 	}
 }
 
-// TODO: Implement InitDB function
+// InitDB инициализирует соединение с базой данных SQLite с настройками по умолчанию
 func InitDB() (*sql.DB, error) {
-	// TODO: Initialize database connection with SQLite
-	// - Open database connection using sqlite3 driver
-	// - Apply connection pool configuration from DefaultConfig()
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDB function")
+	config := DefaultConfig()
+	return InitDBWithConfig(config)
 }
 
-// TODO: Implement InitDBWithConfig function
+// InitDBWithConfig инициализирует соединение с базой данных SQLite с кастомной конфигурацией
 func InitDBWithConfig(config *Config) (*sql.DB, error) {
-	// TODO: Initialize database connection with custom configuration
-	// - Open database connection using the provided config
-	// - Apply all connection pool settings
-	// - Test connection with Ping()
-	// - Return the database connection or error
-	return nil, fmt.Errorf("TODO: implement InitDBWithConfig function")
+	if config == nil {
+		return nil, fmt.Errorf("InitDBWithConfig: config не может быть nil")
+	}
+	db, err := sql.Open("sqlite3", config.DatabasePath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка открытия базы данных: %w", err)
+	}
+
+	// Применяем настройки пула соединений
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	db.SetMaxIdleConns(config.MaxIdleConns)
+	db.SetConnMaxLifetime(config.ConnMaxLifetime)
+	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+
+	// Проверяем соединение
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("ошибка соединения с базой данных: %w", err)
+	}
+
+	return db, nil
 }
 
-// TODO: Implement CloseDB function
+// CloseDB корректно закрывает соединение с базой данных
 func CloseDB(db *sql.DB) error {
-	// TODO: Properly close database connection
-	// - Check if db is not nil
-	// - Close the database connection
-	// - Return any error that occurs
-	return fmt.Errorf("TODO: implement CloseDB function")
+	if db == nil {
+		return fmt.Errorf("CloseDB: db не может быть nil")
+	}
+	return db.Close()
 }

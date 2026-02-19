@@ -128,23 +128,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSharedPreferences() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing SharedPreferences...';
+      _statusMessage = 'Тестирование SharedPreferences...';
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
+      // Реализация теста SharedPreferences
       await PreferencesService.setString(
-          'test_key', 'Hello from SharedPreferences!');
-      final value = PreferencesService.getString('test_key');
+          'test_key', 'Привет из SharedPreferences!');
+      final value = await PreferencesService.getString('test_key');
 
       setState(() {
-        _statusMessage = 'SharedPreferences test result: $value';
+        _statusMessage = 'Результат теста SharedPreferences: $value';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'SharedPreferences test failed: $e';
+        _statusMessage = 'Ошибка теста SharedPreferences: $e';
       });
     } finally {
       setState(() {
@@ -156,22 +154,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSQLite() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing SQLite database...';
+      _statusMessage = 'Тестирование базы данных SQLite...';
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
-
+      // Реализация теста SQLite
       final userCount = await DatabaseService.getUserCount();
 
       setState(() {
         _statusMessage =
-            'SQLite test result: Found $userCount users in database';
+            'Результат теста SQLite: найдено $userCount пользователей в базе данных';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'SQLite test failed: $e';
+        _statusMessage = 'Ошибка теста SQLite: $e';
       });
     } finally {
       setState(() {
@@ -183,22 +179,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _testSecureStorage() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = 'Testing Secure Storage...';
+      _statusMessage = 'Тестирование Secure Storage...';
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
-      await SecureStorageService.saveSecureData('test_secure', 'Secret data');
+      // Реализация теста Secure Storage
+      await SecureStorageService.saveSecureData('test_secure', 'Секретные данные');
       final value = await SecureStorageService.getSecureData('test_secure');
 
       setState(() {
-        _statusMessage = 'Secure Storage test result: $value';
+        _statusMessage = 'Результат теста Secure Storage: $value';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Secure Storage test failed: $e';
+        _statusMessage = 'Ошибка теста Secure Storage: $e';
       });
     } finally {
       setState(() {
