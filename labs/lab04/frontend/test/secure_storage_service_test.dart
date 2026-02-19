@@ -1,10 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:lab04_frontend/services/secure_storage_service.dart';
+import 'mock_secure_storage.dart';
 
 void main() {
   // Initialize Flutter bindings for platform channels
-  TestWidgetsFlutterBinding.ensureInitialized(); 
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late MockSecureStorage mockStorage;
+
+  setUp(() async {
+    mockStorage = MockSecureStorage();
+    FlutterSecureStoragePlatform.instance = mockStorage;
+    await SecureStorageService.clearAll();
+  });
 
   group('SecureStorageService Tests', () {
     setUp(() async {

@@ -64,6 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: _testSharedPreferences,
                   child: const Text('Test SharedPreferences'),
                 ),
+                ElevatedButton(
+                  onPressed: _clearSharedPreferences,
+                  child: const Text('Clear SharedPreferences'),
+                ),
               ],
             ),
 
@@ -76,6 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: _testSQLite,
                   child: const Text('Test SQLite'),
                 ),
+                ElevatedButton(
+                  onPressed: _clearDatabase,
+                  child: const Text('Clear Database'),
+                ),
               ],
             ),
 
@@ -87,6 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ElevatedButton(
                   onPressed: _testSecureStorage,
                   child: const Text('Test Secure Storage'),
+                ),
+                ElevatedButton(
+                  onPressed: _clearSecureStorage,
+                  child: const Text('Clear Secure Storage'),
                 ),
               ],
             ),
@@ -132,19 +144,48 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SharedPreferences test
-      // This will test when students implement the methods
-
       await PreferencesService.setString(
           'test_key', 'Hello from SharedPreferences!');
-      final value = PreferencesService.getString('test_key');
+      await PreferencesService.setInt('test_int', 42);
+      await PreferencesService.setBool('test_bool', true);
+
+      final stringValue = PreferencesService.getString('test_key');
+      final intValue = PreferencesService.getInt('test_int');
+      final boolValue = PreferencesService.getBool('test_bool');
 
       setState(() {
-        _statusMessage = 'SharedPreferences test result: $value';
+        _statusMessage = '''
+SharedPreferences test results:
+String: $stringValue
+Int: $intValue
+Bool: $boolValue
+''';
       });
     } catch (e) {
       setState(() {
         _statusMessage = 'SharedPreferences test failed: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _clearSharedPreferences() async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Clearing SharedPreferences...';
+    });
+
+    try {
+      await PreferencesService.clear();
+      setState(() {
+        _statusMessage = 'SharedPreferences cleared successfully';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Failed to clear SharedPreferences: $e';
       });
     } finally {
       setState(() {
@@ -160,18 +201,53 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement SQLite test
-      // This will test when students implement the methods
+      // Create test user
+      final user = await DatabaseService.createUser(
+        CreateUserRequest(
+          name: 'Test User ${DateTime.now().second}',
+          email: 'test${DateTime.now().second}@example.com',
+        ),
+      );
 
+      // Get user count
       final userCount = await DatabaseService.getUserCount();
 
+      // Search users
+      final searchResults = await DatabaseService.searchUsers('Test');
+
       setState(() {
-        _statusMessage =
-            'SQLite test result: Found $userCount users in database';
+        _statusMessage = '''
+SQLite test results:
+Created user: ${user.name} (ID: ${user.id})
+Total users: $userCount
+Found ${searchResults.length} users matching "Test"
+''';
       });
     } catch (e) {
       setState(() {
         _statusMessage = 'SQLite test failed: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _clearDatabase() async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Clearing database...';
+    });
+
+    try {
+      await DatabaseService.clearAllData();
+      setState(() {
+        _statusMessage = 'Database cleared successfully';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Failed to clear database: $e';
       });
     } finally {
       setState(() {
@@ -187,18 +263,49 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // TODO: Implement Secure Storage test
-      // This will test when students implement the methods
-
       await SecureStorageService.saveSecureData('test_secure', 'Secret data');
-      final value = await SecureStorageService.getSecureData('test_secure');
+      await SecureStorageService.saveAuthToken('test_auth_token');
+      await SecureStorageService.saveUserCredentials(
+          'test_user', 'test_password');
+
+      final secureValue =
+          await SecureStorageService.getSecureData('test_secure');
+      final authToken = await SecureStorageService.getAuthToken();
+      final credentials = await SecureStorageService.getUserCredentials();
 
       setState(() {
-        _statusMessage = 'Secure Storage test result: $value';
+        _statusMessage = '''
+Secure Storage test results:
+Secure Data: $secureValue
+Auth Token: $authToken
+Credentials: ${credentials['username']}/${credentials['password']}
+''';
       });
     } catch (e) {
       setState(() {
         _statusMessage = 'Secure Storage test failed: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _clearSecureStorage() async {
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Clearing Secure Storage...';
+    });
+
+    try {
+      await SecureStorageService.clearAll();
+      setState(() {
+        _statusMessage = 'Secure Storage cleared successfully';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Failed to clear Secure Storage: $e';
       });
     } finally {
       setState(() {
