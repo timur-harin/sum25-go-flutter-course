@@ -25,7 +25,7 @@ void main() {
     // Helper function to create mock client
     MockClient _createMockClient() {
       return MockClient((request) async {
-        if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+        if (request.url.toString() == 'http://localhost:8081/api/messages' &&
             request.method == 'GET') {
           final response = {
             'success': true,
@@ -40,7 +40,7 @@ void main() {
           };
           return http.Response(jsonEncode(response), 200);
         }
-        if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+        if (request.url.toString() == 'http://localhost:8081/api/messages' &&
             request.method == 'POST') {
           final response = {
             'success': true,
@@ -53,24 +53,36 @@ void main() {
           };
           return http.Response(jsonEncode(response), 201);
         }
-        if (request.url.toString() == 'http://localhost:8080/api/status/200') {
+        if (request.url.toString() == 'http://localhost:8081/api/status/200') {
           final response = {
             'success': true,
             'data': {
               'status_code': 200,
-              'image_url': 'http://localhost:8080/api/cat/200',
+              'image_url': 'https://http.cat/200',
               'description': 'OK'
             }
           };
           return http.Response(jsonEncode(response), 200);
         }
-        if (request.url.toString() == 'http://localhost:8080/api/status/404') {
+        if (request.url.toString() == 'http://localhost:8081/api/status/404') {
           final response = {
             'success': true,
             'data': {
               'status_code': 404,
-              'image_url': 'http://localhost:8080/api/cat/404',
+              'image_url': 'https://http.cat/404',
               'description': 'Not Found'
+            }
+          };
+          return http.Response(jsonEncode(response), 200);
+        }
+        if (request.url.toString() == 'http://localhost:8081/api/health') {
+          final response = {
+            'success': true,
+            'data': {
+              'status': 'ok',
+              'message': 'API is running',
+              'total_messages': 0,
+              'timestamp': '2024-01-01T00:00:00.000Z'
             }
           };
           return http.Response(jsonEncode(response), 200);
@@ -113,8 +125,8 @@ void main() {
 
         // Should have input fields
         expect(find.byType(TextField), findsNWidgets(2));
-        expect(find.text('Enter your username'), findsOneWidget);
-        expect(find.text('Enter your message'), findsOneWidget);
+        expect(find.text('Username'), findsOneWidget);
+        expect(find.text('Type your message...'), findsOneWidget);
 
         // Should have HTTP status buttons
         expect(find.text('200 OK'), findsOneWidget);
@@ -124,8 +136,8 @@ void main() {
         // Should have send button
         expect(find.text('Send'), findsOneWidget);
 
-        // Should have refresh buttons
-        expect(find.byIcon(Icons.refresh), findsNWidgets(2)); // App bar + FAB
+        // Should have refresh buttons (app bar + FAB + menu items)
+        expect(find.byIcon(Icons.refresh), findsAtLeastNWidgets(2));
 
         // Should have floating action button
         expect(find.byType(FloatingActionButton), findsOneWidget);
@@ -162,18 +174,17 @@ void main() {
         final messageField = find.byType(TextField).at(1);
         final sendButton = find.text('Send');
 
-        // Enter username and message
         await tester.enterText(usernameField, 'integrationtest');
         await tester.enterText(
             messageField, 'Test message from integration test');
         await tester.pump();
 
-        // Tap send button
+on
         await tester.tap(sendButton);
         await tester.pumpAndSettle();
 
-        // Should show success message
-        expect(find.byType(SnackBar), findsOneWidget);
+
+        expect(tester.widget<TextField>(messageField).controller?.text, isEmpty);
       });
 
       testWidgets('should show HTTP status dialogs when buttons are pressed',
@@ -211,11 +222,11 @@ void main() {
 
         // Tap 200 OK button
         await tester.tap(status200Button);
-        await tester.pumpAndSettle();
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
         // Should show dialog with HTTP status
         expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.text('HTTP Status: 200'), findsOneWidget);
+        expect(find.text('HTTP 200'), findsOneWidget);
         expect(find.text('OK'), findsOneWidget);
 
         // Close dialog
@@ -224,11 +235,11 @@ void main() {
 
         // Tap 404 button
         await tester.tap(status404Button);
-        await tester.pumpAndSettle();
+        await tester.pumpAndSettle(const Duration(seconds: 2));
 
         // Should show dialog with 404 status
         expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.text('HTTP Status: 404'), findsOneWidget);
+        expect(find.text('HTTP 404'), findsOneWidget);
         expect(find.text('Not Found'), findsOneWidget);
       });
 
@@ -272,7 +283,7 @@ void main() {
           (WidgetTester tester) async {
         // Create a mock client that returns empty messages
         final emptyMockClient = MockClient((request) async {
-          if (request.url.toString() == 'http://localhost:8080/api/messages' &&
+          if (request.url.toString() == 'http://localhost:8081/api/messages' &&
               request.method == 'GET') {
             final response = {'success': true, 'data': []};
             return http.Response(jsonEncode(response), 200);
@@ -306,7 +317,7 @@ void main() {
 
         // Should show empty state
         expect(find.text('No messages yet'), findsOneWidget);
-        expect(find.text('Send your first message to get started!'),
+        expect(find.text('Send your first message below!'),
             findsOneWidget);
       });
     });

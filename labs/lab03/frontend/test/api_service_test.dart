@@ -127,7 +127,7 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString().contains('/api/status/200')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8080/api/cat/200"}}',
+                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"https://http.cat/200"}}',
                 200);
           }
           return http.Response('Not Found', 404);
@@ -138,17 +138,21 @@ void main() {
 
         expect(status.statusCode, equals(200));
         expect(status.description, equals('OK'));
-        expect(status.imageUrl, contains('/api/cat/200'));
+        expect(status.imageUrl, equals('https://http.cat/200'));
       });
 
       test('should perform health check successfully', () async {
         final mockClient = MockClient((request) async {
-          if (request.url.toString() == 'http://localhost:8080/api/health' &&
+          if (request.url.toString() == 'http://localhost:8081/api/health' &&
               request.method == 'GET') {
             final response = {
-              'status': 'healthy',
-              'timestamp': '2024-01-01T00:00:00Z',
-              'version': '1.0.0'
+              'success': true,
+              'data': {
+                'status': 'ok',
+                'message': 'API is running',
+                'total_messages': 0,
+                'timestamp': '2024-01-01T00:00:00.000Z'
+              }
             };
             return http.Response(jsonEncode(response), 200);
           }
@@ -158,8 +162,8 @@ void main() {
         final apiService = _createApiServiceWithMockClient(mockClient);
         final health = await apiService.healthCheck();
 
-        expect(health['status'], equals('healthy'));
-        expect(health['version'], equals('1.0.0'));
+        expect(health['success'], equals(true));
+        expect(health['data']['status'], equals('ok'));
       });
 
       test('should handle network errors', () async {
@@ -258,17 +262,17 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString().contains('/api/status/200')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8080/api/cat/200"}}',
+                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"https://http.cat/200"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/404')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"http://localhost:8080/api/cat/404"}}',
+                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"https://http.cat/404"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/500')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"http://localhost:8080/api/cat/500"}}',
+                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"https://http.cat/500"}}',
                 200);
           }
           return http.Response('Not Found', 404);
@@ -280,19 +284,19 @@ void main() {
         final status200 = await apiService.getHTTPStatus(200);
         expect(status200.statusCode, equals(200));
         expect(status200.description, equals('OK'));
-        expect(status200.imageUrl, contains('/api/cat/200'));
+        expect(status200.imageUrl, equals('https://http.cat/200'));
 
         // Test 404 Not Found
         final status404 = await apiService.getHTTPStatus(404);
         expect(status404.statusCode, equals(404));
         expect(status404.description, equals('Not Found'));
-        expect(status404.imageUrl, contains('/api/cat/404'));
+        expect(status404.imageUrl, equals('https://http.cat/404'));
 
         // Test 500 Internal Server Error
         final status500 = await apiService.getHTTPStatus(500);
         expect(status500.statusCode, equals(500));
         expect(status500.description, equals('Internal Server Error'));
-        expect(status500.imageUrl, contains('/api/cat/500'));
+        expect(status500.imageUrl, equals('https://http.cat/500'));
 
         apiService.dispose();
       });
@@ -349,17 +353,17 @@ void main() {
         final mockClient = MockClient((request) async {
           if (request.url.toString().contains('/api/status/200')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"http://localhost:8080/api/cat/200"}}',
+                '{"success":true,"data":{"status_code":200,"description":"OK","image_url":"https://http.cat/200"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/404')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"http://localhost:8080/api/cat/404"}}',
+                '{"success":true,"data":{"status_code":404,"description":"Not Found","image_url":"https://http.cat/404"}}',
                 200);
           }
           if (request.url.toString().contains('/api/status/500')) {
             return http.Response(
-                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"http://localhost:8080/api/cat/500"}}',
+                '{"success":true,"data":{"status_code":500,"description":"Internal Server Error","image_url":"https://http.cat/500"}}',
                 200);
           }
           return http.Response('Not Found', 404);
@@ -373,7 +377,7 @@ void main() {
           final status = await apiService.getHTTPStatus(code);
           expect(status.statusCode, equals(code));
           expect(status.description, isNotEmpty);
-          expect(status.imageUrl, contains('/api/cat/$code'));
+          expect(status.imageUrl, equals('https://http.cat/$code'));
         }
 
         apiService.dispose();
