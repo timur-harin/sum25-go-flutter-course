@@ -1,3 +1,4 @@
+import 'package:lab03_frontend/models/message.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/chat_screen.dart';
@@ -12,24 +13,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Wrap MaterialApp with MultiProvider or Provider
-    // Provide ApiService instance to the widget tree
-    // This allows any widget to access the API service
-    return MaterialApp(
+    return MultiProvider(
+    providers: [
+      Provider<ApiService>(create: (_) => ApiService()),
+      ChangeNotifierProvider<ChatProvider>(
+        create: (context) => ChatProvider(context.read<ApiService>()),
+      ),
+    ],
+    child: MaterialApp(
       title: 'Lab 03 REST API Chat',
       theme: ThemeData(
-        // TODO: Customize theme colors
-        // Set primary color to blue
-        // Set accent color to orange (for HTTP cat theme)
-        // Configure app bar theme
-        // Configure elevated button theme
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+  primarySwatch: Colors.blue,
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: Colors.blue,
+    secondary: Colors.orange, // Accent color
+  ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.blue,
+    foregroundColor: Colors.white,
+    centerTitle: true,
+    elevation: 4,
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.orange,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    ),
+  ),
+  useMaterial3: true,
+),
       home: const ChatScreen(),
-      // TODO: Add error handling for navigation
-      // TODO: Consider adding splash screen or loading widget
-    );
+    ),
+  );
   }
 }
 
@@ -65,4 +82,35 @@ class ChatProvider extends ChangeNotifier {
 
   // TODO: Add clearError() method
   // Set _error = null and call notifyListeners()
+  final ApiService _apiService;
+
+  List<Message> _messages = [];
+  bool _isLoading = false;
+  String? _error;
+
+  ChatProvider(this._apiService);
+
+  List<Message> get messages => _messages;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  Future<void> loadMessages() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _messages = await _apiService.getMessages();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
 }

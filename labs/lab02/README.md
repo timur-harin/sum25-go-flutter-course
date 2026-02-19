@@ -1,4 +1,4 @@
-# Lab 02: Real-time Chat Application
+# Lab 02:   
 
 This lab focuses on building a real-time chat application using Go (backend) and Flutter (frontend), based on the concurrency and streams concepts from Lecture 02.
 

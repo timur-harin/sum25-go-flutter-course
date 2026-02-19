@@ -105,7 +105,7 @@ Implement the following features:
    ```bash
    flutter pub get
    ```
-
+   
 3. Run the app:
    ```bash
    flutter run --web-port 3000 --web-hostname localhost --dart-define=FLUTTER_WEB_USE_SKIA=true
