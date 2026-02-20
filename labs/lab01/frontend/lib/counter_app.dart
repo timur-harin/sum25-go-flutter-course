@@ -11,15 +11,21 @@ class _CounterAppState extends State<CounterApp> {
   int _counter = 0;
 
   void _incrementCounter() {
-    // TODO: Implement this function
+    setState(() {
+      _counter++;
+    });
   }
 
   void _decrementCounter() {
-    // TODO: Implement this function
+    setState(() {
+      _counter--;
+    });
   }
 
   void _resetCounter() {
-    // TODO: Implement this function
+    setState(() {
+      _counter = 0;
+    });
   }
 
   @override
@@ -27,31 +33,43 @@ class _CounterAppState extends State<CounterApp> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Counter App'),
+        centerTitle: true,
         actions: [
-          // TODO: add a refresh button with Icon(Icons.refresh)
+          IconButton(
+            tooltip: 'Reset',
+            icon: const Icon(Icons.refresh),
+            onPressed: _resetCounter,
+          ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // TODO: add a decrement button with Icon(Icons.remove) and onPressed: _decrementCounter
-                
-                const SizedBox(width: 32),
-                // TODO: add a increment button with Icon(Icons.add) and onPressed: _incrementCounter
-                
-              ],
-            ),
-          ],
-        ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            '$_counter',
+            style: const TextStyle(fontSize: 48),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'dec',
+            tooltip: 'Decrement',
+            onPressed: _decrementCounter,
+            child: const Icon(Icons.remove),
+          ),
+          const SizedBox(width: 16),
+          FloatingActionButton(
+            heroTag: 'inc',
+            tooltip: 'Increment',
+            onPressed: _incrementCounter,
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
