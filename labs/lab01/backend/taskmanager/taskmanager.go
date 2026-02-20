@@ -28,36 +28,82 @@ type TaskManager struct {
 
 // NewTaskManager creates a new task manager
 func NewTaskManager() *TaskManager {
-	// TODO: Implement this function
-	return nil
+	return &TaskManager{
+		tasks:  make(map[int]Task),
+		nextID: 1,
+	}
 }
 
 // AddTask adds a new task to the manager, returns an error if the title is empty, and increments the nextID
 func (tm *TaskManager) AddTask(title, description string) (Task, error) {
-	// TODO: Implement this function
-	return Task{}, nil
+	if title == "" {
+		return Task{}, ErrEmptyTitle
+	}
+
+	tm.tasks[tm.nextID] = Task{
+		ID:          tm.nextID,
+		Title:       title,
+		Description: description,
+		Done:        false,
+		CreatedAt:   time.Now(),
+	}
+	tm.nextID++
+	return tm.tasks[tm.nextID-1], nil
 }
 
 // UpdateTask updates an existing task, returns an error if the title is empty or the task is not found
 func (tm *TaskManager) UpdateTask(id int, title, description string, done bool) error {
-	// TODO: Implement this function
+	if _, err := tm.tasks[id]; !err {
+		return ErrTaskNotFound
+	}
+	if title == "" {
+		return ErrEmptyTitle
+	}
+	tm.DeleteTask(id)
+	task := Task{
+		Title:       title,
+		Description: description,
+		Done:        done,
+	}
+	tm.tasks[id] = task
 	return nil
 }
 
 // DeleteTask removes a task from the manager, returns an error if the task is not found
 func (tm *TaskManager) DeleteTask(id int) error {
-	// TODO: Implement this function
+	if _, exist := tm.tasks[id]; !exist {
+		return ErrTaskNotFound
+	}
+	delete(tm.tasks, id)
 	return nil
 }
 
 // GetTask retrieves a task by ID, returns an error if the task is not found
 func (tm *TaskManager) GetTask(id int) (Task, error) {
-	// TODO: Implement this function
-	return Task{}, nil
+
+	task, err := tm.tasks[id]
+	if !err {
+		return Task{}, ErrTaskNotFound
+	}
+	return task, nil
 }
 
 // ListTasks returns all tasks, optionally filtered by done status, returns an empty slice if no tasks are found
 func (tm *TaskManager) ListTasks(filterDone *bool) []Task {
-	// TODO: Implement this function
-	return nil
+	slice :=make([]Task,0)
+
+	switch filterDone {
+	case nil:
+		for _, v := range tm.tasks {
+			slice = append(slice, v)
+		}
+	default:
+		for _, v := range tm.tasks {
+			if v.Done == *filterDone {
+				slice = append(slice, v)
+			}
+		}
+	}
+
+	return slice
 }
