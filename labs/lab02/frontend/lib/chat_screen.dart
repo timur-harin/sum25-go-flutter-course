@@ -1,45 +1,108 @@
 import 'package:flutter/material.dart';
-import 'chat_service.dart';
 import 'dart:async';
 
-// ChatScreen displays the chat UI
+import 'chat_service.dart';
+
 class ChatScreen extends StatefulWidget {
   final ChatService chatService;
-  const ChatScreen({super.key, required this.chatService});
+  const ChatScreen({Key? key, required this.chatService}) : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add TextEditingController for input
-  // TODO: Add state for messages, loading, and error
-  // TODO: Subscribe to chatService.messageStream
-  // TODO: Implement UI for sending and displaying messages
-  // TODO: Simulate chat logic for tests (current implementation is a simulation)
+  final _textController = TextEditingController();
+  final List<String> _messages = [];
+
+  late bool _loading;
+  String? _error;
+  StreamSubscription<String>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service and set up listeners
+    _loading = true;
+
+    widget.chatService
+        .connect()
+        .then((_) {
+      _subscription =
+          widget.chatService.messageStream.listen((incoming) => setState(() {
+            _messages.add(incoming);
+          }));
+      setState(() => _loading = false);
+    })
+        .catchError((e) => setState(() {
+      _loading = false;
+      _error = e.toString();
+    }));
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and subscriptions
+    _subscription?.cancel();
+    _textController.dispose();
     super.dispose();
   }
 
-  void _sendMessage() async {
-    // TODO: Send message using chatService
+  Future<void> _sendMessage() async {
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+
+    try {
+      await widget.chatService.sendMessage(text);
+      _textController.clear();
+    } catch (e) {
+      setState(() => _error = 'Send error: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build chat UI with loading, error, and message list
-    return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
-      body: const Center(child: Text('TODO: Implement chat UI')),
-    );
+    Widget body;
+
+    if (_loading) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (_error != null) {
+      body = Center(child: Text('Connection error: $_error'));
+    } else {
+      body = Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              key: const Key('messageList'),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _messages.length,
+              itemBuilder: (context, i) =>
+                  ListTile(title: Text(_messages[i])),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: const Key('inputField'),
+                    controller: _textController,
+                    decoration:
+                    const InputDecoration(hintText: 'Enter message'),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('sendButton'),
+                  icon: const Icon(Icons.send),
+                  onPressed: _sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+
+    return body;
   }
 }
