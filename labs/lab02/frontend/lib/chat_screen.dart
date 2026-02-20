@@ -12,34 +12,95 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add TextEditingController for input
-  // TODO: Add state for messages, loading, and error
-  // TODO: Subscribe to chatService.messageStream
-  // TODO: Implement UI for sending and displaying messages
-  // TODO: Simulate chat logic for tests (current implementation is a simulation)
+  final TextEditingController _controller = TextEditingController();
+  final List<String> _messages = [];
+  bool _loading = true;
+  String? _error;
+  StreamSubscription<String>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service and set up listeners
+    _connect();
+  }
+
+  Future<void> _connect() async {
+    try {
+      await widget.chatService.connect();
+      _subscription = widget.chatService.messageStream.listen((message) {
+        setState(() {
+          _messages.add(message);
+        });
+      });
+      setState(() {
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = 'Connection error: $e';
+      });
+    }
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and subscriptions
+    _controller.dispose();
+    _subscription?.cancel();
     super.dispose();
   }
 
   void _sendMessage() async {
-    // TODO: Send message using chatService
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    try {
+      await widget.chatService.sendMessage(text);
+      setState(() {
+        _controller.clear();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Send error: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build chat UI with loading, error, and message list
-    return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
-      body: const Center(child: Text('TODO: Implement chat UI')),
+    return _loading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+        ? Center(child: Text(_error!))
+        : Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: _messages.length,
+            itemBuilder: (context, index) => ListTile(
+              title: Text(_messages[index]),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: const InputDecoration(
+                      hintText: 'Enter message'),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: _sendMessage,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"regexp"
 	"sync"
 )
 
@@ -17,7 +18,16 @@ type User struct {
 
 // Validate checks if the user data is valid
 func (u *User) Validate() error {
-	// TODO: Validate name, email, id
+	if u.Name == "" {
+		return errors.New("name is required")
+	}
+	if u.ID == "" {
+		return errors.New("id is required")
+	}
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if !re.MatchString(u.Email) {
+		return errors.New("invalid email")
+	}
 	return nil
 }
 
@@ -50,18 +60,42 @@ func NewUserManagerWithContext(ctx context.Context) *UserManager {
 
 // AddUser adds a user
 func (m *UserManager) AddUser(u User) error {
-	// TODO: Add user to map, check context
+	if m.ctx != nil && m.ctx.Err() != nil {
+		return errors.New("context cancelled")
+	}
+
+	if err := u.Validate(); err != nil {
+		return err
+	}
+
+	m.mutex.Lock()
+	m.users[u.ID] = u
+	m.mutex.Unlock()
 	return nil
 }
 
 // RemoveUser removes a user
 func (m *UserManager) RemoveUser(id string) error {
-	// TODO: Remove user from map
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, exists := m.users[id]; !exists {
+		return errors.New("user not found")
+	}
+
+	delete(m.users, id)
 	return nil
 }
 
 // GetUser retrieves a user by id
 func (m *UserManager) GetUser(id string) (User, error) {
-	// TODO: Get user from map
-	return User{}, errors.New("not found")
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	user, exists := m.users[id]
+	if !exists {
+		return User{}, errors.New("not found")
+	}
+
+	return user, nil
 }
