@@ -3,8 +3,8 @@ import 'package:lab02_chat/user_service.dart';
 
 // UserProfile displays and updates user info
 class UserProfile extends StatefulWidget {
-  final UserService
-      userService; // Accepts a user service for fetching user info
+  final UserService userService;
+
   const UserProfile({Key? key, required this.userService}) : super(key: key);
 
   @override
@@ -12,21 +12,59 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  // TODO: Add state for user data, loading, and error
-  // TODO: Fetch user info from userService (simulate for tests)
+  Map<String, String>? _user;
+  bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch user info and update state
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final user = await widget.userService.fetchUser();
+      setState(() {
+        _user = user;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'An error occurred while loading user info.';
+        _loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build user profile UI with loading, error, and user info
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: const Center(child: Text('TODO: Implement user profile UI')),
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Text(
+          _error!,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_user?['name'] ?? '', style: const TextStyle(fontSize: 24)),
+          const SizedBox(height: 8),
+          Text(_user?['email'] ?? '', style: const TextStyle(fontSize: 16)),
+        ],
+      ),
     );
   }
 }
