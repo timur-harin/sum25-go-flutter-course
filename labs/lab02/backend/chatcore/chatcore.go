@@ -7,7 +7,6 @@ import (
 
 // Message represents a chat message
 // Sender, Recipient, Content, Broadcast, Timestamp
-// TODO: Add more fields if needed
 
 type Message struct {
 	Sender    string
@@ -26,12 +25,10 @@ type Broker struct {
 	users      map[string]chan Message // userID -> receiving channel
 	usersMutex sync.RWMutex            // Protects users map
 	done       chan struct{}           // For shutdown
-	// TODO: Add more fields if needed
 }
 
 // NewBroker creates a new message broker
 func NewBroker(ctx context.Context) *Broker {
-	// TODO: Initialize broker fields
 	return &Broker{
 		ctx:   ctx,
 		input: make(chan Message, 100),
@@ -42,21 +39,54 @@ func NewBroker(ctx context.Context) *Broker {
 
 // Run starts the broker event loop (goroutine)
 func (b *Broker) Run() {
-	// TODO: Implement event loop (fan-in/fan-out pattern)
+	go func() {
+		for {
+			select {
+			case msg, ok := <-b.input:
+				if !ok {
+					b.input = nil
+					break
+				}
+				if msg.Broadcast {
+					b.usersMutex.Lock()
+					for _, ch := range b.users {
+						ch <- msg
+					}
+					b.usersMutex.Unlock()
+				}
+				if !msg.Broadcast {
+					b.users[msg.Recipient] <- msg
+				}
+			case <-b.done:
+				return
+			case <-b.ctx.Done():
+				return
+			}
+		}
+	}()
 }
 
 // SendMessage sends a message to the broker
 func (b *Broker) SendMessage(msg Message) error {
-	// TODO: Send message to appropriate channel/queue
-	return nil
+	select {
+	case <-b.ctx.Done():
+		return b.ctx.Err()
+	default:
+		b.input <- msg
+		return nil
+	}
 }
 
 // RegisterUser adds a user to the broker
 func (b *Broker) RegisterUser(userID string, recv chan Message) {
-	// TODO: Register user and their receiving channel
+	b.usersMutex.Lock()
+	b.users[userID] = recv
+	b.usersMutex.Unlock()
 }
 
 // UnregisterUser removes a user from the broker
 func (b *Broker) UnregisterUser(userID string) {
-	// TODO: Remove user from registry
+	b.usersMutex.Lock()
+	delete(b.users, userID)
+	b.usersMutex.Unlock()
 }

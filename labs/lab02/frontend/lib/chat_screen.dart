@@ -12,34 +12,80 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // TODO: Add TextEditingController for input
-  // TODO: Add state for messages, loading, and error
-  // TODO: Subscribe to chatService.messageStream
-  // TODO: Implement UI for sending and displaying messages
-  // TODO: Simulate chat logic for tests (current implementation is a simulation)
+  final textEditingController = TextEditingController();
+  List<String> messages = [];
+  bool failConnect = false;
+  String error = "Connection error";
+  Stream<String>? messageStream;
+
+  void initConnect() async {
+    try {
+      await widget.chatService.connect();
+    }
+    catch(e) {
+      setState(() {
+        failConnect = true;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // TODO: Connect to chat service and set up listeners
+    messageStream = widget.chatService.messageStream;
+    initConnect();
   }
 
   @override
   void dispose() {
-    // TODO: Dispose controllers and subscriptions
+    textEditingController.dispose();
     super.dispose();
   }
 
   void _sendMessage() async {
-    // TODO: Send message using chatService
+    
+    try {
+      if (!failConnect) {
+        await widget.chatService.sendMessage(textEditingController.text);
+        setState(() {
+          textEditingController.clear();
+        });
+      }
+    }
+    catch(e){}
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Build chat UI with loading, error, and message list
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
-      body: const Center(child: Text('TODO: Implement chat UI')),
+      body: Center(
+        child: Column(
+          children: [
+            TextField(
+              controller: textEditingController,
+            ),
+            ElevatedButton(
+              onPressed: _sendMessage, 
+              child: Icon(Icons.send)
+            ),
+            StreamBuilder<String>(
+              stream: messageStream, 
+              builder: (context, snapshot) {
+                if (failConnect) {
+                  return Text(error);
+                }
+                else if (snapshot.hasData) {
+                  String data = snapshot.data!;
+                  return Text(data);
+                }
+                else {
+                  return Text("");
+                }
+              }
+            )
+          ]  
+        )
+      ),
     );
   }
 }
