@@ -1,4 +1,3 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:lab05_frontend/core/validation/form_validator.dart';
 import 'package:lab05_frontend/domain/entities/user.dart';
 
@@ -40,20 +39,20 @@ class AuthState {
   }
 }
 
-// Mock JWT service interface for dependency injection
+// JWT service interface
 abstract class JWTServiceInterface {
   String generateToken(String userId, String email);
   bool validateToken(String token);
   Map<String, dynamic>? extractClaims(String token);
 }
 
-// Mock user repository interface
+// User repository interface
 abstract class UserRepositoryInterface {
   Future<User?> findByEmail(String email);
   Future<bool> verifyPassword(String email, String password);
 }
 
-// Authentication service implementing clean architecture
+// Authentication service
 class AuthService {
   final FormValidator _validator;
   final JWTServiceInterface _jwtService;
@@ -61,7 +60,6 @@ class AuthService {
 
   AuthState _currentState = const AuthState();
 
-  // Constructor with dependency injection
   AuthService({
     FormValidator? validator,
     JWTServiceInterface? jwtService,
@@ -70,101 +68,101 @@ class AuthService {
         _jwtService = jwtService ?? _MockJWTService(),
         _userRepository = userRepository ?? _MockUserRepository();
 
-  // Get current authentication state
   AuthState get currentState => _currentState;
-
-  // Check if user is currently authenticated
   bool get isAuthenticated => _currentState.isAuthenticated;
-
-  // Get current user
   User? get currentUser => _currentState.currentUser;
 
-  // TODO: Implement login method
-  // login authenticates a user with email and password
-  // Requirements:
-  // - Validate email and password using FormValidator.validateEmail() and FormValidator.validatePassword()
-  // - Return AuthResult.validationError if either validation fails
-  // - Sanitize email input using FormValidator.sanitizeText()
-  // - Use _userRepository.findByEmail() to get user
-  // - Return AuthResult.invalidCredentials if user not found
-  // - Use _userRepository.verifyPassword() to check password
-  // - Return AuthResult.invalidCredentials if password verification fails
-  // - Generate JWT token using _jwtService.generateToken() with user.id.toString() and user.email
-  // - Update _currentState with authenticated user, token, and current DateTime for loginTime
-  // - Return AuthResult.success on successful authentication
-  // - Return AuthResult.networkError if any exception occurs during the process
   Future<AuthResult> login(String email, String password) async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService login not implemented');
+    try {
+      if (FormValidator.validateEmail(email) != null ||
+    FormValidator.validatePassword(password) != null) {
+  return AuthResult.validationError;
+}
+
+final sanitizedEmail = FormValidator.sanitizeText(email);
+
+
+      final user = await _userRepository.findByEmail(sanitizedEmail);
+      if (user == null) {
+        return AuthResult.invalidCredentials;
+      }
+
+      final passwordValid = await _userRepository.verifyPassword(sanitizedEmail, password);
+      if (!passwordValid) {
+        return AuthResult.invalidCredentials;
+      }
+
+      final token = _jwtService.generateToken(user.id.toString(), user.email);
+
+      _currentState = AuthState(
+        isAuthenticated: true,
+        currentUser: user,
+        token: token,
+        loginTime: DateTime.now(),
+      );
+
+      return AuthResult.success;
+    } catch (e) {
+      return AuthResult.networkError;
+    }
   }
 
-  // TODO: Implement logout method
-  // logout clears the current authentication state
-  // Requirements:
-  // - Reset _currentState to a new empty AuthState()
-  // - This should clear isAuthenticated, currentUser, token, and loginTime
-  // - Method should complete without throwing exceptions
   Future<void> logout() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService logout not implemented');
+    _currentState = const AuthState();
   }
 
-  // TODO: Implement isSessionValid method
-  // isSessionValid checks if the current session is still valid
-  // Requirements:
-  // - Return false if not authenticated (!_currentState.isAuthenticated)
-  // - Return false if loginTime is null
-  // - Calculate time difference between current DateTime.now() and _currentState.loginTime
-  // - Return true if session duration is less than 24 hours
-  // - Return false if session has expired (24+ hours)
   bool isSessionValid() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService isSessionValid not implemented');
+    if (!_currentState.isAuthenticated || _currentState.loginTime == null) {
+      return false;
+    }
+
+    final duration = DateTime.now().difference(_currentState.loginTime!);
+    return duration.inHours < 24;
   }
 
-  // TODO: Implement refreshAuth method
-  // refreshAuth validates and refreshes the current authentication status
-  // Requirements:
-  // - Call isSessionValid() to check session validity
-  // - If session is invalid, call logout() and return false
-  // - If token is present in _currentState.token, validate it using _jwtService.validateToken()
-  // - If token validation fails, call logout() and return false
-  // - Return true if session and token are valid
-  // - Handle any exceptions and return false if errors occur
   Future<bool> refreshAuth() async {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService refreshAuth not implemented');
+    try {
+      if (!isSessionValid()) {
+        await logout();
+        return false;
+      }
+
+      final token = _currentState.token;
+      if (token == null || !_jwtService.validateToken(token)) {
+        await logout();
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
-  // TODO: Implement getUserInfo method
-  // getUserInfo returns user information if authenticated
-  // Requirements:
-  // - Return null if not authenticated or currentUser is null
-  // - Return a Map<String, dynamic> containing:
-  //   - 'id': currentUser!.id
-  //   - 'name': currentUser!.name
-  //   - 'email': currentUser!.email
-  //   - 'loginTime': _currentState.loginTime?.toIso8601String() (convert to string or null)
-  //   - 'sessionValid': result of calling isSessionValid()
   Map<String, dynamic>? getUserInfo() {
-    // TODO: Implement this method
-    throw UnimplementedError('AuthService getUserInfo not implemented');
+    if (!_currentState.isAuthenticated || _currentState.currentUser == null) {
+      return null;
+    }
+
+    return {
+      'id': _currentState.currentUser!.id,
+      'name': _currentState.currentUser!.name,
+      'email': _currentState.currentUser!.email,
+      'loginTime': _currentState.loginTime?.toIso8601String(),
+      'sessionValid': isSessionValid(),
+    };
   }
 }
 
-// Mock implementations for testing (in real app, these would be separate files)
+// Mock JWT service for development/testing
 class _MockJWTService implements JWTServiceInterface {
   @override
   String generateToken(String userId, String email) {
-    // Mock JWT token generation
-    final payload =
-        'header.payload_${userId}_${email}_${DateTime.now().millisecondsSinceEpoch}.signature';
-    return payload;
+    return 'header.payload_${userId}_${email}_${DateTime.now().millisecondsSinceEpoch}.signature';
   }
 
   @override
   bool validateToken(String token) {
-    // Mock validation - check format and not too old
     if (!token.contains('header.payload_') || !token.contains('.signature')) {
       return false;
     }
@@ -179,7 +177,7 @@ class _MockJWTService implements JWTServiceInterface {
       final age = DateTime.now().difference(tokenTime);
 
       return age.inHours < 24;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -196,19 +194,19 @@ class _MockJWTService implements JWTServiceInterface {
         'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
         'exp': (DateTime.now().millisecondsSinceEpoch ~/ 1000) + (24 * 60 * 60),
       };
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 }
 
+// Mock user repository for development/testing
 class _MockUserRepository implements UserRepositoryInterface {
-  // Mock user database
   static final Map<String, Map<String, String>> _users = {
     'test@example.com': {
       'id': '1',
       'name': 'Test User',
-      'password': 'password123', // In real app, this would be hashed
+      'password': 'password123',
     },
     'john@example.com': {
       'id': '2',
@@ -224,9 +222,7 @@ class _MockUserRepository implements UserRepositoryInterface {
 
   @override
   Future<User?> findByEmail(String email) async {
-    // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 100));
-
     final userData = _users[email];
     if (userData == null) return null;
 
@@ -240,13 +236,9 @@ class _MockUserRepository implements UserRepositoryInterface {
 
   @override
   Future<bool> verifyPassword(String email, String password) async {
-    // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 100));
-
     final userData = _users[email];
     if (userData == null) return false;
-
-    // In real app, would use bcrypt to compare hashed password
     return userData['password'] == password;
   }
 }
