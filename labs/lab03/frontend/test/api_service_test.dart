@@ -19,7 +19,7 @@ void main() {
     });
 
     // Helper function to create ApiService with mock client
-    ApiService _createApiServiceWithMockClient(MockClient mockClient) {
+    ApiService createApiServiceWithMockClient(MockClient mockClient) {
       return ApiService(client: mockClient);
     }
 
@@ -46,7 +46,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         final messages = await apiService.getMessages();
 
         expect(messages, isA<List<Message>>());
@@ -73,7 +73,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         final request =
             CreateMessageRequest(username: 'newuser', content: 'new message');
         final message = await apiService.createMessage(request);
@@ -101,7 +101,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         final request = UpdateMessageRequest(content: 'updated message');
         final message = await apiService.updateMessage(1, request);
 
@@ -118,7 +118,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         await apiService.deleteMessage(1);
         // Should not throw an exception
       });
@@ -133,7 +133,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         final status = await apiService.getHTTPStatus(200);
 
         expect(status.statusCode, equals(200));
@@ -155,7 +155,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         final health = await apiService.healthCheck();
 
         expect(health['status'], equals('healthy'));
@@ -167,7 +167,7 @@ void main() {
           throw Exception('Network error');
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
 
         expect(() => apiService.getMessages(), throwsA(isA<ApiException>()));
       });
@@ -177,7 +177,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
         final request = UpdateMessageRequest(content: 'test');
 
         expect(() => apiService.updateMessage(999, request),
@@ -189,7 +189,7 @@ void main() {
           return http.Response('Not Found', 404);
         });
 
-        final apiService = _createApiServiceWithMockClient(mockClient);
+        final apiService = createApiServiceWithMockClient(mockClient);
 
         expect(
             () => apiService.deleteMessage(999), throwsA(isA<ApiException>()));
